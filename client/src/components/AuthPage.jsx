@@ -7,13 +7,10 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  Sparkles,
   AlertCircle,
   Sun,
   Moon,
-  ShieldCheck,
-  Zap,
-  CheckCircle2
+  Zap
 } from 'lucide-react';
 
 export default function AuthPage() {
@@ -58,16 +55,9 @@ export default function AuthPage() {
     }
   };
 
-  const handleFillDemo = () => {
-    setAuthMode('login');
-    setCompanyName('Apex AI & Cloud Solutions');
-    setPassword('apex123');
-    setError('');
-  };
-
   return (
     <div className="min-h-screen bg-surface flex flex-col justify-between transition-colors duration-300">
-      {/* Top Navigation Bar with Logo and Theme Switcher */}
+      {/* Top Navigation Bar */}
       <header className="h-16 px-6 border-b border-theme flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-sky-400 p-0.5 shadow-md shadow-brand-500/20 flex items-center justify-center">
@@ -82,9 +72,6 @@ export default function AuthPage() {
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-bold text-base tracking-tight text-primary">Sales Operation Center</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-brand-500/10 text-brand-500 border border-brand-500/20 uppercase tracking-wider">
-                Enterprise
-              </span>
             </div>
             <p className="text-[11px] text-muted hidden sm:block">Autonomous Lead Discovery & Pipeline Engine</p>
           </div>
@@ -114,17 +101,16 @@ export default function AuthPage() {
       {/* Main Authentication Card */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
         <div className="w-full max-w-md">
-          {/* Card Container */}
           <div className="bg-card border border-theme rounded-2xl shadow-xl p-6 sm:p-8 backdrop-blur-sm transition-all duration-300">
             {/* Header Titles */}
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-primary tracking-tight">
-                {authMode === 'login' ? 'Company Workspace Sign In' : 'Register Company Workspace'}
+                {authMode === 'login' ? 'Company Sign In' : 'Create Company Workspace'}
               </h1>
               <p className="text-xs text-muted mt-1.5">
                 {authMode === 'login'
-                  ? 'Access your isolated company sales pipeline and active leads'
-                  : 'Provision a dedicated multi-tenant sales operations workspace'}
+                  ? 'Sign in to access your sales pipeline and active opportunities'
+                  : 'Get started with an automated outbound sales pipeline'}
               </p>
             </div>
 
@@ -165,16 +151,6 @@ export default function AuthPage() {
               <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start space-x-2.5 text-xs text-red-500 animate-fadeIn">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
-              </div>
-            )}
-
-            {/* Registration Feature Highlight */}
-            {authMode === 'register' && (
-              <div className="mb-5 p-3 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-start space-x-2 text-xs text-brand-500">
-                <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>
-                  Instantly provisions isolated database scoping, dedicated company settings, and custom ICP targeting.
-                </span>
               </div>
             )}
 
@@ -225,7 +201,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full mt-2 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs tracking-wide transition-all shadow-md shadow-brand-600/20 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs tracking-wide transition-all shadow-md shadow-brand-600/20 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -242,41 +218,14 @@ export default function AuthPage() {
                 )}
               </button>
             </form>
-
-            {/* Quick Demo Credentials Fill */}
-            <div className="mt-6 pt-5 border-t border-theme">
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="w-full py-2 px-3 rounded-xl border border-dashed border-theme hover:border-brand-500/50 bg-surface/50 hover:bg-hover text-[11px] text-muted hover:text-primary transition-all flex items-center justify-center space-x-2 group"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-500 group-hover:scale-110 transition-transform" />
-                <span>
-                  Demo Credentials: <strong className="text-primary font-medium">Apex AI & Cloud Solutions</strong>
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Privacy & Trust Badge */}
-          <div className="mt-6 text-center flex items-center justify-center space-x-4 text-[11px] text-muted">
-            <div className="flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Multi-Tenant DB Isolation</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>JWT Encrypted Sessions</span>
-            </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Clean Enterprise Footer */}
       <footer className="h-12 px-6 border-t border-theme flex items-center justify-between text-[11px] text-muted">
         <span>© 2026 Sales Operation Center. All rights reserved.</span>
-        <span className="hidden sm:inline">Smart Sales Multi-Tenant Infrastructure v2.4</span>
+        <span className="hidden sm:inline">Protected by End-to-End Encryption</span>
       </footer>
     </div>
   );
