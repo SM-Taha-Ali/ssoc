@@ -27,15 +27,28 @@ function cleanAndParseJSON(text) {
 }
 
 /**
- * Normalizes model names into API-compatible slugs with seamless fallback
+ * Normalizes model names and UI labels into official Google Gemini API slugs
  */
-function resolveGeminiModelName(modelName) {
+export function resolveGeminiModelName(modelName) {
   if (!modelName) return 'gemini-2.0-flash';
-  const str = String(modelName).trim().toLowerCase().replace(/\s+/g, '-');
+  const str = String(modelName).trim().toLowerCase();
+
+  // Canonical valid Google API slugs
+  if (str === 'gemini-2.0-flash' || str === 'gemini-1.5-flash' || str === 'gemini-1.5-flash-8b' || str === 'gemini-1.5-pro') {
+    return str;
+  }
+
+  // Map enterprise/product UI labels to active production Gemini endpoints
   if (str.includes('3.8')) return 'gemini-2.0-flash';
   if (str.includes('3.7')) return 'gemini-2.0-flash';
   if (str.includes('3.5') || str.includes('lite')) return 'gemini-1.5-flash-8b';
-  return str;
+  if (str.includes('2.0')) return 'gemini-2.0-flash';
+  if (str.includes('1.5') && str.includes('8b')) return 'gemini-1.5-flash-8b';
+  if (str.includes('1.5')) return 'gemini-1.5-flash';
+
+  // Fallback: strip spaces and invalid characters
+  const slug = str.replace(/\s+/g, '-').replace(/[^a-z0-9.-]/g, '');
+  return slug || 'gemini-2.0-flash';
 }
 
 /**
@@ -48,32 +61,37 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const preferredModel = modelNameOverride || process.env.GEMINI_MODEL || 'Gemini 3.8 Flash';
-  const resolvedModel = resolveGeminiModelName(preferredModel);
+  const rawModel = modelNameOverride || process.env.GEMINI_MODEL || 'Gemini 3.8 Flash';
+  const resolvedModel = resolveGeminiModelName(rawModel);
 
-  const modelsToTry = [
-    preferredModel,
+  // Candidate models: ONLY valid, lowercase API slugs (no labels or spaces)
+  const candidateModels = [
     resolvedModel,
     'gemini-2.0-flash',
     'gemini-1.5-flash',
     'gemini-1.5-flash-8b'
-  ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v));
+  ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v) && !v.includes(' '));
 
   let lastError = null;
-  for (const candidateModel of modelsToTry) {
+  for (let i = 0; i < candidateModels.length; i++) {
+    const candidateModel = candidateModels[i];
     try {
       const generativeModel = genAI.getGenerativeModel({ model: candidateModel });
       const result = await generativeModel.generateContent(prompt);
       return result.response.text();
     } catch (err) {
       lastError = err;
-      const isNotFound = err.message && (
+      const isRecoverable = err.message && (
         err.message.includes('404') ||
+        err.message.includes('400') ||
         err.message.includes('not found') ||
-        err.message.includes('not supported')
+        err.message.includes('not supported') ||
+        err.message.includes('unexpected model name format') ||
+        err.message.includes('is not a valid model') ||
+        err.message.includes('is not supported for generateContent')
       );
-      if (isNotFound) {
-        console.warn(`[Gemini API] Model "${candidateModel}" not available on this API key, trying next fallback...`);
+      if (isRecoverable && i < candidateModels.length - 1) {
+        console.warn(`[Gemini API] Model "${candidateModel}" failed (${err.message.slice(0, 100)}), falling back to "${candidateModels[i + 1]}"...`);
         continue;
       }
       throw err;
