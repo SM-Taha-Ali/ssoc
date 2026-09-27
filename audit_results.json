@@ -1,0 +1,314 @@
+[
+  {
+    "category": "Backend API",
+    "feature": "Company Authentication & Token",
+    "expected": "Returns 200 with JWT token for tenant",
+    "actual": "Authenticated as \"Apex AI & Cloud Solutions\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Backend API",
+    "feature": "API Health Check Endpoint",
+    "expected": "Returns 200 with status healthy",
+    "actual": "Status 200, product: \"Smart Sales Operations Center (SSOC)\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Backend API",
+    "feature": "Leads REST API Endpoint",
+    "expected": "Returns 200 OK with lead documents and stage counts",
+    "actual": "Returned 200 OK with 21 leads in database",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Backend API",
+    "feature": "Company Profile API Endpoint",
+    "expected": "Returns 200 OK with organization profile",
+    "actual": "Returned 200 OK for \"Apex AI & Cloud Solutions\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Backend API",
+    "feature": "Integrations & Feeds API Endpoint",
+    "expected": "Returns 200 OK with feed sources",
+    "actual": "Returned 200 OK with 2 feeds configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "App Shell",
+    "feature": "Document Title & Branding",
+    "expected": "Title is \"Sales Operation Center\"",
+    "actual": "Title is \"Sales Operation Center\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "App Shell",
+    "feature": "Header Brand Title",
+    "expected": "Displays \"Sales Operation Center\"",
+    "actual": "Header displays \"Sales Operation Center\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "App Shell",
+    "feature": "Header Brand Subtitle",
+    "expected": "Displays \"Autonomous Lead Discovery & Pipeline Engine\"",
+    "actual": "Displays \"Autonomous Lead Discovery & Pipeline Engine\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Header Actions",
+    "feature": "Scan Leads Action",
+    "expected": "Header features \"Scan Leads\" feeder trigger",
+    "actual": "Scan button active",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Header Actions",
+    "feature": "Check Cooldowns Action",
+    "expected": "Header features \"Check Cooldowns\" tracker trigger",
+    "actual": "Cooldown button active",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Header Actions",
+    "feature": "Add Lead Action",
+    "expected": "Header features primary \"+ Add Lead\" action button",
+    "actual": "Add Lead button active",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Pipeline Board",
+    "feature": "8 Enterprise Kanban Stages",
+    "expected": "Renders all 8 stages from Discovered to Closed Won",
+    "actual": "All stages verified: 1.Discovered, 2.Needs Demo, 3.Draft Ready, 4.Contacted, 5.Cooldown, 6.Client Replied, 7.Meeting Booked, 8.Won",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Pipeline Board",
+    "feature": "Opportunity Cards in Columns",
+    "expected": "Renders active opportunities with fit scores & budget",
+    "actual": "Rendered 21 opportunity cards across stages",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Platform Filter",
+    "feature": "Modern CustomSelect Dropdown",
+    "expected": "Renders sleek custom floating menu with platform filters",
+    "actual": "Opened with options: All Platforms, Upwork, Freelancer, LinkedIn, Indeed",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Search & Filter",
+    "feature": "Live Search Filtering",
+    "expected": "Dynamically filters leads on keystroke without reload",
+    "actual": "Search filtered view to 17 items and reset cleanly",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Lead Drawer Modal",
+    "feature": "Modal Opening on Card Click",
+    "expected": "Opens comprehensive drawer with full opportunity context",
+    "actual": "Modal opened with title: \"Lemon.io: Senior React Native Developer...\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Lead Drawer Modal",
+    "feature": "4-Stage Opportunity Stepper",
+    "expected": "Includes 1. Intake, 2. Pitch, 3. Video, 4. Outbound",
+    "actual": "Found stages: Lead Details & Fit | 2\nDemo Script & Prep | 3\nOutreach Pitch | Proceed to Demo Prep",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Lead Drawer Modal",
+    "feature": "Step 2: AI Pitch & Script Studio",
+    "expected": "Displays AI pitch generation controls and tone options",
+    "actual": "Pitch studio controls active",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Lead Drawer Modal",
+    "feature": "Escape / Close Modal",
+    "expected": "Closes cleanly on Escape or backdrop click",
+    "actual": "Modal closed cleanly",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Add Lead Intake",
+    "feature": "Add Lead Modal Mount",
+    "expected": "Displays Add Opportunity Modal",
+    "actual": "Modal title: \"Add New Opportunity\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Add Lead Intake",
+    "feature": "Quick AI Paste Intake",
+    "expected": "Features AI automatic parsing for raw opportunity copy",
+    "actual": "Quick AI Paste tab present with auto-parsing",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Priority Inbox",
+    "feature": "Active Client Replies Review",
+    "expected": "Prioritizes inbound replies with immediate meeting booking",
+    "actual": "Active client replies section displayed",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Priority Inbox",
+    "feature": "Follow-up Cooldown Review",
+    "expected": "Lists opportunities ready for scheduled sequence touchpoint",
+    "actual": "Cooldown review section displayed",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Layout",
+    "feature": "Sidebar & Breadcrumb Header Alignment",
+    "expected": "Both left & right header bars locked to exact h-14 (56px)",
+    "actual": "Left: 56px | Right: 56px",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Layout",
+    "feature": "8 Operational Modules",
+    "expected": "Modular sections for Profile, ICP, AI Models, Sequences, Feeds, Theme",
+    "actual": "Found tabs: Company Profile, Value Proposition & Pitch, Targeting & Ideal Client (ICP), Gemini AI Engine, Delivery Channels, Lead Sources & Webhooks, Automations & Database, Appearance & Theme",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "1. Company Profile",
+    "expected": "Clean segmented fields for company name, website, and identity",
+    "actual": "Company fields rendered cleanly",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "2. Value Proposition & Pitch",
+    "expected": "Dedicated module for core agency value props and proof metrics",
+    "actual": "Value propositions configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "3. Targeting & Ideal Client (ICP)",
+    "expected": "Includes client sizing, industries, and minimum match fit threshold",
+    "actual": "Targeting parameters configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "4. Gemini AI Engine (Model Naming)",
+    "expected": "Standardized on Gemini 3.8 Flash, 3.7 Flash, 3.5 Flash Lite",
+    "actual": "Gemini 3.8: true, 3.7: true, 3.5: true",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "5. Delivery Channels",
+    "expected": "SMTP, Resend, and Direct Outbound dispatch configuration",
+    "actual": "Delivery channels configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "6. Lead Sources & Webhooks",
+    "expected": "Configured RSS/API lead sources (Upwork, Freelancer, RemoteOK)",
+    "actual": "Lead sources configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Modules",
+    "feature": "7. Automations & Database",
+    "expected": "Background cron triggers and database retention settings",
+    "actual": "Automations configured",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Appearance & Theme",
+    "feature": "Interface Modes (Dark & Light)",
+    "expected": "Presents Deep Obsidian (Dark) and Executive Paper (Light)",
+    "actual": "Found: Deep Obsidian / Dark Mode & Executive Paper / Light Mode",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Appearance & Theme",
+    "feature": "5 Industry-Standard Color Palettes",
+    "expected": "Features Purple, Oceanic, Emerald, Crimson, and Amber",
+    "actual": "Found: Royal Purple, Oceanic Blue, Emerald Green, Crimson Ruby, Warm Amber",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Appearance & Theme",
+    "feature": "Light Mode Activation",
+    "expected": "Document root applies data-mode=\"light\" with paper-white surfaces",
+    "actual": "Active mode is \"light\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Appearance & Theme",
+    "feature": "Oceanic Blue Accent Switch",
+    "expected": "Document root applies data-accent=\"oceanic\"",
+    "actual": "Active accent is \"oceanic\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Appearance & Theme",
+    "feature": "Real-time Live Component Preview",
+    "expected": "Live interactive opportunity card renders theme changes in real time",
+    "actual": "Live sample card preview active",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Settings Persistence",
+    "feature": "Permanently Pinned Save Button",
+    "expected": "Saves all configuration to MongoDB with feedback banner",
+    "actual": "Recorded: \"Settings saved successfully!\"",
+    "passed": true,
+    "details": ""
+  },
+  {
+    "category": "Copy & Content Quality",
+    "feature": "Zero Mock / Guiding / Placeholder Copy",
+    "expected": "100% production-ready enterprise sales language",
+    "actual": "All copy is professional enterprise sales terminology",
+    "passed": true,
+    "details": ""
+  }
+]

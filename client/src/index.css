@@ -1,0 +1,360 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--theme-canvas);
+    color: var(--theme-text-primary);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+}
+
+/* ========================================================
+   1. BASE DESIGN TOKENS: DARK MODE (DEFAULT)
+   ======================================================== */
+:root,
+html[data-mode="dark"] {
+  color-scheme: dark;
+  --theme-canvas: #090d16;
+  --theme-surface: #0d1424;
+  --theme-card: #121a2d;
+  --theme-card-subtle: #1a233a;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border-strong: rgba(255, 255, 255, 0.18);
+
+  --theme-text-primary: #f8fafc;
+  --theme-text-secondary: #94a3b8;
+  --theme-text-muted: #64748b;
+
+  --theme-input-bg: #080c14;
+  --theme-input-border: rgba(255, 255, 255, 0.12);
+
+  --theme-scrollbar-track: rgba(15, 23, 42, 0.6);
+  --theme-scrollbar-thumb: rgba(71, 85, 105, 0.5);
+}
+
+/* ========================================================
+   2. BASE DESIGN TOKENS: LIGHT MODE
+   ======================================================== */
+html[data-mode="light"] {
+  color-scheme: light;
+  --theme-canvas: #f8fafc;
+  --theme-surface: #ffffff;
+  --theme-card: #ffffff;
+  --theme-card-subtle: #f1f5f9;
+  --theme-border: #e2e8f0;
+  --theme-border-strong: #cbd5e1;
+
+  --theme-text-primary: #0f172a;
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #64748b;
+
+  --theme-input-bg: #ffffff;
+  --theme-input-border: #cbd5e1;
+
+  --theme-scrollbar-track: #f1f5f9;
+  --theme-scrollbar-thumb: #cbd5e1;
+}
+
+/* ========================================================
+   3. FIVE INDUSTRY-STANDARD BUSINESS COLOR PALETTES
+   ======================================================== */
+
+/* 1. Purple (Royal Indigo / Violet - Default Enterprise) */
+:root,
+html[data-accent="purple"] {
+  --theme-accent: #6366f1;
+  --theme-accent-hover: #4f46e5;
+  --theme-accent-surface: rgba(99, 102, 241, 0.12);
+  --theme-accent-border: rgba(99, 102, 241, 0.35);
+  --theme-accent-shadow: rgba(99, 102, 241, 0.28);
+  --theme-accent-text: #818cf8;
+}
+html[data-mode="light"][data-accent="purple"] {
+  --theme-accent: #4f46e5;
+  --theme-accent-hover: #4338ca;
+  --theme-accent-surface: rgba(79, 70, 229, 0.1);
+  --theme-accent-border: rgba(79, 70, 229, 0.3);
+  --theme-accent-text: #4f46e5;
+}
+
+/* 2. Oceanic Blue (Deep Ocean Cobalt & Cyan - FinTech) */
+html[data-accent="oceanic"] {
+  --theme-accent: #0284c7;
+  --theme-accent-hover: #0369a1;
+  --theme-accent-surface: rgba(14, 165, 233, 0.12);
+  --theme-accent-border: rgba(14, 165, 233, 0.35);
+  --theme-accent-shadow: rgba(14, 165, 233, 0.28);
+  --theme-accent-text: #38bdf8;
+}
+html[data-mode="light"][data-accent="oceanic"] {
+  --theme-accent: #0284c7;
+  --theme-accent-hover: #0369a1;
+  --theme-accent-surface: rgba(2, 132, 199, 0.1);
+  --theme-accent-border: rgba(2, 132, 199, 0.3);
+  --theme-accent-text: #0284c7;
+}
+
+/* 3. Emerald Green (Bloomberg Mint & Forest - High Prosperity) */
+html[data-accent="emerald"] {
+  --theme-accent: #059669;
+  --theme-accent-hover: #047857;
+  --theme-accent-surface: rgba(16, 185, 129, 0.12);
+  --theme-accent-border: rgba(16, 185, 129, 0.35);
+  --theme-accent-shadow: rgba(16, 185, 129, 0.28);
+  --theme-accent-text: #34d399;
+}
+html[data-mode="light"][data-accent="emerald"] {
+  --theme-accent: #059669;
+  --theme-accent-hover: #047857;
+  --theme-accent-surface: rgba(5, 150, 105, 0.1);
+  --theme-accent-border: rgba(5, 150, 105, 0.3);
+  --theme-accent-text: #059669;
+}
+
+/* 4. Crimson Ruby (Executive Scarlet - Decisive) */
+html[data-accent="crimson"] {
+  --theme-accent: #e11d48;
+  --theme-accent-hover: #be123c;
+  --theme-accent-surface: rgba(244, 63, 94, 0.12);
+  --theme-accent-border: rgba(244, 63, 94, 0.35);
+  --theme-accent-shadow: rgba(244, 63, 94, 0.28);
+  --theme-accent-text: #fb7185;
+}
+html[data-mode="light"][data-accent="crimson"] {
+  --theme-accent: #e11d48;
+  --theme-accent-hover: #be123c;
+  --theme-accent-surface: rgba(225, 29, 72, 0.1);
+  --theme-accent-border: rgba(225, 29, 72, 0.3);
+  --theme-accent-text: #e11d48;
+}
+
+/* 5. Warm Amber (Sunset Tangerine - Eye Comfort / Zero Blue Glare) */
+html[data-accent="amber"] {
+  --theme-accent: #d97706;
+  --theme-accent-hover: #b45309;
+  --theme-accent-surface: rgba(245, 158, 11, 0.14);
+  --theme-accent-border: rgba(245, 158, 11, 0.4);
+  --theme-accent-shadow: rgba(245, 158, 11, 0.28);
+  --theme-accent-text: #fbbf24;
+}
+html[data-mode="light"][data-accent="amber"] {
+  --theme-accent: #d97706;
+  --theme-accent-hover: #b45309;
+  --theme-accent-surface: rgba(217, 119, 6, 0.1);
+  --theme-accent-border: rgba(217, 119, 6, 0.3);
+  --theme-accent-text: #d97706;
+}
+
+/* ========================================================
+   4. CENTRALIZED SURFACE & BACKGROUND OVERRIDES
+   ======================================================== */
+.bg-canvas,
+.bg-\[\#0b0f19\],
+.bg-\[\#090d16\],
+.bg-\[\#0a0f1d\],
+.bg-\[\#0c1222\] {
+  background-color: var(--theme-canvas) !important;
+}
+
+.bg-surface,
+.bg-\[\#0d1424\],
+.bg-\[\#0d1527\],
+.bg-\[\#0b101d\],
+.bg-\[\#0f172a\],
+header.bg-\[\#0f172a\]\/90,
+div.bg-\[\#0d1424\]\/70 {
+  background-color: var(--theme-surface) !important;
+}
+
+.bg-card,
+.bg-slate-900,
+.bg-slate-900\/90,
+.bg-slate-900\/80,
+.bg-slate-900\/70,
+.bg-slate-900\/60,
+.bg-slate-900\/50,
+.bg-slate-900\/40,
+.bg-slate-950 {
+  background-color: var(--theme-card) !important;
+}
+
+.bg-card-subtle,
+.bg-slate-800,
+.bg-slate-800\/90,
+.bg-slate-800\/80,
+.bg-slate-800\/60,
+.bg-slate-800\/50,
+.bg-slate-800\/40 {
+  background-color: var(--theme-card-subtle) !important;
+}
+
+/* In light mode, secondary buttons on card surfaces need distinct subtle background */
+html[data-mode="light"] .bg-slate-800,
+html[data-mode="light"] .bg-slate-800\/80,
+html[data-mode="light"] .bg-slate-800\/60 {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+html[data-mode="light"] .hover\:bg-slate-700:hover,
+html[data-mode="light"] .hover\:bg-slate-700\/80:hover,
+html[data-mode="light"] .hover\:bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* ========================================================
+   5. CENTRALIZED BORDERS & DIVIDERS
+   ======================================================== */
+.border-theme,
+.border-slate-800,
+.border-slate-800\/90,
+.border-slate-800\/80,
+.border-slate-800\/60,
+.border-slate-700,
+.border-slate-700\/90,
+.border-slate-700\/80,
+.border-slate-700\/70,
+.border-slate-700\/60 {
+  border-color: var(--theme-border) !important;
+}
+
+/* ========================================================
+   6. CENTRALIZED TYPOGRAPHY CONTRAST
+   ======================================================== */
+.text-primary,
+.text-white,
+.text-slate-100 {
+  color: var(--theme-text-primary) !important;
+}
+
+.text-secondary,
+.text-slate-200,
+.text-slate-300,
+.text-slate-400 {
+  color: var(--theme-text-secondary) !important;
+}
+
+.text-muted,
+.text-slate-500,
+.text-slate-600 {
+  color: var(--theme-text-muted) !important;
+}
+
+/* ========================================================
+   7. CENTRALIZED ACCENT BUTTONS, BADGES, AND HIGHLIGHTS
+   ======================================================== */
+.bg-brand-600,
+.bg-brand-500 {
+  background-color: var(--theme-accent) !important;
+  color: #ffffff !important;
+}
+
+.hover\:bg-brand-500:hover,
+.hover\:bg-brand-600:hover {
+  background-color: var(--theme-accent-hover) !important;
+  color: #ffffff !important;
+}
+
+.text-brand-400,
+.text-brand-300,
+.text-brand-500 {
+  color: var(--theme-accent-text) !important;
+}
+
+.hover\:text-brand-300:hover,
+.hover\:text-brand-400:hover {
+  color: var(--theme-accent-text) !important;
+  filter: brightness(1.15);
+}
+
+.border-brand-500,
+.border-brand-600 {
+  border-color: var(--theme-accent) !important;
+}
+
+.border-brand-500\/20,
+.border-brand-500\/30,
+.border-brand-500\/40,
+.border-brand-500\/50,
+.border-brand-500\/70 {
+  border-color: var(--theme-accent-border) !important;
+}
+
+.bg-brand-500\/10,
+.bg-brand-500\/15,
+.bg-brand-500\/20,
+.bg-brand-600\/15,
+.bg-brand-600\/20 {
+  background-color: var(--theme-accent-surface) !important;
+}
+
+.shadow-brand-600\/20,
+.shadow-brand-600\/25,
+.shadow-brand-600\/30,
+.shadow-brand-500\/10,
+.shadow-brand-500\/20 {
+  box-shadow: 0 4px 14px 0 var(--theme-accent-shadow) !important;
+}
+
+.ring-brand-500,
+.ring-brand-500\/30,
+.ring-brand-500\/40 {
+  --tw-ring-color: var(--theme-accent-border) !important;
+  box-shadow: 0 0 0 2px var(--theme-accent-border) !important;
+}
+
+/* ========================================================
+   8. FORM INPUTS & TEXTAREAS
+   ======================================================== */
+input,
+textarea {
+  background-color: var(--theme-input-bg) !important;
+  border-color: var(--theme-input-border) !important;
+  color: var(--theme-text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--theme-accent) !important;
+  box-shadow: 0 0 0 1px var(--theme-accent) !important;
+  outline: none !important;
+}
+
+/* ========================================================
+   9. SCROLLBARS
+   ======================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--theme-scrollbar-track) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--theme-scrollbar-thumb) !important;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-accent) !important;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s infinite ease-in-out;
+}
