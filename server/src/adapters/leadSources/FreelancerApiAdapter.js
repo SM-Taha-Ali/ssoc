@@ -10,7 +10,7 @@ export class FreelancerApiAdapter extends BaseLeadSource {
     try {
       const limit = options.limit || 25;
       const response = await axios.get(
-        `https://www.freelancer.com/api/projects/0.1/projects/active?limit=${limit}&compact=true&job_details=true`,
+        `https://www.freelancer.com/api/projects/0.1/projects/active?limit=${limit}&job_details=true&full_description=true`,
         {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -30,7 +30,7 @@ export class FreelancerApiAdapter extends BaseLeadSource {
 
   normalizeLead(project) {
     const title = project.title || 'Freelance Project Opportunity';
-    const description = project.preview_description || project.description || 'No description provided';
+    const description = project.description || project.preview_description || 'No description provided';
     const currency = project.currency?.code || 'USD';
     const amount = project.budget?.maximum || project.budget?.minimum || 0;
 

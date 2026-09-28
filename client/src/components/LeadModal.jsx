@@ -21,7 +21,11 @@ import {
   Cpu,
   Layers,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  User,
+  MapPin,
+  Globe,
+  Link2
 } from 'lucide-react';
 import { STAGES } from './PipelineView.jsx';
 
@@ -46,7 +50,25 @@ export default function LeadModal({
   const [pitchBody, setPitchBody] = useState(lead.pitchDraft?.body || '');
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedPitch, setCopiedPitch] = useState(false);
+  const [copiedSourceUrl, setCopiedSourceUrl] = useState(false);
+  const [copiedContactEmail, setCopiedContactEmail] = useState(false);
   const [sendSuccessMsg, setSendSuccessMsg] = useState('');
+
+  const handleCopySourceUrl = () => {
+    if (lead?.sourceUrl) {
+      navigator.clipboard.writeText(lead.sourceUrl);
+      setCopiedSourceUrl(true);
+      setTimeout(() => setCopiedSourceUrl(false), 2000);
+    }
+  };
+
+  const handleCopyContactEmail = (email) => {
+    if (email) {
+      navigator.clipboard.writeText(email);
+      setCopiedContactEmail(true);
+      setTimeout(() => setCopiedContactEmail(false), 2000);
+    }
+  };
 
   // Local state for pitch generation overlay
   const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
@@ -384,38 +406,223 @@ export default function LeadModal({
                 )}
               </div>
 
-              {/* Client & Project Metrics Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
-                  <span className="text-muted block text-[10px] uppercase font-semibold">Client Name</span>
-                  <span className="font-semibold text-primary mt-0.5 block truncate">
-                    {lead.clientInfo?.name || 'Hiring Client'}
+              {/* 1. SOURCE LISTING & COUNTER-VERIFICATION (ALWAYS AVAILABLE IN LEAD DETAILS & FIT) */}
+              <div className="p-4 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-theme">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                      <Link2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-primary flex items-center gap-2">
+                        <span>Original Job Listing & Counter-Verification</span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 capitalize border border-brand-500/20">
+                          {lead.platform || 'Platform'}
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-secondary mt-0.5">
+                        Verify this posting on the original host platform to counter-check job authenticity, client reputation, and active status.
+                      </p>
+                    </div>
+                  </div>
+
+                  {lead.sourceUrl && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopySourceUrl}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg border border-theme transition-all cursor-pointer"
+                        title="Copy source listing URL"
+                      >
+                        {copiedSourceUrl ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-muted" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+                      <a
+                        href={lead.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-sm transition-all cursor-pointer"
+                      >
+                        <span>Open Original Listing</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {lead.sourceUrl ? (
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card-subtle border border-theme text-xs font-mono">
+                    <span className="text-muted shrink-0 text-[11px] font-sans font-medium">Verified Source Link:</span>
+                    <a
+                      href={lead.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand-600 dark:text-brand-400 hover:underline truncate flex-1 font-medium"
+                      title={lead.sourceUrl}
+                    >
+                      {lead.sourceUrl}
+                    </a>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-card-subtle border border-theme text-xs text-secondary flex items-center justify-between">
+                    <span>Direct Inbound / Manual Entry (No external URL attached)</span>
+                    <span className="text-[10px] font-medium text-muted uppercase">Direct Origin</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. PROPER SECTION-WISE CLIENT & CONTACT INTELLIGENCE */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                      <Building className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-primary">
+                        Client & Contact Intelligence
+                      </h4>
+                      <p className="text-[11px] text-secondary mt-0.5">
+                        Verified contact profile, organizational details, and engagement scope.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold text-muted px-2 py-0.5 rounded-md bg-card-subtle border border-theme">
+                    Primary Point of Contact
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
-                  <span className="text-muted block text-[10px] uppercase font-semibold">Company / Stage</span>
-                  <span className="font-semibold text-primary mt-0.5 block truncate">
-                    {lead.clientInfo?.company || 'Direct Engagement'}
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
-                  <span className="text-muted block text-[10px] uppercase font-semibold">Budget / Rate</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                    {lead.budget?.amount > 0 ? `$${lead.budget.amount} (${lead.budget.type || 'fixed'})` : 'Flexible / Market'}
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
-                  <span className="text-muted block text-[10px] uppercase font-semibold">Contact Email</span>
-                  <span className="font-semibold text-primary mt-0.5 block truncate">
-                    {lead.clientInfo?.email || 'Via Platform'}
-                  </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  {/* Client / Hiring Lead */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                      <User className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Contact Person</span>
+                    </div>
+                    <p className="font-semibold text-primary truncate text-sm">
+                      {lead.clientInfo?.name && lead.clientInfo.name !== 'Hiring Client'
+                        ? lead.clientInfo.name
+                        : (lead.clientName || 'Hiring Client')}
+                    </p>
+                    <span className="text-[10px] text-muted block">Direct Hiring Authority</span>
+                  </div>
+
+                  {/* Company / Organization */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                      <Building className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Organization</span>
+                    </div>
+                    <p className="font-semibold text-primary truncate text-sm">
+                      {lead.clientInfo?.company || lead.company || 'Direct Engagement'}
+                    </p>
+                    <span className="text-[10px] text-muted block">Client Entity</span>
+                  </div>
+
+                  {/* Contact Email / Channel */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                        <Mail className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Outreach Email / Channel</span>
+                      </div>
+                      {lead.clientInfo?.email && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopyContactEmail(lead.clientInfo.email)}
+                          className="text-[10px] text-brand-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                        >
+                          {copiedContactEmail ? 'Copied' : 'Copy'}
+                        </button>
+                      )}
+                    </div>
+                    <p className="font-semibold text-primary truncate text-sm">
+                      {lead.clientInfo?.email ? (
+                        <a
+                          href={`mailto:${lead.clientInfo.email}`}
+                          className="hover:underline text-brand-600 dark:text-brand-400"
+                        >
+                          {lead.clientInfo.email}
+                        </a>
+                      ) : (
+                        'Platform Direct / Bid System'
+                      )}
+                    </p>
+                    <span className="text-[10px] text-muted block">
+                      {lead.clientInfo?.email ? 'Direct Inbox Available' : 'Dispatched via In-Platform Messaging'}
+                    </span>
+                  </div>
+
+                  {/* Budget & Engagement */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                      <DollarSign className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Project Budget</span>
+                    </div>
+                    <p className="font-bold text-emerald-600 dark:text-emerald-400 truncate text-sm">
+                      {lead.budget?.amount > 0
+                        ? `${lead.budget.currency && lead.budget.currency !== 'USD' ? lead.budget.currency + ' ' : '$'}${lead.budget.amount.toLocaleString()} (${lead.budget.type || 'fixed'})`
+                        : 'Flexible / Market Rate'}
+                    </p>
+                    <span className="text-[10px] text-muted block">
+                      {lead.budget?.type === 'hourly' ? 'Hourly Engagement' : 'Fixed Milestone / Escrow'}
+                    </span>
+                  </div>
+
+                  {/* Location / Geography */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Client Location</span>
+                    </div>
+                    <p className="font-semibold text-primary truncate text-sm">
+                      {lead.clientInfo?.location || 'Remote / Global'}
+                    </p>
+                    <span className="text-[10px] text-muted block">Timezone / Geography</span>
+                  </div>
+
+                  {/* Client Website */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                    <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
+                      <Globe className="w-3.5 h-3.5 text-cyan-500" />
+                      <span>Web / Digital Presence</span>
+                    </div>
+                    <p className="font-semibold text-primary truncate text-sm">
+                      {lead.clientInfo?.website ? (
+                        <a
+                          href={lead.clientInfo.website.startsWith('http') ? lead.clientInfo.website : `https://${lead.clientInfo.website}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                        >
+                          <span className="truncate">{lead.clientInfo.website.replace(/^https?:\/\//, '')}</span>
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                        </a>
+                      ) : (
+                        'Not Disclosed'
+                      )}
+                    </p>
+                    <span className="text-[10px] text-muted block">Online Footprint</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Required Skills Badges */}
+              {/* 3. REQUIRED SKILLS & TECHNOLOGIES */}
               {lead.skillsRequired?.length > 0 && (
-                <div>
-                  <span className="text-xs font-semibold text-secondary block mb-2">Required Skills & Technologies</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-secondary block">Required Skills & Technologies</span>
+                    <span className="text-[10px] text-muted font-medium">{lead.skillsRequired.length} Skills Listed</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {lead.skillsRequired.map((skill, idx) => (
                       <span
@@ -429,10 +636,17 @@ export default function LeadModal({
                 </div>
               )}
 
-              {/* Full Job Description Card */}
+              {/* 4. COMPLETE JOB DESCRIPTION */}
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-secondary block">Complete Job Description</span>
-                <div className="p-5 rounded-xl bg-card border border-theme text-xs text-secondary whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto font-sans shadow-sm dark:shadow-none">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-secondary block">Complete Job Description</span>
+                  {lead.description && (
+                    <span className="text-[10px] text-muted font-mono">
+                      {lead.description.length.toLocaleString()} characters ({lead.description.trim().split(/\s+/).length} words)
+                    </span>
+                  )}
+                </div>
+                <div className="p-5 rounded-xl bg-card border border-theme text-xs text-secondary whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-sans shadow-sm dark:shadow-none select-text">
                   {lead.description || 'No extended description provided.'}
                 </div>
               </div>
