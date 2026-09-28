@@ -20,8 +20,9 @@ import {
 import CustomSelect from './CustomSelect.jsx';
 
 const GEMINI_MODEL_OPTIONS = [
-  { value: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Gemini 3.8 Flash)' },
-  { value: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite (Gemini 3.5 Flash Lite)' }
+  { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (Recommended)' },
+  { value: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash (Balanced)' },
+  { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash Lite (High Speed)' }
 ];
 
 const MODAL_FEED_PLATFORM_OPTIONS = [

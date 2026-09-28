@@ -30,63 +30,40 @@ function cleanAndParseJSON(text) {
 }
 
 /**
- * Dynamically queries Google's ModelService to get the exact list of available models for this specific API key
+ * The 3 Supported Gemini 3 Models in SSOC:
+ * Display Label <-> Real API Model Key
  */
-async function getAvailableGeminiModels(apiKey) {
-  const now = Date.now();
-  if (cachedAvailableModels && (now - lastModelFetch < 300000)) {
-    return cachedAvailableModels;
-  }
-  try {
-    const res = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, { timeout: 7000 });
-    const models = res.data?.models || [];
-    const supported = models
-      .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
-      .map(m => m.name.replace(/^models\//, ''));
-    if (supported.length > 0) {
-      cachedAvailableModels = supported;
-      lastModelFetch = now;
-      console.log('[Gemini Dynamic Discovery] Available models for this key:', supported);
-      return supported;
-    }
-  } catch (err) {
-    console.warn('[Gemini Model Discovery Warning]:', err.message);
-  }
-  return [
-    'gemini-2.0-flash',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-pro-latest',
-    'gemini-pro'
-  ];
-}
+export const SUPPORTED_GEMINI_MODELS = {
+  'Gemini 3.8 Flash': 'gemini-3.8-flash',
+  'Gemini 3.7 Flash': 'gemini-3.7-flash',
+  'Gemini 3.5 Flash Lite': 'gemini-3.5-flash-lite',
+  'gemini-3.8-flash': 'gemini-3.8-flash',
+  'gemini-3.7-flash': 'gemini-3.7-flash',
+  'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite'
+};
+
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 /**
- * Normalizes model names and UI labels into official Google Gemini API slugs
+ * Normalizes user-selected model names or settings into the real Gemini 3 API model key.
+ * Defaults to 'gemini-3.8-flash' (Gemini 3.8 Flash).
  */
 export function resolveGeminiModelName(modelName) {
-  if (!modelName) return 'gemini-2.0-flash';
-  const str = String(modelName).trim().toLowerCase();
-
-  // Canonical valid Google API slugs
-  if (str === 'gemini-2.0-flash' || str === 'gemini-2.5-flash' || str === 'gemini-1.5-flash-latest' || str === 'gemini-pro') {
-    return str;
+  if (!modelName) return DEFAULT_GEMINI_MODEL;
+  const trimmed = String(modelName).trim();
+  if (SUPPORTED_GEMINI_MODELS[trimmed]) {
+    return SUPPORTED_GEMINI_MODELS[trimmed];
   }
-
-  // Map enterprise/product UI labels to active production Gemini endpoints
-  if (str.includes('3.8')) return 'gemini-2.0-flash';
-  if (str.includes('3.7')) return 'gemini-2.0-flash';
-  if (str.includes('3.5') || str.includes('lite')) return 'gemini-2.0-flash';
-  if (str.includes('2.0')) return 'gemini-2.0-flash';
-  if (str.includes('2.5')) return 'gemini-2.5-flash';
-  if (str.includes('1.5')) return 'gemini-1.5-flash-latest';
-
-  const slug = str.replace(/\s+/g, '-').replace(/[^a-z0-9.-]/g, '');
-  return slug || 'gemini-2.0-flash';
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('3.8')) return 'gemini-3.8-flash';
+  if (lower.includes('3.7')) return 'gemini-3.7-flash';
+  if (lower.includes('3.5') || lower.includes('lite')) return 'gemini-3.5-flash-lite';
+  return DEFAULT_GEMINI_MODEL;
 }
 
 /**
- * Executes a Gemini prompt with automatic fallback if the requested model name is not yet in the user's API tier
+ * Executes a Gemini prompt with the selected Gemini 3 model.
+ * Strictly calls the real API model key (gemini-3.8-flash, gemini-3.7-flash, gemini-3.5-flash-lite).
  */
 async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
   const apiKey = apiKeyOverride || process.env.GEMINI_API_KEY;
@@ -96,26 +73,20 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const rawModel = modelNameOverride || process.env.GEMINI_MODEL || 'Gemini 3.8 Flash';
-  const resolvedModel = resolveGeminiModelName(rawModel);
+  const targetModel = resolveGeminiModelName(rawModel);
 
-  // Dynamically inspect permitted models for this account
-  const availableModels = await getAvailableGeminiModels(apiKey);
-
-  // Candidate models: start with resolved preference, then matched discovered models
+  // Strictly execute the selected model first, with fallback only across the other 2 supported Gemini 3 tiers
   const candidateModels = [
-    resolvedModel,
-    ...availableModels.filter(m => m.includes('2.0') || m.includes('2.5')),
-    ...availableModels.filter(m => m.includes('flash')),
-    ...availableModels,
-    'gemini-2.0-flash',
-    'gemini-2.5-flash',
-    'gemini-pro'
-  ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v) && !v.includes(' '));
+    targetModel,
+    targetModel === 'gemini-3.8-flash' ? 'gemini-3.7-flash' : 'gemini-3.8-flash',
+    'gemini-3.5-flash-lite'
+  ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v));
 
   let lastError = null;
   for (let i = 0; i < candidateModels.length; i++) {
     const candidateModel = candidateModels[i];
     try {
+      console.log(`[Gemini 3 Engine] Invoking model: "${candidateModel}" (Requested: "${rawModel}")`);
       const generativeModel = genAI.getGenerativeModel({ model: candidateModel });
       const result = await generativeModel.generateContent(prompt);
       return result.response.text();
@@ -131,7 +102,7 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
         err.message.includes('is not supported for generateContent')
       );
       if (isRecoverable && i < candidateModels.length - 1) {
-        console.warn(`[Gemini API] Model "${candidateModel}" failed (${err.message.slice(0, 100)}), falling back to "${candidateModels[i + 1]}"...`);
+        console.warn(`[Gemini 3 Engine] Model "${candidateModel}" returned (${err.message.slice(0, 100)}). Trying fallback tier "${candidateModels[i + 1]}"...`);
         continue;
       }
       throw err;

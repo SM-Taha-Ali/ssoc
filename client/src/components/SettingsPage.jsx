@@ -83,7 +83,7 @@ export default function SettingsPage({ onBackToPipeline }) {
   // Integrations state
   const [integrations, setIntegrations] = useState({
     geminiApiKey: '',
-    geminiModel: 'Gemini 3.8 Flash',
+    geminiModel: 'gemini-3.8-flash',
     deliveryProvider: 'smtp',
     smtpConfig: {
       host: 'smtp.gmail.com',
@@ -925,7 +925,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 {/* Gemini 3.8 Flash */}
                 <label
                   className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                    integrations.geminiModel === 'Gemini 3.8 Flash' || integrations.geminiModel === 'gemini-3.8-flash'
+                    integrations.geminiModel === 'gemini-3.8-flash' || integrations.geminiModel === 'Gemini 3.8 Flash'
                       ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
@@ -933,10 +933,10 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   <input
                     type="radio"
                     name="geminiModel"
-                    value="Gemini 3.8 Flash"
+                    value="gemini-3.8-flash"
                     checked={
-                      integrations.geminiModel === 'Gemini 3.8 Flash' ||
-                      integrations.geminiModel === 'gemini-3.8-flash'
+                      integrations.geminiModel === 'gemini-3.8-flash' ||
+                      integrations.geminiModel === 'Gemini 3.8 Flash'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
                     className="mt-1"
@@ -957,7 +957,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 {/* Gemini 3.7 Flash */}
                 <label
                   className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                    integrations.geminiModel === 'Gemini 3.7 Flash' || integrations.geminiModel === 'gemini-3.7-flash'
+                    integrations.geminiModel === 'gemini-3.7-flash' || integrations.geminiModel === 'Gemini 3.7 Flash'
                       ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
@@ -965,10 +965,10 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   <input
                     type="radio"
                     name="geminiModel"
-                    value="Gemini 3.7 Flash"
+                    value="gemini-3.7-flash"
                     checked={
-                      integrations.geminiModel === 'Gemini 3.7 Flash' ||
-                      integrations.geminiModel === 'gemini-3.7-flash'
+                      integrations.geminiModel === 'gemini-3.7-flash' ||
+                      integrations.geminiModel === 'Gemini 3.7 Flash'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
                     className="mt-1"
@@ -989,7 +989,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 {/* Gemini 3.5 Flash Lite */}
                 <label
                   className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                    integrations.geminiModel === 'Gemini 3.5 Flash Lite' || integrations.geminiModel === 'gemini-3.5-flash-lite'
+                    integrations.geminiModel === 'gemini-3.5-flash-lite' || integrations.geminiModel === 'Gemini 3.5 Flash Lite'
                       ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
                   }`}
@@ -997,10 +997,10 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   <input
                     type="radio"
                     name="geminiModel"
-                    value="Gemini 3.5 Flash Lite"
+                    value="gemini-3.5-flash-lite"
                     checked={
-                      integrations.geminiModel === 'Gemini 3.5 Flash Lite' ||
-                      integrations.geminiModel === 'gemini-3.5-flash-lite'
+                      integrations.geminiModel === 'gemini-3.5-flash-lite' ||
+                      integrations.geminiModel === 'Gemini 3.5 Flash Lite'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
                     className="mt-1"

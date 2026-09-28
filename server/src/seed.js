@@ -44,7 +44,7 @@ async function seed() {
   let config = await IntegrationConfig.findOne();
   if (!config) {
     config = await IntegrationConfig.create({
-      geminiModel: 'gemini-2.5-flash',
+      geminiModel: 'gemini-3.8-flash',
       emailProvider: 'manual',
       rssFeeds: [
         {
