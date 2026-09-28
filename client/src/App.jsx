@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Header from './components/Header.jsx';
 import PipelineView from './components/PipelineView.jsx';
@@ -9,7 +9,7 @@ import SettingsPage from './components/SettingsPage.jsx';
 import CustomSelect from './components/CustomSelect.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
-import { Search, Filter, RefreshCw, AlertCircle } from 'lucide-react';
+import { Search, Filter, RefreshCw, AlertCircle, X } from 'lucide-react';
 
 const PLATFORM_FILTER_OPTIONS = [
   { value: 'all', label: 'All Platforms' },
@@ -46,6 +46,37 @@ export default function App() {
   const [isAuditing, setIsAuditing] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [bannerNotice, setBannerNotice] = useState('');
+  const bannerTimeoutRef = useRef(null);
+
+  const showBannerNotice = (message, duration = 4500) => {
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+      bannerTimeoutRef.current = null;
+    }
+    setBannerNotice(message);
+    if (duration > 0) {
+      bannerTimeoutRef.current = setTimeout(() => {
+        setBannerNotice('');
+        bannerTimeoutRef.current = null;
+      }, duration);
+    }
+  };
+
+  const handleDismissBanner = () => {
+    if (bannerTimeoutRef.current) {
+      clearTimeout(bannerTimeoutRef.current);
+      bannerTimeoutRef.current = null;
+    }
+    setBannerNotice('');
+  };
+
+  useEffect(() => {
+    return () => {
+      if (bannerTimeoutRef.current) {
+        clearTimeout(bannerTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -157,8 +188,7 @@ export default function App() {
     try {
       const res = await axios.post('/api/scheduler/run-lead-finder');
       fetchLeads();
-      setBannerNotice(`Lead Finder finished! Found ${res.data?.newLeadsCount || 0} new leads.`);
-      setTimeout(() => setBannerNotice(''), 4000);
+      showBannerNotice(`Lead Finder finished! Found ${res.data?.newLeadsCount || 0} new leads.`);
     } catch (err) {
       alert('Error running lead finder: ' + (err.response?.data?.error || err.message));
     } finally {
@@ -172,8 +202,7 @@ export default function App() {
     try {
       const res = await axios.post('/api/scheduler/run-cooldown');
       fetchLeads();
-      setBannerNotice(`Cooldown Tracker updated ${res.data?.updatedCount || 0} follow-ups.`);
-      setTimeout(() => setBannerNotice(''), 4000);
+      showBannerNotice(`Cooldown Tracker updated ${res.data?.updatedCount || 0} follow-ups.`);
     } catch (err) {
       alert('Error checking cooldowns: ' + (err.response?.data?.error || err.message));
     } finally {
@@ -216,10 +245,22 @@ export default function App() {
         isCooldownRunning={isCooldownRunning}
       />
 
-      {/* Dynamic Toast / Notice */}
+      {/* Dynamic Toast / Notice with manual cross dismissal and error-free timed fade */}
       {bannerNotice && (
-        <div className="bg-brand-500/15 border-b border-brand-500/30 px-6 py-2 text-xs text-brand-400 font-semibold text-center flex items-center justify-center gap-2">
-          <span>{bannerNotice}</span>
+        <div className="bg-brand-500/10 dark:bg-brand-500/15 border-b border-brand-500/25 px-4 sm:px-6 py-2.5 text-xs text-brand-700 dark:text-brand-300 font-medium flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex-1 flex items-center justify-center gap-2 text-center">
+            <span className="w-2 h-2 rounded-full bg-brand-500 ring-2 ring-brand-500/30 animate-pulse flex-shrink-0" />
+            <span className="font-semibold">{bannerNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleDismissBanner}
+            className="p-1 text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-brand-500/15 rounded-md transition-colors flex-shrink-0 cursor-pointer"
+            title="Dismiss notice"
+            aria-label="Dismiss notice"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

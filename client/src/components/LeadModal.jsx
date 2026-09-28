@@ -218,32 +218,32 @@ export default function LeadModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 md:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/70 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 md:p-6 animate-in fade-in duration-200">
       {/* Outer Click Backdrop */}
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Main Modal Container */}
-      <div className="relative w-full max-w-5xl h-[90vh] max-h-[920px] bg-[#0c1222] border border-slate-800/90 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10 text-slate-100">
+      <div className="relative w-full max-w-5xl h-[90vh] max-h-[920px] bg-card border border-theme rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10 text-primary">
         {/* MODAL HEADER */}
-        <div className="px-6 py-5 border-b border-slate-800/90 bg-[#0d1527] flex items-start justify-between gap-4 flex-shrink-0">
+        <div className="px-6 py-5 border-b border-theme bg-surface flex items-start justify-between gap-4 flex-shrink-0">
           <div className="flex-1 min-w-0 space-y-2">
             {/* 1. Primary Title - Bold, prominent, top-level heading */}
-            <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-snug break-words" title={lead.title}>
+            <h2 className="text-lg md:text-xl font-bold text-primary tracking-tight leading-snug break-words" title={lead.title}>
               {lead.title}
             </h2>
 
             {/* 2. Organized Metadata Details Subline (Under the Title) */}
-            <div className="flex items-center gap-2.5 flex-wrap text-xs text-slate-400">
+            <div className="flex items-center gap-2.5 flex-wrap text-xs text-secondary">
               {/* Platform Tag */}
-              <span className="font-semibold px-2.5 py-0.5 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700/70 text-[11px] flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+              <span className="font-semibold px-2.5 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme text-[11px] flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
                 {lead.platform ? (lead.platform.charAt(0).toUpperCase() + lead.platform.slice(1)) : 'Opportunity'}
               </span>
 
               {/* Match Fit Score */}
               {lead.matchScore > 0 && (
-                <span className="font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1 text-[11px] shadow-sm">
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                <span className="font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1 text-[11px] shadow-sm">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
                   {lead.matchScore}% Match Fit
                 </span>
               )}
@@ -252,7 +252,7 @@ export default function LeadModal({
               {lead.budget && (
                 <span className="flex items-center gap-1 text-xs">
                   <span className="text-muted">•</span>
-                  <span className="text-emerald-400 font-semibold">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                     {typeof lead.budget === 'object'
                       ? (lead.budget.amount > 0 ? `$${lead.budget.amount}${lead.budget.type === 'hourly' ? '/hr' : ''}` : 'Flexible Budget')
                       : String(lead.budget)}
@@ -285,17 +285,17 @@ export default function LeadModal({
                 href={lead.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-750 active:scale-95 rounded-lg border border-slate-700/80 transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-800 active:scale-95 rounded-lg border border-theme transition-all shadow-sm"
                 title="Open original job posting"
               >
-                <ExternalLink className="w-3.5 h-3.5 text-brand-400" />
+                <ExternalLink className="w-3.5 h-3.5 text-brand-500" />
                 <span>Open Listing</span>
               </a>
             )}
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 active:scale-95 rounded-lg border border-slate-700/80 transition-all"
+              className="p-1.5 text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-800 active:scale-95 rounded-lg border border-theme transition-all cursor-pointer"
               title="Close modal (Esc)"
             >
               <X className="w-4 h-4" />
@@ -304,7 +304,7 @@ export default function LeadModal({
         </div>
 
         {/* STEPPER WORKFLOW BAR */}
-        <div className="px-6 py-2.5 bg-[#090d18] border-b border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto flex-shrink-0">
+        <div className="px-6 py-2.5 bg-card-subtle/80 dark:bg-[#090d18] border-b border-theme flex items-center justify-between gap-2 overflow-x-auto flex-shrink-0">
           <div className="flex items-center gap-2 min-w-max">
             {steps.map((step, idx) => {
               const Icon = step.icon;
@@ -317,12 +317,12 @@ export default function LeadModal({
                       }
                       setActiveTab(step.id);
                     }}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       step.isActive
                         ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-400/40'
                         : step.isCompleted
-                        ? 'text-slate-300 hover:text-white hover:bg-slate-800/60 bg-slate-900/60 border border-slate-800'
-                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900 border border-transparent'
+                        ? 'text-primary hover:bg-card bg-surface border border-theme'
+                        : 'text-secondary hover:text-primary hover:bg-card border border-transparent'
                     }`}
                   >
                     <div
@@ -330,83 +330,83 @@ export default function LeadModal({
                         step.isActive
                           ? 'bg-white text-brand-700'
                           : step.isCompleted
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
                     >
-                      {step.isCompleted ? <Check className="w-3 h-3 text-emerald-400" /> : step.number}
+                      {step.isCompleted ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : step.number}
                     </div>
                     <span>{step.title}</span>
                   </button>
-                  {idx < steps.length - 1 && <span className="text-slate-700 text-xs">/</span>}
+                  {idx < steps.length - 1 && <span className="text-muted text-xs">/</span>}
                 </React.Fragment>
               );
             })}
           </div>
 
-          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-500">
+          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-secondary">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>Guided Conversion Pipeline</span>
           </div>
         </div>
 
         {/* MODAL BODY (SCROLLABLE CONTENT) */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 relative min-h-0 bg-[#0a0f1d]">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 relative min-h-0 bg-canvas dark:bg-[#0a0f1d]">
           {/* ============================================================ */}
           {/* TAB 1: COMPLETE LEAD DETAILS AS FIRST SECTION                */}
           {/* ============================================================ */}
           {activeTab === 'details' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               {/* Fit Overview Banner */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-brand-950/40 to-slate-900/80 border border-brand-500/25 space-y-2">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-950/40 dark:to-slate-900/80 border border-brand-200/80 dark:border-brand-500/25 shadow-sm dark:shadow-none space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-brand-400" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-brand-300">
+                    <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">
                       AI Opportunity Match Fit: {lead.matchScore || 85}%
                     </h3>
                   </div>
-                  <span className="text-[10px] font-semibold text-slate-400">
-                    Source: <span className="text-slate-200 capitalize">{lead.platform}</span>
+                  <span className="text-[10px] font-semibold text-muted dark:text-slate-400">
+                    Source: <span className="text-primary dark:text-slate-200 capitalize font-medium">{lead.platform}</span>
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-secondary dark:text-slate-300 leading-relaxed">
                   {lead.matchReasoning ||
                     'Identified as a high-affinity project matching your agency capabilities, technology stack, and business requirements.'}
                 </p>
                 {lead.demoAngle && (
-                  <div className="pt-2 border-t border-slate-800/80 flex items-start gap-2 text-xs">
-                    <span className="text-[10px] uppercase font-bold text-amber-400 flex-shrink-0 mt-0.5">
+                  <div className="pt-2 border-t border-theme flex items-start gap-2 text-xs">
+                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5">
                       Suggested Angle:
                     </span>
-                    <span className="text-slate-200">{lead.demoAngle}</span>
+                    <span className="text-primary dark:text-slate-200">{lead.demoAngle}</span>
                   </div>
                 )}
               </div>
 
               {/* Client & Project Metrics Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Client Name</span>
-                  <span className="font-semibold text-slate-200 mt-0.5 block truncate">
+                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
+                  <span className="text-muted block text-[10px] uppercase font-semibold">Client Name</span>
+                  <span className="font-semibold text-primary mt-0.5 block truncate">
                     {lead.clientInfo?.name || 'Hiring Client'}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Company / Stage</span>
-                  <span className="font-semibold text-slate-200 mt-0.5 block truncate">
+                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
+                  <span className="text-muted block text-[10px] uppercase font-semibold">Company / Stage</span>
+                  <span className="font-semibold text-primary mt-0.5 block truncate">
                     {lead.clientInfo?.company || 'Direct Engagement'}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Budget / Rate</span>
-                  <span className="font-bold text-emerald-400 mt-0.5 block">
+                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
+                  <span className="text-muted block text-[10px] uppercase font-semibold">Budget / Rate</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
                     {lead.budget?.amount > 0 ? `$${lead.budget.amount} (${lead.budget.type || 'fixed'})` : 'Flexible / Market'}
                   </span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Contact Email</span>
-                  <span className="font-semibold text-slate-300 mt-0.5 block truncate">
+                <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none">
+                  <span className="text-muted block text-[10px] uppercase font-semibold">Contact Email</span>
+                  <span className="font-semibold text-primary mt-0.5 block truncate">
                     {lead.clientInfo?.email || 'Via Platform'}
                   </span>
                 </div>
@@ -415,12 +415,12 @@ export default function LeadModal({
               {/* Required Skills Badges */}
               {lead.skillsRequired?.length > 0 && (
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 block mb-2">Required Skills & Technologies</span>
+                  <span className="text-xs font-semibold text-secondary block mb-2">Required Skills & Technologies</span>
                   <div className="flex flex-wrap gap-2">
                     {lead.skillsRequired.map((skill, idx) => (
                       <span
                         key={idx}
-                        className="text-xs font-medium bg-slate-900 text-slate-200 px-3 py-1 rounded-lg border border-slate-800 shadow-sm"
+                        className="text-xs font-medium bg-card text-primary px-3 py-1 rounded-lg border border-theme shadow-sm"
                       >
                         {skill}
                       </span>
@@ -431,17 +431,17 @@ export default function LeadModal({
 
               {/* Full Job Description Card */}
               <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-400 block">Complete Job Description</span>
-                <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto font-sans">
+                <span className="text-xs font-semibold text-secondary block">Complete Job Description</span>
+                <div className="p-5 rounded-xl bg-card border border-theme text-xs text-secondary whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto font-sans shadow-sm dark:shadow-none">
                   {lead.description || 'No extended description provided.'}
                 </div>
               </div>
 
               {/* STEP 1 FOOTER: NEXT STEP BUTTON */}
-              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-4">
+              <div className="p-4 rounded-xl bg-card border border-theme flex items-center justify-between gap-4 shadow-sm dark:shadow-none">
                 <div>
-                  <h4 className="text-xs font-bold text-white">Next Step: 60-Second Video Demo & Prep</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <h4 className="text-xs font-bold text-primary">Next Step: 60-Second Video Demo & Prep</h4>
+                  <p className="text-[11px] text-secondary mt-0.5">
                     {lead.demoScript?.hook
                       ? 'AI demo script and tips are already prepared for this lead.'
                       : 'Gemini will automatically analyze the job and generate your tailored 60s demo script.'}
@@ -449,7 +449,7 @@ export default function LeadModal({
                 </div>
                 <button
                   onClick={handleProceedToDemo}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex-shrink-0"
+                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex-shrink-0 cursor-pointer"
                 >
                   <span>{lead.demoScript?.hook ? 'View Demo Script' : 'Proceed to Demo Prep'}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -495,8 +495,8 @@ export default function LeadModal({
               {/* Action Toolbar */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <Video className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  <Video className="w-4 h-4 text-amber-500" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
                     60-Second Video Demo Script & Recording Guide
                   </h3>
                 </div>
@@ -504,7 +504,7 @@ export default function LeadModal({
                   <button
                     onClick={() => onRunAudit(lead._id)}
                     disabled={isAuditing}
-                    className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 text-xs text-secondary hover:text-primary px-3 py-1.5 rounded-lg bg-card border border-theme hover:bg-card-subtle transition-colors disabled:opacity-50 shadow-sm cursor-pointer"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isAuditing ? 'animate-spin' : ''}`} />
                     <span>Regenerate Script</span>
@@ -512,9 +512,9 @@ export default function LeadModal({
                   {lead.demoScript?.hook && (
                     <button
                       onClick={handleCopyScript}
-                      className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-secondary hover:text-primary px-3 py-1.5 rounded-lg bg-card border border-theme hover:bg-card-subtle transition-colors shadow-sm cursor-pointer"
                     >
-                      {copiedScript ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedScript ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedScript ? 'Copied to Clipboard' : 'Copy Full Script'}</span>
                     </button>
                   )}
@@ -523,15 +523,15 @@ export default function LeadModal({
 
               {/* Profile Optimization Tips */}
               {lead.profileOptimizationTips?.length > 0 && (
-                <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-card border border-theme space-y-2.5 shadow-sm dark:shadow-none">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Profile & Proposal Optimization Strategy
                   </h4>
                   <ul className="space-y-2">
                     {lead.profileOptimizationTips.map((tip, idx) => (
-                      <li key={idx} className="text-xs text-slate-300 flex items-start gap-2.5">
-                        <span className="text-amber-400 font-bold mt-0.5">•</span>
+                      <li key={idx} className="text-xs text-secondary flex items-start gap-2.5">
+                        <span className="text-amber-500 font-bold mt-0.5">•</span>
                         <span className="leading-relaxed">{tip}</span>
                       </li>
                     ))}
@@ -542,59 +542,59 @@ export default function LeadModal({
               {/* 60-Second Script Structured Blocks */}
               {lead.demoScript?.hook ? (
                 <div className="space-y-3">
-                  <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                  <div className="p-4 rounded-xl bg-card border border-theme space-y-1.5 shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                         0:00 - 0:10 • The Attention Hook
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium">10 Seconds</span>
+                      <span className="text-[10px] text-muted font-medium">10 Seconds</span>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-sans">{lead.demoScript.hook}</p>
+                    <p className="text-xs text-primary leading-relaxed font-sans">{lead.demoScript.hook}</p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                  <div className="p-4 rounded-xl bg-card border border-theme space-y-1.5 shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wide">
                         0:10 - 0:25 • Problem Statement
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium">15 Seconds</span>
+                      <span className="text-[10px] text-muted font-medium">15 Seconds</span>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                    <p className="text-xs text-primary leading-relaxed font-sans">
                       {lead.demoScript.problemStatement}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                  <div className="p-4 rounded-xl bg-card border border-theme space-y-1.5 shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
                         0:25 - 0:50 • Micro-Solution & Proof
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium">25 Seconds</span>
+                      <span className="text-[10px] text-muted font-medium">25 Seconds</span>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                    <p className="text-xs text-primary leading-relaxed font-sans">
                       {lead.demoScript.microSolution}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                  <div className="p-4 rounded-xl bg-card border border-theme space-y-1.5 shadow-sm dark:shadow-none">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide">
                         0:50 - 1:00 • Call To Action
                       </span>
-                      <span className="text-[10px] text-slate-500 font-medium">10 Seconds</span>
+                      <span className="text-[10px] text-muted font-medium">10 Seconds</span>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                    <p className="text-xs text-primary leading-relaxed font-sans">
                       {lead.demoScript.callToAction}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="p-8 text-center rounded-xl bg-slate-900/40 border border-slate-800 space-y-3">
-                  <p className="text-xs text-slate-400">No demo script generated yet.</p>
+                <div className="p-8 text-center rounded-xl bg-card border border-theme space-y-3 shadow-sm dark:shadow-none">
+                  <p className="text-xs text-secondary">No demo script generated yet.</p>
                   <button
                     onClick={() => onRunAudit(lead._id)}
                     disabled={isAuditing}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-lg shadow-sm"
+                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer"
                   >
                     Generate Demo Script with Gemini
                   </button>
@@ -602,19 +602,19 @@ export default function LeadModal({
               )}
 
               {/* Loom / Video URL Upload & Next Step */}
-              <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-4">
+              <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Video className="w-3.5 h-3.5 text-brand-400" />
+                    <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Video className="w-3.5 h-3.5 text-brand-500" />
                       Attach Recorded Demo Video (Loom, YouTube, Drive)
                     </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-secondary mt-0.5">
                       Paste your recorded video URL. Submitting this will automatically generate your personalized outreach pitch!
                     </p>
                   </div>
                   {lead.demoVideoUrl && (
-                    <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold flex-shrink-0">
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold flex-shrink-0">
                       <Check className="w-3.5 h-3.5" /> Video Attached
                     </span>
                   )}
@@ -626,12 +626,12 @@ export default function LeadModal({
                     placeholder="https://www.loom.com/share/..."
                     value={videoUrlInput}
                     onChange={(e) => setVideoUrlInput(e.target.value)}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="flex-1 bg-surface border border-theme rounded-xl px-3.5 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 shadow-sm"
                   />
                   <button
                     onClick={handleSaveVideoAndProceed}
                     disabled={isGeneratingPitch}
-                    className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex-shrink-0 disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex-shrink-0 disabled:opacity-50 cursor-pointer"
                   >
                     <span>{videoUrlInput.trim() ? 'Save Video & Generate Pitch' : 'Generate Outreach Pitch'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -676,11 +676,11 @@ export default function LeadModal({
               {/* Pitch Header Controls */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
                     Personalized Outreach Pitch Draft
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Target Channel: <span className="text-brand-300 font-semibold">{lead.clientInfo?.email ? lead.clientInfo.email : `${lead.platform} direct proposal/message`}</span>
+                  <p className="text-[11px] text-secondary mt-0.5">
+                    Target Channel: <span className="text-brand-600 dark:text-brand-300 font-semibold">{lead.clientInfo?.email ? lead.clientInfo.email : `${lead.platform} direct proposal/message`}</span>
                   </p>
                 </div>
 
@@ -688,7 +688,7 @@ export default function LeadModal({
                   <button
                     onClick={handleRegeneratePitch}
                     disabled={isGeneratingPitch}
-                    className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 text-xs text-secondary hover:text-primary px-3 py-1.5 rounded-lg bg-card border border-theme hover:bg-card-subtle transition-colors disabled:opacity-50 shadow-sm cursor-pointer"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingPitch ? 'animate-spin' : ''}`} />
                     <span>Regenerate Pitch</span>
@@ -696,9 +696,9 @@ export default function LeadModal({
 
                   <button
                     onClick={handleCopyPitch}
-                    className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-secondary hover:text-primary px-3 py-1.5 rounded-lg bg-card border border-theme hover:bg-card-subtle transition-colors shadow-sm cursor-pointer"
                   >
-                    {copiedPitch ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedPitch ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedPitch ? 'Copied' : 'Copy Full Pitch'}</span>
                   </button>
                 </div>
@@ -706,39 +706,39 @@ export default function LeadModal({
 
               {/* Subject Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 block">Outreach Email Subject</label>
+                <label className="text-xs font-semibold text-secondary block">Outreach Email Subject</label>
                 <input
                   type="text"
                   value={pitchSubject}
                   onChange={(e) => setPitchSubject(e.target.value)}
                   placeholder="Subject line..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 font-medium shadow-inner"
+                  className="w-full bg-surface border border-theme rounded-xl px-4 py-2.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-medium shadow-sm"
                 />
               </div>
 
               {/* Message Body Textarea */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 block">Message Body Content</label>
+                <label className="text-xs font-semibold text-secondary block">Message Body Content</label>
                 <textarea
                   rows={10}
                   value={pitchBody}
                   onChange={(e) => setPitchBody(e.target.value)}
                   placeholder="Draft message content..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-white focus:outline-none focus:border-brand-500 leading-relaxed font-sans shadow-inner"
+                  className="w-full bg-surface border border-theme rounded-xl p-4 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 leading-relaxed font-sans shadow-sm"
                 />
               </div>
 
               {/* Dispatch Section */}
-              <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-4">
+              <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-white">Select Dispatch Channel</h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <h4 className="text-xs font-bold text-primary">Select Dispatch Channel</h4>
+                    <p className="text-[11px] text-secondary mt-0.5">
                       Dispatching moves the lead to <b>Contacted</b> and starts the 3-touch follow-up timeline.
                     </p>
                   </div>
                   {sendSuccessMsg && (
-                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
                       <Check className="w-4 h-4 flex-shrink-0" />
                       <span>{sendSuccessMsg}</span>
                     </div>
@@ -750,9 +750,9 @@ export default function LeadModal({
                   <button
                     onClick={() => handleDispatch('manual')}
                     disabled={isSending}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 active:scale-95 rounded-xl border border-slate-700 transition-all shadow-sm"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 rounded-xl border border-theme transition-all shadow-sm cursor-pointer"
                   >
-                    <ExternalLink className="w-4 h-4 text-brand-400" />
+                    <ExternalLink className="w-4 h-4 text-brand-500" />
                     <span>Copy & Open Job Listing</span>
                   </button>
 
@@ -760,7 +760,7 @@ export default function LeadModal({
                   <button
                     onClick={() => handleDispatch('smtp')}
                     disabled={isSending}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-xl shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-xl shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50 cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                     <span>{isSending ? 'Dispatching Email...' : 'Send Email via SMTP'}</span>
@@ -776,13 +776,13 @@ export default function LeadModal({
           {activeTab === 'followups' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               {/* Cooldown Header Banner */}
-              <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+              <div className="p-5 rounded-xl bg-card border border-theme flex items-center justify-between gap-4 flex-wrap shadow-sm dark:shadow-none">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-purple-500 dark:text-purple-400" />
                     Automated Cooldown & 3-Touch Follow-up Sequence
                   </h3>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-secondary mt-1">
                     Sequences pause immediately the exact second a client replies, preventing embarrassing spam.
                   </p>
                 </div>
@@ -790,13 +790,13 @@ export default function LeadModal({
                 {lead.stage !== 'replied' ? (
                   <button
                     onClick={() => onClientReplied(lead._id)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-4 py-2 rounded-xl border border-rose-500/25 transition-all active:scale-95"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 px-4 py-2 rounded-xl border border-rose-500/25 transition-all active:scale-95 cursor-pointer"
                   >
-                    <MessageSquare className="w-4 h-4 text-rose-400" />
+                    <MessageSquare className="w-4 h-4 text-rose-500" />
                     <span>Client Replied! (Halt Follow-ups)</span>
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 text-xs font-bold text-rose-400 bg-rose-500/10 px-3.5 py-1.5 rounded-lg border border-rose-500/20">
+                  <div className="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-3.5 py-1.5 rounded-lg border border-rose-500/20">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Client Responded • All Follow-ups Stopped</span>
                   </div>
@@ -815,14 +815,14 @@ export default function LeadModal({
                 ).map((followUp, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 hover:border-slate-700 transition-colors"
+                    className="p-4 rounded-xl bg-card border border-theme space-y-2 hover:border-brand-300 dark:hover:border-slate-700 transition-colors shadow-sm dark:shadow-none"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-full bg-card-subtle text-secondary border border-theme text-xs font-bold flex items-center justify-center">
                           {idx + 1}
                         </span>
-                        <span className="text-xs font-bold text-slate-200">
+                        <span className="text-xs font-bold text-primary">
                           Touch {idx + 1}: After {followUp.delayDays || (idx === 0 ? 2 : idx === 1 ? 7 : 21)} Days
                         </span>
                       </div>
@@ -830,12 +830,12 @@ export default function LeadModal({
                       <span
                         className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-md ${
                           followUp.status === 'sent'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                             : followUp.status === 'ready'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse'
                             : followUp.status === 'skipped'
-                            ? 'bg-slate-800 text-slate-500 border border-slate-700'
-                            : 'bg-slate-800/80 text-slate-400 border border-slate-700/80'
+                            ? 'bg-card-subtle text-muted border border-theme'
+                            : 'bg-card-subtle text-secondary border border-theme'
                         }`}
                       >
                         {followUp.status || 'pending'}
@@ -843,10 +843,10 @@ export default function LeadModal({
                     </div>
 
                     {followUp.subject && (
-                      <p className="text-xs text-brand-300 font-medium pl-8">{followUp.subject}</p>
+                      <p className="text-xs text-brand-600 dark:text-brand-300 font-medium pl-8">{followUp.subject}</p>
                     )}
                     {followUp.body && (
-                      <p className="text-xs text-slate-400 whitespace-pre-wrap bg-slate-950 p-3 rounded-xl border border-slate-800/80 ml-8 leading-relaxed">
+                      <p className="text-xs text-secondary whitespace-pre-wrap bg-surface p-3 rounded-xl border border-theme ml-8 leading-relaxed">
                         {followUp.body}
                       </p>
                     )}

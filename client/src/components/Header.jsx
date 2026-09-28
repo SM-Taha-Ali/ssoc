@@ -224,14 +224,14 @@ export default function Header({
                     <button
                       type="button"
                       onClick={handleOpenSettings}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors text-left ${
+                      className={`group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-all text-left cursor-pointer ${
                         activeView === 'settings'
-                          ? 'bg-brand-600/10 text-brand-400 font-semibold'
-                          : 'text-secondary hover:text-primary hover:bg-card-subtle'
+                          ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400 font-semibold'
+                          : 'text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100/90 dark:hover:bg-slate-800/80 active:bg-slate-200/70'
                       }`}
                     >
-                      <Settings className="w-3.5 h-3.5 text-muted" />
-                      <span>Workspace Settings</span>
+                      <Settings className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors flex-shrink-0" />
+                      <span className="flex-1 font-medium">Workspace Settings</span>
                     </button>
 
                     <div className="h-px bg-theme my-1" />
@@ -240,10 +240,10 @@ export default function Header({
                     <button
                       type="button"
                       onClick={handlePromptLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors text-left"
+                      className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 rounded-lg transition-all text-left cursor-pointer"
                     >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out</span>
+                      <LogOut className="w-3.5 h-3.5 text-rose-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="flex-1 font-medium">Sign Out</span>
                     </button>
                   </div>
                 )}
