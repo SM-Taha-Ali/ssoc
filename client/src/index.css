@@ -3,12 +3,16 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    font-family: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    letter-spacing: -0.012em;
+  *, ::before, ::after {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     background-color: var(--theme-canvas);
     color: var(--theme-text-primary);
     transition: background-color 0.15s ease, color 0.15s ease;
@@ -254,37 +258,49 @@ html[data-mode="light"] .hover\:bg-slate-800:hover {
    gradient avatars, and action chips across BOTH light and dark modes.
    ======================================================== */
 .text-pure-white,
+.text-pure-white *,
 .\!text-white,
-button.text-white,
-button.text-white *,
-button[class*="text-white"],
-button[class*="text-white"] *,
-a.text-white,
-a.text-white *,
+.\!text-white *,
 .btn-primary,
 .btn-primary *,
-.bg-brand-600,
-.bg-brand-600 *,
-.bg-brand-500,
-.bg-brand-500 *,
-.bg-indigo-600,
-.bg-indigo-600 *,
-.bg-indigo-500,
-.bg-indigo-500 *,
-.bg-emerald-600,
-.bg-emerald-600 *,
-.bg-emerald-500,
-.bg-emerald-500 *,
+button.bg-brand-600,
+button.bg-brand-600 *,
+button.bg-brand-500,
+button.bg-brand-500 *,
+button.bg-indigo-600,
+button.bg-indigo-600 *,
+button.bg-indigo-500,
+button.bg-indigo-500 *,
+button.bg-emerald-600,
+button.bg-emerald-600 *,
+button.bg-emerald-500,
+button.bg-emerald-500 *,
+button.bg-rose-600,
+button.bg-rose-600 *,
+button.bg-rose-500,
+button.bg-rose-500 *,
+button.bg-purple-600,
+button.bg-purple-600 *,
+button.bg-blue-600,
+button.bg-blue-600 *,
+button.bg-violet-600,
+button.bg-violet-600 *,
+a.bg-brand-600,
+a.bg-brand-600 *,
+.bg-brand-600.text-white,
+.bg-brand-600.text-white *,
+.bg-brand-500.text-white,
+.bg-brand-500.text-white *,
+.bg-indigo-600.text-white,
+.bg-indigo-600.text-white *,
+.bg-emerald-600.text-white,
+.bg-emerald-600.text-white *,
 .bg-rose-600.text-white,
 .bg-rose-600.text-white *,
-.bg-rose-500.text-white,
-.bg-rose-500.text-white *,
-.bg-purple-600,
-.bg-purple-600 *,
-.bg-blue-600,
-.bg-blue-600 *,
-.bg-violet-600,
-.bg-violet-600 *,
+.bg-purple-600.text-white,
+.bg-purple-600.text-white *,
+.bg-blue-600.text-white,
+.bg-blue-600.text-white *,
 [class*="bg-gradient-"].text-white,
 [class*="bg-gradient-"].text-white *,
 [class*="from-brand-"].text-white,

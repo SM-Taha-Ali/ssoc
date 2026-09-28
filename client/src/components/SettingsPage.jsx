@@ -574,8 +574,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             {/* Section: Organization Details */}
             {/* Section: Organization Details */}
             <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                <Building className="w-4 h-4 text-brand-400" />
+              <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Building className="w-4 h-4 text-brand-500" />
                 Organization Information
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -634,8 +634,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
 
             {/* Section: Sender Profile */}
             <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                <Mail className="w-4 h-4 text-emerald-400" />
+              <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Mail className="w-4 h-4 text-emerald-500" />
                 Sender Profile (Appears on Dispatched Outreach)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -676,8 +676,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme">
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-brand-400" />
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-brand-500" />
                     Live Digital Assets & Profiles (AI Input Integration)
                   </h4>
                   <p className="text-[11px] text-secondary mt-0.5">
@@ -843,13 +843,13 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Primary Value Proposition */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm dark:shadow-none">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-brand-400" />
+                <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-500" />
                   Primary Value Proposition & Transformation
                 </label>
-                <span className="text-[10px] text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                <span className="text-[10px] text-brand-500 font-semibold bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
                   Core AI Pitch Anchor
                 </span>
               </div>
@@ -858,17 +858,17 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={company.valueProposition || ''}
                 onChange={(e) => setCompany({ ...company, valueProposition: e.target.value })}
                 placeholder="Describe what unique business outcomes you deliver. E.g.: We build production-ready custom AI agents, automated workflow pipelines (n8n/Zapier), and scalable MERN applications that drive revenue and cut infrastructure bills by 40%."
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 leading-relaxed font-mono text-[11px]"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 leading-relaxed font-mono text-[11px]"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted mt-1">
                 This is heavily weighted by the AI when framing your outreach emails and 60-second video demo scripts.
               </p>
             </div>
 
             {/* Core Services Offered */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-indigo-400" />
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm dark:shadow-none">
+              <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-500" />
                 Core Services Offered (One per line)
               </label>
               <textarea
@@ -876,17 +876,17 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={servicesStr}
                 onChange={(e) => setServicesStr(e.target.value)}
                 placeholder="Autonomous AI Agents & Voice Bots&#10;Workflow Automations (n8n, Zapier, Make, Webhooks)&#10;Full-Stack Web Apps (React, Next.js, Node.js, MERN)&#10;Cloud Infrastructure & AWS Cost Reduction"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted mt-1">
                 These services are matched against job requirements during lead qualification.
               </p>
             </div>
 
             {/* Core Technical Strengths */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-sky-400" />
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm dark:shadow-none">
+              <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-sky-500" />
                 Technical Strengths & Superpowers (One per line)
               </label>
               <textarea
@@ -894,14 +894,14 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={strengthsStr}
                 onChange={(e) => setStrengthsStr(e.target.value)}
                 placeholder="Autonomous AI Agents (LangChain, LlamaIndex, OpenAI, Gemini)&#10;Enterprise Workflow Orchestration (n8n self-hosted, Make, Zapier)&#10;Modern React / Node.js Full-Stack Architecture&#10;High-Volume Database Migrations & API Optimizations"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
               />
             </div>
 
             {/* Proven Case Studies & Client Wins */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-400" />
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm dark:shadow-none">
+              <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500" />
                 Proven Case Studies, Metrics & Past Wins
               </label>
               <textarea
@@ -909,9 +909,9 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={company.caseStudies || ''}
                 onChange={(e) => setCompany({ ...company, caseStudies: e.target.value })}
                 placeholder="1. Automated customer onboarding and Zendesk ticket triaging using custom AI agents, reducing support tickets by 62% for a Series A SaaS.&#10;2. Built multi-tenant n8n & Stripe synchronization pipeline processing $1.2M in annual transactions.&#10;3. Slashed monthly AWS infrastructure bill from $14k to $5.8k."
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted mt-1">
                 Injected as real social proof into your cold pitches and profile optimization tips.
               </p>
             </div>
@@ -957,14 +957,15 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Section: Ideal Client Profile (ICP) */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Target className="w-4 h-4 text-brand-400" />
+            {/* Section: Ideal Client Profile (ICP) */}
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+              <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Target className="w-4 h-4 text-brand-500" />
                 Ideal Client Profile (ICP)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Target Client Industries (Comma-separated)
                   </label>
                   <input
@@ -972,12 +973,12 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     value={industriesStr}
                     onChange={(e) => setIndustriesStr(e.target.value)}
                     placeholder="B2B SaaS, Startups, E-commerce, Digital Agencies, FinTech"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Target Decision-Maker Roles (Comma-separated)
                   </label>
                   <input
@@ -985,7 +986,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     value={rolesStr}
                     onChange={(e) => setRolesStr(e.target.value)}
                     placeholder="Founder / CEO, CTO, VP Engineering, Head of Product"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -994,9 +995,9 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             {/* Section: Keywords & Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Positive Keywords */}
-              <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
+              <div className="p-5 rounded-xl bg-card border border-theme space-y-2 shadow-sm dark:shadow-none">
+                <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
                   Positive Tech Keywords (Comma-separated)
                 </label>
                 <textarea
@@ -1004,17 +1005,17 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   value={keywordsStr}
                   onChange={(e) => setKeywordsStr(e.target.value)}
                   placeholder="AI, Agent, n8n, Zapier, React, Node, MERN, Full Stack, Automation, Python, API, RAG, AWS"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px]"
+                  className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px]"
                 />
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[10px] text-muted mt-1">
                   Opportunities must match at least one keyword to pass initial ingestion.
                 </p>
               </div>
 
               {/* Negative Keywords */}
-              <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-                <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-400" />
+              <div className="p-5 rounded-xl bg-card border border-theme space-y-2 shadow-sm dark:shadow-none">
+                <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-500" />
                   Negative Keywords (Comma-separated)
                 </label>
                 <textarea
@@ -1022,18 +1023,18 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   value={negativeKeywordsStr}
                   onChange={(e) => setNegativeKeywordsStr(e.target.value)}
                   placeholder="unpaid, internship, volunteer, commission only, spanish speaking, german speaking, telemarketer"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px]"
+                  className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px]"
                 />
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[10px] text-muted mt-1">
                   Instantly discarded without consuming LLM credits.
                 </p>
               </div>
             </div>
 
             {/* Strict Disqualifiers */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-2 shadow-sm dark:shadow-none">
+              <label className="text-sm font-semibold text-primary flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
                 Strict AI Disqualifier Rules (Evaluated in Batch LLM Prompt)
               </label>
               <textarea
@@ -1041,21 +1042,21 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={disqualifiersStr}
                 onChange={(e) => setDisqualifiersStr(e.target.value)}
                 placeholder="Non-tech sales or cold-calling telesales roles&#10;Specific non-English language requirements (e.g. Spanish-only or German-only customer service)&#10;Staffing agency or generic recruiter headhunting listings&#10;Unpaid internships or 100% commission/equity-only without baseline budget&#10;Basic data entry or virtual assistant tasks with zero engineering"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono text-[11px] leading-relaxed"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-muted mt-1">
                 Jobs matching any of these criteria are rejected during batch AI analysis.
               </p>
             </div>
 
             {/* Budget & Daily Cap */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+              <h4 className="text-sm font-semibold text-primary">
                 Deal Criteria & Discovery Limits
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Max Discovered Leads Per Run / Day
                   </label>
                   <input
@@ -1064,13 +1065,13 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     max="50"
                     value={company.maxLeadsPerBatch || 20}
                     onChange={(e) => setCompany({ ...company, maxLeadsPerBatch: parseInt(e.target.value) || 20 })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Prevents pipeline noise (Recommended: 20)</p>
+                  <p className="text-[10px] text-muted mt-1">Prevents pipeline noise (Recommended: 20)</p>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Minimum Project Budget ($ USD)
                   </label>
                   <input
@@ -1078,13 +1079,13 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     min="0"
                     value={company.minBudget || 150}
                     onChange={(e) => setCompany({ ...company, minBudget: parseInt(e.target.value) || 0 })}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Filters out micro-budget posts</p>
+                  <p className="text-[10px] text-muted mt-1">Filters out micro-budget posts</p>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Geographic Preference
                   </label>
                   <input
@@ -1450,7 +1451,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     <Inbox className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                    <h4 className="text-sm font-semibold text-primary">
                       Inbound Email Connection & Reply Detection
                     </h4>
                     <p className="text-[11px] text-secondary mt-0.5">
