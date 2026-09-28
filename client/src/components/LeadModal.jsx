@@ -631,7 +631,7 @@ export default function LeadModal({
                   <button
                     onClick={handleSaveVideoAndProceed}
                     disabled={isGeneratingPitch}
-                    className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 rounded-xl transition-all shadow-md shadow-indigo-600/20 flex-shrink-0 disabled:opacity-50 cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-5 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl transition-all shadow-md shadow-brand-600/25 flex-shrink-0 disabled:opacity-50 cursor-pointer"
                   >
                     <span>{videoUrlInput.trim() ? 'Save Video & Generate Pitch' : 'Generate Outreach Pitch'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />

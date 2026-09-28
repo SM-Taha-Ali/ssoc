@@ -186,8 +186,8 @@ export default function Header({
                   }`}
                   title={`Workspace: ${company.companyName}`}
                 >
-                  <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                    {companyInitial}
+                  <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-brand-600 to-indigo-600 !text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="!text-white text-white font-bold leading-none">{companyInitial}</span>
                   </div>
                   <span className="max-w-[110px] sm:max-w-[140px] md:max-w-[180px] truncate text-left">
                     {company.companyName}
@@ -205,8 +205,8 @@ export default function Header({
                     {/* Workspace Header */}
                     <div className="px-3 py-2.5 rounded-lg bg-card-subtle border border-theme">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                          {companyInitial}
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 !text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
+                          <span className="!text-white text-white font-bold leading-none">{companyInitial}</span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-primary truncate">

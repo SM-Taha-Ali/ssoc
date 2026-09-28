@@ -246,18 +246,58 @@ html[data-mode="light"] .hover\:bg-slate-800:hover {
 }
 
 /* ========================================================
-   7. CENTRALIZED ACCENT BUTTONS, BADGES, AND HIGHLIGHTS
+   7. SOLID BUTTONS, GRADIENT AVATARS & BADGES (CRISP WHITE TEXT & ICONS)
+   Enforces pure, legible white text on all solid colored buttons,
+   gradient avatars, and action chips across BOTH light and dark modes.
    ======================================================== */
+.text-pure-white,
+.\!text-white,
+button.text-white,
+button.text-white *,
+button[class*="text-white"],
+button[class*="text-white"] *,
+a.text-white,
+a.text-white *,
+.btn-primary,
+.btn-primary *,
+.bg-brand-600,
+.bg-brand-600 *,
+.bg-brand-500,
+.bg-brand-500 *,
+.bg-indigo-600,
+.bg-indigo-600 *,
+.bg-indigo-500,
+.bg-indigo-500 *,
+.bg-emerald-600,
+.bg-emerald-600 *,
+.bg-emerald-500,
+.bg-emerald-500 *,
+.bg-rose-600.text-white,
+.bg-rose-600.text-white *,
+.bg-rose-500.text-white,
+.bg-rose-500.text-white *,
+.bg-purple-600,
+.bg-purple-600 *,
+.bg-blue-600,
+.bg-blue-600 *,
+.bg-violet-600,
+.bg-violet-600 *,
+[class*="bg-gradient-"].text-white,
+[class*="bg-gradient-"].text-white *,
+[class*="from-brand-"].text-white,
+[class*="from-brand-"].text-white * {
+  color: #ffffff !important;
+  fill: currentColor;
+}
+
 .bg-brand-600,
 .bg-brand-500 {
   background-color: var(--theme-accent) !important;
-  color: #ffffff !important;
 }
 
 .hover\:bg-brand-500:hover,
 .hover\:bg-brand-600:hover {
   background-color: var(--theme-accent-hover) !important;
-  color: #ffffff !important;
 }
 
 .text-brand-400,
