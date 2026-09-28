@@ -39,13 +39,15 @@ export const SUPPORTED_GEMINI_MODELS = {
   'Gemini 3.5 Flash Lite': 'gemini-3.5-flash-lite',
   'gemini-3.8-flash': 'gemini-3.8-flash',
   'gemini-3.7-flash': 'gemini-3.7-flash',
-  'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite'
+  'gemini-3.5-flash-lite': 'gemini-3.5-flash-lite',
+  'gemini-2.5-flash': 'gemini-2.5-flash',
+  'gemini-flash-latest': 'gemini-flash-latest'
 };
 
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 /**
- * Normalizes user-selected model names or settings into the real Gemini 3 API model key.
+ * Normalizes user-selected model names or settings into the real Gemini API model key.
  * Defaults to 'gemini-3.8-flash' (Gemini 3.8 Flash).
  */
 export function resolveGeminiModelName(modelName) {
@@ -58,12 +60,34 @@ export function resolveGeminiModelName(modelName) {
   if (lower.includes('3.8')) return 'gemini-3.8-flash';
   if (lower.includes('3.7')) return 'gemini-3.7-flash';
   if (lower.includes('3.5') || lower.includes('lite')) return 'gemini-3.5-flash-lite';
+  if (lower.includes('2.5')) return 'gemini-2.5-flash';
   return DEFAULT_GEMINI_MODEL;
 }
 
 /**
- * Executes a Gemini prompt with the selected Gemini 3 model.
- * Strictly calls the real API model key (gemini-3.8-flash, gemini-3.7-flash, gemini-3.5-flash-lite).
+ * Builds an intelligent fallback sequence prioritizing the user's choice,
+ * followed by peer Gemini 3 tiers, and finally high-capacity production tiers.
+ */
+export function getCandidateModelChain(targetModel) {
+  const primary = targetModel;
+  let alternatives = [];
+  if (primary === 'gemini-3.5-flash-lite') {
+    alternatives = ['gemini-3.7-flash', 'gemini-3.8-flash'];
+  } else if (primary === 'gemini-3.7-flash') {
+    alternatives = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+  } else {
+    // gemini-3.8-flash or other
+    alternatives = ['gemini-3.7-flash', 'gemini-3.5-flash-lite'];
+  }
+
+  // Stable production tiers prevent hard failures when preview models experience Google load surges
+  const stableTiers = ['gemini-2.5-flash', 'gemini-flash-latest'];
+  return [primary, ...alternatives, ...stableTiers].filter((v, i, a) => a.indexOf(v) === i && Boolean(v));
+}
+
+/**
+ * Executes a Gemini prompt with the selected Gemini model.
+ * Resilient against temporary 503 high-demand bursts with backoff and graceful fallback.
  */
 async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
   const apiKey = apiKeyOverride || process.env.GEMINI_API_KEY;
@@ -75,20 +99,34 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
   const rawModel = modelNameOverride || process.env.GEMINI_MODEL || 'Gemini 3.8 Flash';
   const targetModel = resolveGeminiModelName(rawModel);
 
-  // Strictly execute the selected model first, with fallback only across the other 2 supported Gemini 3 tiers
-  const candidateModels = [
-    targetModel,
-    targetModel === 'gemini-3.8-flash' ? 'gemini-3.7-flash' : 'gemini-3.8-flash',
-    'gemini-3.5-flash-lite'
-  ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v));
-
+  const candidateModels = getCandidateModelChain(targetModel);
   let lastError = null;
+
   for (let i = 0; i < candidateModels.length; i++) {
     const candidateModel = candidateModels[i];
     try {
-      console.log(`[Gemini 3 Engine] Invoking model: "${candidateModel}" (Requested: "${rawModel}")`);
+      console.log(`[Gemini Engine] Invoking model: "${candidateModel}" (User configured: "${rawModel}")`);
       const generativeModel = genAI.getGenerativeModel({ model: candidateModel });
-      const result = await generativeModel.generateContent(prompt);
+
+      // Handle momentary 503 high demand spikes with a fast 1-second retry
+      let result;
+      try {
+        result = await generativeModel.generateContent(prompt);
+      } catch (firstErr) {
+        const is503HighDemand = firstErr.message && (
+          firstErr.message.includes('503') ||
+          firstErr.message.includes('high demand') ||
+          firstErr.message.includes('temporarily')
+        );
+        if (is503HighDemand) {
+          console.warn(`[Gemini Engine] Model "${candidateModel}" experienced high demand (503). Retrying in 1s...`);
+          await new Promise((r) => setTimeout(r, 1000));
+          result = await generativeModel.generateContent(prompt);
+        } else {
+          throw firstErr;
+        }
+      }
+
       return result.response.text();
     } catch (err) {
       lastError = err;
@@ -106,12 +144,18 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
         err.message.includes('is not a valid model') ||
         err.message.includes('is not supported for generateContent')
       );
+
       if (isRecoverable && i < candidateModels.length - 1) {
-        console.warn(`[Gemini 3 Engine] Model "${candidateModel}" returned (${err.message.slice(0, 100)}). Trying fallback tier "${candidateModels[i + 1]}"...`);
+        console.warn(`[Gemini Engine] Model "${candidateModel}" unavailable (${err.message.slice(0, 80)}). Falling back to "${candidateModels[i + 1]}"...`);
         continue;
       }
-      throw err;
+      break;
     }
+  }
+
+  // Provide a clear message pointing to the user's requested model if high demand occurred
+  if (lastError?.message?.includes('503') || lastError?.message?.includes('high demand')) {
+    throw new Error(`Google Gemini service is temporarily experiencing high demand for model "${rawModel}". Please try again in a few moments.`);
   }
 
   throw lastError;
