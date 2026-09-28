@@ -83,4 +83,29 @@ router.post('/ai-extract', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/company-profile/sync-profiles
+ * Automatically scrapes and ingests live data from Website, Upwork, and LinkedIn
+ */
+router.post('/sync-profiles', async (req, res) => {
+  try {
+    const { syncAllCompanyProfiles } = await import('../services/profileScraperService.js');
+    let profile = await CompanyProfile.findOne({ companyId: req.companyId });
+    if (!profile) {
+      return res.status(404).json({ error: 'Company profile not found. Please create profile first.' });
+    }
+
+    const { profile: updatedProfile, results } = await syncAllCompanyProfiles(profile._id);
+    res.json({
+      success: true,
+      message: 'Profile synchronization complete',
+      results,
+      profile: updatedProfile
+    });
+  } catch (err) {
+    console.error('[Profile Sync Error]:', err);
+    res.status(500).json({ error: err.message || 'Failed to sync live profiles.' });
+  }
+});
+
 export default router;

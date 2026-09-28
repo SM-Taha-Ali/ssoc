@@ -41,6 +41,9 @@ router.get('/', requireAuth, async (req, res) => {
     if (safeConfig.smtp && safeConfig.smtp.pass) {
       safeConfig.smtp.pass = '••••••••';
     }
+    if (safeConfig.imap && safeConfig.imap.pass) {
+      safeConfig.imap.pass = '••••••••';
+    }
     if (safeConfig.geminiApiKey) {
       safeConfig.geminiApiKey = safeConfig.geminiApiKey ? '••••••••' + safeConfig.geminiApiKey.slice(-4) : '';
     }
@@ -50,6 +53,11 @@ router.get('/', requireAuth, async (req, res) => {
     if (safeConfig.apolloApiKey) {
       safeConfig.apolloApiKey = safeConfig.apolloApiKey ? '••••••••' + safeConfig.apolloApiKey.slice(-4) : '';
     }
+
+    // Attach production-ready inbound reply webhook URL
+    const host = req.get('host');
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    safeConfig.inboundWebhookUrl = `${protocol}://${host}/api/webhooks/email-reply`;
 
     res.json(safeConfig);
   } catch (err) {
@@ -69,6 +77,9 @@ router.put('/', requireAuth, async (req, res) => {
       // Don't overwrite passwords if masked string was sent back
       if (req.body.smtp && req.body.smtp.pass === '••••••••') {
         delete req.body.smtp.pass;
+      }
+      if (req.body.imap && req.body.imap.pass === '••••••••') {
+        delete req.body.imap.pass;
       }
       if (req.body.geminiApiKey && req.body.geminiApiKey.startsWith('••••••••')) {
         delete req.body.geminiApiKey;
@@ -271,6 +282,21 @@ router.post('/reset-database', requireAuth, async (req, res) => {
       deletedCount: result.deletedCount
     });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/integrations/sync-imap - Check IMAP mailbox for client replies now
+ */
+router.post('/sync-imap', requireAuth, async (req, res) => {
+  try {
+    const { syncImapReplies } = await import('../services/imapSyncService.js');
+    const config = await IntegrationConfig.findOne({ companyId: req.companyId });
+    const result = await syncImapReplies(config);
+    res.json(result);
+  } catch (err) {
+    console.error('[API sync-imap error]:', err);
     res.status(500).json({ error: err.message });
   }
 });

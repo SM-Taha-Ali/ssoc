@@ -41,6 +41,19 @@ const integrationConfigSchema = new mongoose.Schema(
       apiKey: { type: String, default: '' },
       fromEmail: { type: String, default: '' }
     },
+    imap: {
+      host: { type: String, default: '' },
+      port: { type: Number, default: 993 },
+      secure: { type: Boolean, default: true },
+      user: { type: String, default: '' },
+      pass: { type: String, default: '' },
+      enabled: { type: Boolean, default: false },
+      lastCheckedAt: { type: Date }
+    },
+    inboundWebhookSecret: {
+      type: String,
+      default: ''
+    },
     apolloApiKey: {
       type: String,
       default: ''

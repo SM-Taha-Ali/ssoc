@@ -125,14 +125,17 @@ export async function scoreAndAuditLead(lead, companyProfile, apiKey, modelName)
   const prompt = `
 You are a Principal AI & Tech Sales Solutions Architect. Evaluate this tech job lead against the company profile and criteria.
 
-COMPANY PROFILE:
-- Name: ${companyProfile.name}
-- Tagline: ${companyProfile.tagline}
-- Value Proposition: ${companyProfile.valueProposition}
-- Target Services: ${JSON.stringify(companyProfile.targetServices)}
-- Target Keywords: ${JSON.stringify(companyProfile.targetKeywords)}
-- Negative Keywords: ${JSON.stringify(companyProfile.negativeKeywords)}
-- Minimum Budget: $${companyProfile.minBudget}
+COMPANY PROFILE & GROUND-TRUTH DIGITAL ASSETS:
+- Name: ${companyProfile.name || companyProfile.companyName || 'Agency'}
+- Tagline: ${companyProfile.tagline || ''}
+- Value Proposition: ${companyProfile.valueProposition || ''}
+- Target Services: ${JSON.stringify(companyProfile.targetServices || [])}
+- Target Keywords: ${JSON.stringify(companyProfile.targetKeywords || [])}
+- Negative Keywords: ${JSON.stringify(companyProfile.negativeKeywords || [])}
+- Minimum Budget: $${companyProfile.minBudget || 0}
+${companyProfile.websiteData?.rawTextSummary ? `- Live Website Intelligence & Case Studies:\n${companyProfile.websiteData.rawTextSummary.slice(0, 1000)}` : ''}
+${companyProfile.upworkData?.rawTextSummary ? `- Live Upwork Profile (Headline, Overview, Skills):\n${companyProfile.upworkData.rawTextSummary.slice(0, 800)}` : ''}
+${companyProfile.linkedinData?.rawTextSummary ? `- Live LinkedIn Profile (Headline & About):\n${companyProfile.linkedinData.rawTextSummary.slice(0, 800)}` : ''}
 
 JOB LEAD:
 - Title: ${lead.title}
@@ -143,9 +146,9 @@ JOB LEAD:
 ${lead.description}
 
 YOUR TASKS:
-1. Calculate a matchScore (integer from 0 to 100) based on how well this job matches the company's target services and keywords. Penalize heavily if it hits negative keywords or is below minimum budget.
+1. Calculate a matchScore (integer from 0 to 100) based on how well this job matches the company's real target services, skills, and budget. Penalize heavily if it hits negative keywords or is below minimum budget.
 2. Provide a 2-sentence matchReasoning explaining the score.
-3. List 3 concrete profileOptimizationTips: specific suggestions on how the freelancer/agency should present their profile, headline, or prior case studies for this exact client.
+3. List 3 concrete, personalized profileOptimizationTips: compare their real ground-truth Upwork headline, LinkedIn about section, or website case studies against this exact job posting. Give precise recommendations on what words to highlight, how to adjust their headline, and which specific proof point to put first.
 4. Write a 60-second video demo script:
    - hook: (0-10 sec) Compelling personal opening directly addressing their specific pain point.
    - problemStatement: (10-25 sec) Articulate the exact technical difficulty they are facing.

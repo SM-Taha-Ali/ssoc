@@ -93,6 +93,37 @@ const companyProfileSchema = new mongoose.Schema(
       type: Number,
       default: 100
     },
+    websiteData: {
+      scrapedTitle: { type: String, default: '' },
+      metaDescription: { type: String, default: '' },
+      rawTextSummary: { type: String, default: '' },
+      scrapedServices: [{ type: String }],
+      scrapedCaseStudies: [{ type: String }],
+      lastScrapedAt: { type: Date }
+    },
+    upworkProfileUrl: {
+      type: String,
+      default: ''
+    },
+    upworkData: {
+      headline: { type: String, default: '' },
+      overview: { type: String, default: '' },
+      skills: [{ type: String }],
+      hourlyRate: { type: String, default: '' },
+      rawTextSummary: { type: String, default: '' },
+      lastScrapedAt: { type: Date }
+    },
+    linkedinProfileUrl: {
+      type: String,
+      default: ''
+    },
+    linkedinData: {
+      headline: { type: String, default: '' },
+      about: { type: String, default: '' },
+      services: [{ type: String }],
+      rawTextSummary: { type: String, default: '' },
+      lastScrapedAt: { type: Date }
+    },
     portfolioLinks: [
       {
         label: { type: String, required: true },

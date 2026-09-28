@@ -9,6 +9,7 @@ import { Company } from '../models/Company.js';
 
 let leadFinderJob = null;
 let cooldownJob = null;
+let imapJob = null;
 
 /**
  * Runs the Lead Finder: scrapes raw candidates, runs high-efficiency single-call LLM batch evaluation,
@@ -275,6 +276,7 @@ export async function initScheduler() {
 
   if (leadFinderJob) leadFinderJob.stop();
   if (cooldownJob) cooldownJob.stop();
+  if (imapJob) imapJob.stop();
 
   leadFinderJob = cron.schedule(finderSchedule, () => {
     runLeadFinderTask();
@@ -284,5 +286,13 @@ export async function initScheduler() {
     runCooldownTrackerTask();
   });
 
-  console.log(`[Scheduler] Initialized. Lead Finder: "${finderSchedule}", Cooldown Tracker: "${cooldownSchedule}"`);
+  // Automated IMAP Reply Detection every 30 minutes
+  imapJob = cron.schedule('*/30 * * * *', async () => {
+    try {
+      const { syncImapReplies } = await import('./imapSyncService.js');
+      await syncImapReplies();
+    } catch (_) {}
+  });
+
+  console.log(`[Scheduler] Initialized. Lead Finder: "${finderSchedule}", Cooldown Tracker: "${cooldownSchedule}", IMAP Reply Checker: every 30m`);
 }

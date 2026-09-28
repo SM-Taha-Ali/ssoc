@@ -26,7 +26,11 @@ import {
   Sun,
   Moon,
   Eye,
-  CheckCircle2
+  CheckCircle2,
+  Globe,
+  RefreshCw,
+  Inbox,
+  Link
 } from 'lucide-react';
 import CustomSelect from './CustomSelect.jsx';
 import { useTheme, ACCENT_THEMES } from '../context/ThemeContext.jsx';
@@ -112,6 +116,12 @@ export default function SettingsPage({ onBackToPipeline }) {
   const [triggeringCooldown, setTriggeringCooldown] = useState(false);
   const [resettingDb, setResettingDb] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState('');
+
+  // Live Digital Profile Scraping & Inbound Email States
+  const [syncingProfiles, setSyncingProfiles] = useState(false);
+  const [profileSyncResult, setProfileSyncResult] = useState(null);
+  const [syncingImap, setSyncingImap] = useState(false);
+  const [imapSyncResult, setImapSyncResult] = useState(null);
 
   useEffect(() => {
     fetchSettings();
@@ -241,6 +251,57 @@ export default function SettingsPage({ onBackToPipeline }) {
     } finally {
       setResettingDb(false);
     }
+  };
+
+  const handleSyncProfiles = async () => {
+    setSyncingProfiles(true);
+    setProfileSyncResult(null);
+    try {
+      await axios.put('/api/company-profile', company);
+      const res = await axios.post('/api/company-profile/sync-profiles');
+      if (res.data?.profile) {
+        setCompany(res.data.profile);
+      }
+      setProfileSyncResult({
+        success: true,
+        message: 'Live digital profiles & case studies successfully scraped! Gemini 3.8 Flash will now use this ground-truth data in pitch generation and profile audits.'
+      });
+      setTimeout(() => setProfileSyncResult(null), 6000);
+    } catch (err) {
+      setProfileSyncResult({
+        success: false,
+        message: err.response?.data?.error || err.message || 'Profile sync failed'
+      });
+    } finally {
+      setSyncingProfiles(false);
+    }
+  };
+
+  const handleSyncImap = async () => {
+    setSyncingImap(true);
+    setImapSyncResult(null);
+    try {
+      await axios.put('/api/integrations', integrations);
+      const res = await axios.post('/api/integrations/sync-imap');
+      setImapSyncResult(res.data);
+      if (typeof window !== 'undefined' && window.__refreshLeads) {
+        window.__refreshLeads();
+      }
+    } catch (err) {
+      setImapSyncResult({
+        success: false,
+        error: err.response?.data?.error || err.message
+      });
+    } finally {
+      setSyncingImap(false);
+    }
+  };
+
+  const handleCopyWebhook = () => {
+    const url = integrations.inboundWebhookUrl || `${window.location.origin}/api/webhooks/email-reply`;
+    navigator.clipboard.writeText(url);
+    setCopiedWebhook(true);
+    setTimeout(() => setCopiedWebhook(false), 2500);
   };
 
   const handleAddFeed = async (e) => {
@@ -609,6 +670,136 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Section: Live Digital Assets & Profile Sync (Upwork, LinkedIn & Website) */}
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-theme">
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-brand-400" />
+                    Live Digital Assets & Profiles (AI Input Integration)
+                  </h4>
+                  <p className="text-[11px] text-secondary mt-0.5">
+                    Connect your public agency website, Upwork, and LinkedIn. AI scrapes your actual headline, skills, and case studies to power hyper-personalized cold pitches and profile audits.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSyncProfiles}
+                  disabled={syncingProfiles}
+                  className="px-4 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl transition-all shadow-md shadow-brand-600/20 flex items-center gap-2 flex-shrink-0 disabled:opacity-50 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingProfiles ? 'animate-spin' : ''}`} />
+                  <span>{syncingProfiles ? 'Scraping Profiles...' : 'Scrape & Sync Profiles'}</span>
+                </button>
+              </div>
+
+              {profileSyncResult && (
+                <div
+                  className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                    profileSyncResult.success
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                  }`}
+                >
+                  {profileSyncResult.success ? (
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  )}
+                  <span>{profileSyncResult.message}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">
+                    Agency Website URL
+                  </label>
+                  <input
+                    type="url"
+                    value={company.website || ''}
+                    onChange={(e) => setCompany({ ...company, website: e.target.value })}
+                    placeholder="https://apexsolutions.io"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                  />
+                  {company.websiteData?.lastScrapedAt && (
+                    <p className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1 font-medium">
+                      <Check className="w-3 h-3" />
+                      Synced {company.websiteData.scrapedCaseStudies?.length || 0} case studies & highlights
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">
+                    Upwork Profile or Agency URL
+                  </label>
+                  <input
+                    type="url"
+                    value={company.upworkProfileUrl || ''}
+                    onChange={(e) => setCompany({ ...company, upworkProfileUrl: e.target.value })}
+                    placeholder="https://www.upwork.com/agencies/..."
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                  />
+                  {company.upworkData?.lastScrapedAt && (
+                    <p className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1 font-medium">
+                      <Check className="w-3 h-3" />
+                      Synced headline & {company.upworkData.skills?.length || 0} skills
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">
+                    LinkedIn Profile or Company URL
+                  </label>
+                  <input
+                    type="url"
+                    value={company.linkedinProfileUrl || ''}
+                    onChange={(e) => setCompany({ ...company, linkedinProfileUrl: e.target.value })}
+                    placeholder="https://www.linkedin.com/company/..."
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                  />
+                  {company.linkedinData?.lastScrapedAt && (
+                    <p className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1 font-medium">
+                      <Check className="w-3 h-3" />
+                      Synced LinkedIn about & positioning
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Scraped Assets Summary Panel */}
+              {(company.websiteData?.scrapedTitle || company.upworkData?.headline || company.linkedinData?.headline) && (
+                <div className="mt-2 p-3.5 rounded-xl bg-card-subtle border border-theme space-y-2">
+                  <div className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+                    Live Scraped Ground-Truth Fed into Gemini 3.8 Flash:
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px]">
+                    <div className="p-2.5 rounded-lg bg-surface border border-theme">
+                      <div className="font-semibold text-secondary">Website Title & Copy</div>
+                      <div className="text-muted text-[10px] mt-0.5 line-clamp-2">
+                        {company.websiteData?.scrapedTitle || 'Title parsed'} - {company.websiteData?.metaDescription || 'No description'}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-surface border border-theme">
+                      <div className="font-semibold text-secondary">Upwork Headline & Bio</div>
+                      <div className="text-muted text-[10px] mt-0.5 line-clamp-2">
+                        {company.upworkData?.headline || company.upworkData?.rawTextSummary?.slice(0, 100) || 'Upwork profile registered'}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-surface border border-theme">
+                      <div className="font-semibold text-secondary">LinkedIn Positioning</div>
+                      <div className="text-muted text-[10px] mt-0.5 line-clamp-2">
+                        {company.linkedinData?.headline || company.linkedinData?.rawTextSummary?.slice(0, 100) || 'LinkedIn profile registered'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1250,6 +1441,209 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 </div>
               </div>
             )}
+
+            {/* Section: Inbound Email Connection & Reply Detection */}
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-5 shadow-sm dark:shadow-none">
+              <div className="border-b border-theme pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                    <Inbox className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                      Inbound Email Connection & Reply Detection
+                    </h4>
+                    <p className="text-[11px] text-secondary mt-0.5">
+                      Automatically detect when a prospective client replies to your cold outreach. SSOC will immediately change the lead's status to <strong>Replied</strong> and halt all remaining follow-up sequences.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-Card 1: Inbound Webhook */}
+              <div className="p-4 rounded-xl bg-card-subtle border border-theme space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Link className="w-3.5 h-3.5 text-brand-400" />
+                      Option A: Real-Time Inbound Reply Webhook
+                    </span>
+                    <p className="text-[10px] text-muted mt-0.5">
+                      Direct HTTP webhook compatible with Resend Inbound, SendGrid Inbound Parse, Zapier, Make, and n8n.
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-500/10 text-brand-500 border border-brand-500/20">
+                    Instant
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">
+                    Your Inbound Webhook Endpoint URL
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={integrations.inboundWebhookUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/email-reply`}
+                      className="flex-1 bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyWebhook}
+                      className="px-3 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-brand-600/20"
+                    >
+                      {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedWebhook ? 'Copied!' : 'Copy URL'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">
+                    Optional Webhook Secret Token (Security)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="e.g. whsec_secret_key_123"
+                    value={integrations.inboundWebhookSecret || ''}
+                    onChange={(e) =>
+                      setIntegrations({
+                        ...integrations,
+                        inboundWebhookSecret: e.target.value
+                      })
+                    }
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                  />
+                  <p className="text-[10px] text-muted mt-1">
+                    If set, incoming webhooks must include this token as header <code>x-webhook-secret</code> or query param <code>?secret=...</code>
+                  </p>
+                </div>
+              </div>
+
+              {/* Sub-Card 2: Direct IMAP Mailbox Polling */}
+              <div className="p-4 rounded-xl bg-card-subtle border border-theme space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="enableImap"
+                      checked={integrations.imap?.enabled || false}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          imap: { ...(integrations.imap || {}), enabled: e.target.checked }
+                        })
+                      }
+                      className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                    />
+                    <label htmlFor="enableImap" className="text-xs font-bold text-primary cursor-pointer select-none">
+                      Option B: Direct IMAP Mailbox Polling (Gmail / Outlook / Custom Mail)
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSyncImap}
+                    disabled={syncingImap}
+                    className="px-3 py-1.5 text-xs font-semibold !text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-emerald-600/20 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${syncingImap ? 'animate-spin' : ''}`} />
+                    <span>{syncingImap ? 'Checking...' : 'Check Inbox Now'}</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-secondary">
+                  Connects directly to your email inbox to scan for replies from active leads. When enabled, SSOC automatically checks your inbox every 30 minutes in the background.
+                </p>
+
+                {imapSyncResult && (
+                  <div
+                    className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 ${
+                      imapSyncResult.success
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                        : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                    }`}
+                  >
+                    {imapSyncResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    <span>
+                      {imapSyncResult.success
+                        ? `Checked mailbox: scanned ${imapSyncResult.processedCount || 0} messages, matched & updated ${imapSyncResult.matchedLeadsCount || 0} lead replies!`
+                        : `IMAP Check Error: ${imapSyncResult.error || 'Connection failed'}`}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">IMAP Host</label>
+                    <input
+                      type="text"
+                      placeholder="imap.gmail.com"
+                      value={integrations.imap?.host || ''}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          imap: { ...(integrations.imap || {}), host: e.target.value }
+                        })
+                      }
+                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">Port</label>
+                    <input
+                      type="number"
+                      placeholder="993"
+                      value={integrations.imap?.port || 993}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          imap: { ...(integrations.imap || {}), port: Number(e.target.value) }
+                        })
+                      }
+                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">Email / Username</label>
+                    <input
+                      type="email"
+                      placeholder="alex@apexsolutions.io"
+                      value={integrations.imap?.user || ''}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          imap: { ...(integrations.imap || {}), user: e.target.value }
+                        })
+                      }
+                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">App Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={integrations.imap?.pass || ''}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          imap: { ...(integrations.imap || {}), pass: e.target.value }
+                        })
+                      }
+                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
