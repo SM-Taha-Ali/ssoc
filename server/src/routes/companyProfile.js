@@ -34,11 +34,15 @@ router.get('/', async (req, res) => {
  */
 router.put('/', async (req, res) => {
   try {
+    const payload = { ...req.body };
+    if (Array.isArray(payload.caseStudies)) {
+      payload.caseStudies = payload.caseStudies.map((cs, i) => `${i + 1}. ${cs}`).join('\n');
+    }
     let profile = await CompanyProfile.findOne({ companyId: req.companyId });
     if (!profile) {
-      profile = new CompanyProfile({ ...req.body, companyId: req.companyId });
+      profile = new CompanyProfile({ ...payload, companyId: req.companyId });
     } else {
-      Object.assign(profile, req.body, { companyId: req.companyId });
+      Object.assign(profile, payload, { companyId: req.companyId });
     }
     await profile.save();
     res.json(profile);

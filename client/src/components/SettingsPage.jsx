@@ -299,7 +299,12 @@ export default function SettingsPage({ onBackToPipeline }) {
         if (data.tagline) setCompany(prev => ({ ...prev, tagline: data.tagline }));
         if (data.website) setCompany(prev => ({ ...prev, website: data.website }));
         if (data.valueProposition) setCompany(prev => ({ ...prev, valueProposition: data.valueProposition }));
-        if (data.caseStudies) setCompany(prev => ({ ...prev, caseStudies: data.caseStudies }));
+        if (data.caseStudies) {
+          const formattedCaseStudies = Array.isArray(data.caseStudies)
+            ? data.caseStudies.map((cs, i) => `${i + 1}. ${cs}`).join('\n')
+            : String(data.caseStudies);
+          setCompany(prev => ({ ...prev, caseStudies: formattedCaseStudies }));
+        }
         
         if (Array.isArray(data.services) && data.services.length) {
           setServicesStr(data.services.join('\n'));
