@@ -380,9 +380,11 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
           {onBackToPipeline && (
             <button
               onClick={onBackToPipeline}
-              className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-brand-400 hover:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 rounded-lg transition-all"
+              title="Return to Pipeline Board"
             >
-              Back
+              <span>←</span>
+              <span>Back</span>
             </button>
           )}
         </div>
@@ -474,26 +476,26 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
         {activeTab === 'company' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Company Profile & Sender Details</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-base font-bold text-primary dark:text-white">Company Profile & Sender Details</h3>
+              <p className="text-xs text-secondary dark:text-slate-400 mt-1">
                 Basic organization details and outbound sender identity used across automated pitches and calendar bookings.
               </p>
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-900/40 via-indigo-900/30 to-purple-900/20 border border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-950/20">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
-                  <Wand2 className="w-5 h-5 text-brand-300" />
+                <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
+                  <Wand2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-primary dark:text-white flex items-center gap-2">
                     Quick AI Auto-Setup
-                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 border border-brand-500/20 dark:bg-brand-500/20 dark:text-brand-300 dark:border-brand-500/30">
                       1-Click Extraction
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-[11px] text-secondary dark:text-slate-300 mt-0.5">
                     Paste your agency website copy or company bio. Gemini will auto-fill your profile, value proposition, and targeting rules.
                   </p>
                 </div>
@@ -501,7 +503,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               <button
                 type="button"
                 onClick={() => setShowQuickAiModal(true)}
-                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-sm shadow-brand-600/20 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Launch Quick AI Setup</span>
@@ -509,14 +511,15 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Section: Organization Details */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            {/* Section: Organization Details */}
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
                 <Building className="w-4 h-4 text-brand-400" />
                 Organization Information
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Company / Agency Name
                   </label>
                   <input
@@ -524,36 +527,36 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     value={company.name || ''}
                     onChange={(e) => setCompany({ ...company, name: e.target.value })}
                     placeholder="e.g. Apex AI & Cloud Engineering"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Company Tagline</label>
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">Company Tagline</label>
                   <input
                     type="text"
                     value={company.tagline || ''}
                     onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
                     placeholder="e.g. Production AI Agents & Scalable Cloud Solutions"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Website URL</label>
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">Website URL</label>
                   <input
                     type="url"
                     value={company.website || ''}
                     onChange={(e) => setCompany({ ...company, website: e.target.value })}
                     placeholder="https://apexsolutions.io"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
                     Calendar Booking Link (Injected into Pitches)
                   </label>
                   <input
@@ -561,48 +564,48 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     value={company.calendarLink || ''}
                     onChange={(e) => setCompany({ ...company, calendarLink: e.target.value })}
                     placeholder="https://calendly.com/your-name/30min"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Included in outbound emails and pitch video CTAs</p>
+                  <p className="text-[10px] text-muted mt-1">Included in outbound emails and pitch video CTAs</p>
                 </div>
               </div>
             </div>
 
             {/* Section: Sender Profile */}
-            <div className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
                 <Mail className="w-4 h-4 text-emerald-400" />
                 Sender Profile (Appears on Dispatched Outreach)
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Sender Name</label>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">Sender Name</label>
                   <input
                     type="text"
                     value={company.senderName || ''}
                     onChange={(e) => setCompany({ ...company, senderName: e.target.value })}
                     placeholder="Alex Vance"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Sender Title</label>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">Sender Title</label>
                   <input
                     type="text"
                     value={company.senderTitle || ''}
                     onChange={(e) => setCompany({ ...company, senderTitle: e.target.value })}
                     placeholder="Principal Solutions Architect"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Sender Email</label>
+                  <label className="text-[11px] font-semibold text-secondary block mb-1">Sender Email</label>
                   <input
                     type="email"
                     value={company.senderEmail || ''}
                     onChange={(e) => setCompany({ ...company, senderEmail: e.target.value })}
                     placeholder="alex@apexsolutions.io"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -614,26 +617,26 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
         {activeTab === 'valueprop' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Value Proposition & Sales Positioning</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-base font-bold text-primary dark:text-white">Value Proposition & Sales Positioning</h3>
+              <p className="text-xs text-secondary dark:text-slate-400 mt-1">
                 Define what you sell, your core technical superpowers, and past customer proof. Gemini AI uses this exact data to write personalized pitches and construct 60-second video demo scripts.
               </p>
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-900/40 via-indigo-900/30 to-purple-900/20 border border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-950/20">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
-                  <Wand2 className="w-5 h-5 text-brand-300" />
+                <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
+                  <Wand2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-primary dark:text-white flex items-center gap-2">
                     Quick AI Auto-Setup
-                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 border border-brand-500/20 dark:bg-brand-500/20 dark:text-brand-300 dark:border-brand-500/30">
                       1-Click Extraction
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-[11px] text-secondary dark:text-slate-300 mt-0.5">
                     Paste your company capabilities or sales deck. Gemini will automatically distill your value proposition, services, and proof points.
                   </p>
                 </div>
@@ -641,7 +644,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               <button
                 type="button"
                 onClick={() => setShowQuickAiModal(true)}
-                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-sm shadow-brand-600/20 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Launch Quick AI Setup</span>
@@ -728,26 +731,26 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
         {activeTab === 'targeting' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Targeting Rules & Ideal Client Profile (ICP)</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-base font-bold text-primary dark:text-white">Targeting Rules & Ideal Client Profile (ICP)</h3>
+              <p className="text-xs text-secondary dark:text-slate-400 mt-1">
                 Set the exact criteria for which opportunities get approved into your pipeline. The single-call LLM batch auditor uses these rules to reject irrelevant jobs and keep your focus on high-ticket leads.
               </p>
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-900/40 via-indigo-900/30 to-purple-900/20 border border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-indigo-950/20">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center flex-shrink-0">
-                  <Wand2 className="w-5 h-5 text-brand-300" />
+                <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
+                  <Wand2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-primary dark:text-white flex items-center gap-2">
                     Quick AI Auto-Setup
-                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 border border-brand-500/20 dark:bg-brand-500/20 dark:text-brand-300 dark:border-brand-500/30">
                       1-Click Extraction
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
+                  <p className="text-[11px] text-secondary dark:text-slate-300 mt-0.5">
                     Auto-generate target industries, decision maker titles, tech keywords, and disqualifiers using AI.
                   </p>
                 </div>
@@ -755,7 +758,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               <button
                 type="button"
                 onClick={() => setShowQuickAiModal(true)}
-                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-md shadow-brand-600/30 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-sm shadow-brand-600/20 transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Launch Quick AI Setup</span>

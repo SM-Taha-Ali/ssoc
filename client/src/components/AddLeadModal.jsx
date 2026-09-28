@@ -155,7 +155,7 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
           {mode === 'paste' ? (
             <div className="space-y-3">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-secondary dark:text-slate-400">
                 Paste any job posting description, client email, or platform post. Gemini will parse it into a clean structured lead for your operations pipeline.
               </p>
               <textarea
@@ -163,7 +163,7 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
                 placeholder="Paste job description or email here..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-brand-500 font-sans leading-relaxed"
+                className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-xl p-3 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-sans leading-relaxed"
               />
               <button
                 type="button"
@@ -178,7 +178,7 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">
                   Job / Project Title *
                 </label>
                 <input
@@ -187,97 +187,97 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. AI Workflow Specialist (n8n + OpenAI) needed"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                  className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Platform</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Platform</label>
                   <CustomSelect
                     value={platform}
                     onChange={setPlatform}
                     options={PLATFORM_OPTIONS}
                     className="w-full"
-                    buttonClassName="w-full bg-slate-900 border-slate-800 py-2"
+                    buttonClassName="w-full bg-card-subtle dark:bg-slate-900 border-theme py-2 text-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Source URL</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Source URL</label>
                   <input
                     type="url"
                     value={sourceUrl}
                     onChange={(e) => setSourceUrl(e.target.value)}
                     placeholder="https://..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Client Name</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Client Name</label>
                   <input
                     type="text"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
                     placeholder="e.g. Alex"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Company</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Company</label>
                   <input
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="Acme Inc"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Client Email</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Client Email</label>
                   <input
                     type="email"
                     value={clientEmail}
                     onChange={(e) => setClientEmail(e.target.value)}
                     placeholder="alex@acme.com"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Budget ($)</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Budget ($)</label>
                   <input
                     type="number"
                     value={budgetAmount}
                     onChange={(e) => setBudgetAmount(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Skills (comma separated)</label>
+                  <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Skills (comma separated)</label>
                   <input
                     type="text"
                     value={skills}
                     onChange={(e) => setSkills(e.target.value)}
                     placeholder="React, AI, n8n, Node"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg px-3 py-2 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Description *</label>
+                <label className="text-[11px] font-semibold text-secondary dark:text-slate-400 block mb-1">Description *</label>
                 <textarea
                   rows={4}
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Paste or write job requirements..."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-white focus:outline-none focus:border-brand-500"
+                  className="w-full bg-card-subtle dark:bg-slate-900 border border-theme rounded-lg p-3 text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                 />
               </div>
 

@@ -255,31 +255,31 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="bg-[#0f172a] border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-surface border border-theme rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
+        <div className="p-4 border-b border-theme flex items-center justify-between bg-card">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-primary flex items-center gap-2">
               SSOC Operations Settings
-              <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="text-[10px] text-emerald-500 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 Multi-Tenant & Zero-Hardcoded
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Configure your company identity, targeting rules, AI model, and dispatch channels.</p>
+            <p className="text-xs text-secondary">Configure your company identity, targeting rules, AI model, and dispatch channels.</p>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
+          <button onClick={onClose} className="p-1 text-secondary hover:text-primary rounded-lg transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 bg-slate-900/40 text-xs font-semibold px-4 overflow-x-auto">
+        <div className="flex border-b border-theme bg-card-subtle text-xs font-semibold px-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab('company')}
             className={`py-3 px-3 border-b-2 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
               activeTab === 'company'
-                ? 'border-brand-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-brand-500 text-brand-500 font-bold'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
             <Building className="w-3.5 h-3.5 text-brand-400" />
