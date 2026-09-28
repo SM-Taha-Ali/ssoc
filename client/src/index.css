@@ -234,8 +234,14 @@ html[data-mode="light"] .hover\:bg-slate-800:hover {
    6. CENTRALIZED TYPOGRAPHY CONTRAST
    ======================================================== */
 .text-primary,
-.text-white,
-.text-slate-100 {
+.text-slate-100,
+h1.text-white,
+h2.text-white,
+h3.text-white,
+h4.text-white,
+h5.text-white,
+h6.text-white,
+p.text-white {
   color: var(--theme-text-primary) !important;
 }
 
@@ -254,6 +260,7 @@ html[data-mode="light"] .hover\:bg-slate-800:hover {
 
 /* ========================================================
    6.5 DROPDOWN MENU ITEMS (PRECISE LIGHT & DARK HOVER STYLES)
+   Preserves crisp slate/brand contrast on transparent/subtle backgrounds
    ======================================================== */
 .dropdown-item-btn {
   background-color: transparent !important;
@@ -320,7 +327,8 @@ html[data-mode="dark"] .dropdown-item-logout:hover {
 /* ========================================================
    7. SOLID BUTTONS, GRADIENT AVATARS & BADGES (CRISP WHITE TEXT & ICONS)
    Enforces pure, legible white text on all solid colored buttons,
-   gradient avatars, and action chips across BOTH light and dark modes.
+   action buttons, and avatars across BOTH light and dark modes.
+   Does NOT touch transparent or light dropdown/secondary buttons.
    ======================================================== */
 .text-pure-white,
 .text-pure-white *,
@@ -328,6 +336,26 @@ html[data-mode="dark"] .dropdown-item-logout:hover {
 .\!text-white *,
 .btn-primary,
 .btn-primary *,
+button.text-white,
+button.text-white *,
+a.text-white,
+a.text-white *,
+button.bg-teal-600,
+button.bg-teal-600 *,
+button.bg-teal-500,
+button.bg-teal-500 *,
+a.bg-teal-600,
+a.bg-teal-600 *,
+.bg-teal-600.text-white,
+.bg-teal-600.text-white *,
+button.bg-sky-600,
+button.bg-sky-600 *,
+button.bg-sky-500,
+button.bg-sky-500 *,
+a.bg-sky-600,
+a.bg-sky-600 *,
+.bg-sky-600.text-white,
+.bg-sky-600.text-white *,
 button.bg-brand-600,
 button.bg-brand-600 *,
 button.bg-brand-500,
@@ -350,8 +378,30 @@ button.bg-blue-600,
 button.bg-blue-600 *,
 button.bg-violet-600,
 button.bg-violet-600 *,
+button.bg-cyan-600,
+button.bg-cyan-600 *,
+button.bg-cyan-500,
+button.bg-cyan-500 *,
+button.bg-amber-600,
+button.bg-amber-600 *,
+button.bg-amber-500,
+button.bg-amber-500 *,
+button.bg-red-600,
+button.bg-red-600 *,
+button.bg-red-500,
+button.bg-red-500 *,
 a.bg-brand-600,
 a.bg-brand-600 *,
+a.bg-indigo-600,
+a.bg-indigo-600 *,
+a.bg-emerald-600,
+a.bg-emerald-600 *,
+a.bg-rose-600,
+a.bg-rose-600 *,
+a.bg-purple-600,
+a.bg-purple-600 *,
+a.bg-blue-600,
+a.bg-blue-600 *,
 .bg-brand-600.text-white,
 .bg-brand-600.text-white *,
 .bg-brand-500.text-white,

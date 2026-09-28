@@ -68,9 +68,9 @@ export default function PriorityInbox({
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => onUpdateStage(lead._id, 'meeting')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 hover:bg-teal-500 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold !text-white bg-teal-600 hover:bg-teal-500 active:scale-95 rounded-lg transition-all shadow-sm shadow-teal-600/20 cursor-pointer"
                   >
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-3.5 h-3.5 !text-white" />
                     Book Meeting
                   </button>
                   <button
