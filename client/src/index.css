@@ -253,6 +253,71 @@ html[data-mode="light"] .hover\:bg-slate-800:hover {
 }
 
 /* ========================================================
+   6.5 DROPDOWN MENU ITEMS (PRECISE LIGHT & DARK HOVER STYLES)
+   ======================================================== */
+.dropdown-item-btn {
+  background-color: transparent !important;
+  color: var(--theme-text-primary) !important;
+  transition: all 0.15s ease-in-out;
+}
+
+.dropdown-item-btn .dropdown-item-icon {
+  color: var(--theme-text-muted) !important;
+  transition: color 0.15s ease-in-out;
+}
+
+.dropdown-item-btn .dropdown-item-text {
+  color: var(--theme-text-primary) !important;
+  transition: color 0.15s ease-in-out;
+}
+
+/* Light Mode Hover: clear soft slate background, brand indigo text & icon */
+html[data-mode="light"] .dropdown-item-btn:hover {
+  background-color: #f1f5f9 !important;
+}
+html[data-mode="light"] .dropdown-item-btn:hover .dropdown-item-text,
+html[data-mode="light"] .dropdown-item-btn:hover .dropdown-item-icon {
+  color: #4f46e5 !important;
+}
+
+/* Dark Mode Hover: sleek frosted dark highlight, bright brand text & icon */
+html[data-mode="dark"] .dropdown-item-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-mode="dark"] .dropdown-item-btn:hover .dropdown-item-text,
+html[data-mode="dark"] .dropdown-item-btn:hover .dropdown-item-icon {
+  color: #818cf8 !important;
+}
+
+/* Active State when on Settings */
+.dropdown-item-btn.active {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+}
+.dropdown-item-btn.active .dropdown-item-text,
+.dropdown-item-btn.active .dropdown-item-icon {
+  color: #6366f1 !important;
+  font-weight: 600 !important;
+}
+
+/* Sign Out Item */
+.dropdown-item-logout {
+  background-color: transparent !important;
+  color: #e11d48 !important;
+  transition: all 0.15s ease-in-out;
+}
+.dropdown-item-logout .dropdown-logout-icon {
+  color: #f43f5e !important;
+}
+html[data-mode="light"] .dropdown-item-logout:hover {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+}
+html[data-mode="dark"] .dropdown-item-logout:hover {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+  color: #fb7185 !important;
+}
+
+/* ========================================================
    7. SOLID BUTTONS, GRADIENT AVATARS & BADGES (CRISP WHITE TEXT & ICONS)
    Enforces pure, legible white text on all solid colored buttons,
    gradient avatars, and action chips across BOTH light and dark modes.

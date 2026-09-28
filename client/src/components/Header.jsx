@@ -179,10 +179,10 @@ export default function Header({
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none ${
+                  className={`flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
                     isDropdownOpen
                       ? 'bg-card border-brand-500/50 ring-2 ring-brand-500/10 text-primary'
-                      : 'bg-card-subtle hover:bg-card border-theme text-primary hover:border-slate-700'
+                      : 'bg-card-subtle hover:bg-slate-100 dark:hover:bg-slate-800/80 border-theme text-primary hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                   title={`Workspace: ${company.companyName}`}
                 >
@@ -224,23 +224,21 @@ export default function Header({
                     <button
                       type="button"
                       onClick={handleOpenSettings}
-                      className={`group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-all text-left cursor-pointer ${
-                        activeView === 'settings'
-                          ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400 font-semibold'
-                          : 'text-primary hover:text-brand-600 hover:bg-card-subtle'
+                      className={`group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-all text-left cursor-pointer dropdown-item-btn ${
+                        activeView === 'settings' ? 'active' : ''
                       }`}
                     >
-                      <Settings className="w-3.5 h-3.5 text-muted group-hover:text-brand-600 transition-colors flex-shrink-0" />
-                      <span className="flex-1 font-medium text-primary group-hover:text-brand-600">Workspace Settings</span>
+                      <Settings className="w-3.5 h-3.5 dropdown-item-icon transition-colors flex-shrink-0" />
+                      <span className="flex-1 font-medium dropdown-item-text">Workspace Settings</span>
                     </button>
 
                     {/* Sign Out Item */}
                     <button
                       type="button"
                       onClick={handlePromptLogout}
-                      className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all text-left cursor-pointer"
+                      className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-all text-left cursor-pointer dropdown-item-logout"
                     >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <LogOut className="w-3.5 h-3.5 dropdown-logout-icon transition-transform flex-shrink-0 group-hover:scale-110" />
                       <span className="flex-1 font-medium">Sign Out</span>
                     </button>
                   </div>
