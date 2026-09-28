@@ -30,10 +30,20 @@ import {
   Globe,
   RefreshCw,
   Inbox,
-  Link
+  Link,
+  Send,
+  Server,
+  ArrowRight
 } from 'lucide-react';
 import CustomSelect from './CustomSelect.jsx';
 import { useTheme, ACCENT_THEMES } from '../context/ThemeContext.jsx';
+
+const SMTP_PRESETS = [
+  { name: 'Gmail / Workspace', host: 'smtp.gmail.com', port: 465, secure: true },
+  { name: 'Microsoft 365', host: 'smtp.office365.com', port: 587, secure: false },
+  { name: 'Amazon SES', host: 'email-smtp.us-east-1.amazonaws.com', port: 587, secure: false },
+  { name: 'SendGrid', host: 'smtp.sendgrid.net', port: 587, secure: false }
+];
 
 const FEED_PLATFORM_OPTIONS = [
   { value: 'upwork', label: 'Upwork' },
@@ -101,6 +111,31 @@ export default function SettingsPage({ onBackToPipeline }) {
       apiKey: '',
       fromEmail: ''
     },
+    imap: {
+      enabled: false,
+      host: 'imap.gmail.com',
+      port: 993,
+      user: '',
+      pass: ''
+    },
+    inboundWebhookUrl: '',
+    inboundWebhookSecret: '',
+    freelancer: {
+      apiToken: '',
+      profileUsername: '',
+      enabled: true
+    },
+    upwork: {
+      profileUrl: '',
+      agencyName: '',
+      searchKeywords: '',
+      enabled: true
+    },
+    linkedin: {
+      searchKeywords: '',
+      companyPageUrl: '',
+      enabled: true
+    },
     apolloApiKey: '',
     rssFeeds: []
   });
@@ -122,6 +157,7 @@ export default function SettingsPage({ onBackToPipeline }) {
   const [profileSyncResult, setProfileSyncResult] = useState(null);
   const [syncingImap, setSyncingImap] = useState(false);
   const [imapSyncResult, setImapSyncResult] = useState(null);
+  const [inboundMethod, setInboundMethod] = useState('imap'); // 'imap' or 'webhook'
 
   useEffect(() => {
     fetchSettings();
@@ -157,7 +193,21 @@ export default function SettingsPage({ onBackToPipeline }) {
       }
 
       if (intRes.data) {
-        setIntegrations(intRes.data);
+        setIntegrations((prev) => ({
+          ...prev,
+          ...intRes.data,
+          smtpConfig: { ...prev.smtpConfig, ...(intRes.data.smtpConfig || {}) },
+          resendConfig: { ...prev.resendConfig, ...(intRes.data.resendConfig || {}) },
+          imap: { ...prev.imap, ...(intRes.data.imap || {}) },
+          freelancer: { ...prev.freelancer, ...(intRes.data.freelancer || {}) },
+          upwork: { ...prev.upwork, ...(intRes.data.upwork || {}) },
+          linkedin: { ...prev.linkedin, ...(intRes.data.linkedin || {}) }
+        }));
+        if (intRes.data.imap?.enabled) {
+          setInboundMethod('imap');
+        } else if (intRes.data.inboundWebhookSecret) {
+          setInboundMethod('webhook');
+        }
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -1093,7 +1143,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     value={company.geographicPreference || ''}
                     onChange={(e) => setCompany({ ...company, geographicPreference: e.target.value })}
                     placeholder="Remote Worldwide (US/EU timezones preferred)"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -1105,24 +1155,24 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
         {activeTab === 'ai' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Gemini AI Engine Settings</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-base font-bold text-primary">Gemini AI Engine Settings</h3>
+              <p className="text-xs text-secondary mt-1">
                 Configure Google Gemini LLM settings for high-speed single-call candidate filtering, 60-second video demo scripting, and personalized outreach pitches.
               </p>
             </div>
 
             {/* Model Selection */}
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
-              <label className="text-xs font-semibold text-slate-200 block">
+            <div className="p-5 rounded-xl bg-card border border-theme shadow-sm space-y-4">
+              <label className="text-xs font-bold text-primary block uppercase tracking-wider">
                 Select Gemini Model
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                 {/* Gemini 3.8 Flash */}
                 <label
-                  className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                  className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
                     integrations.geminiModel === 'gemini-3.8-flash' || integrations.geminiModel === 'Gemini 3.8 Flash'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-brand-500/10 border-brand-500 shadow-sm ring-1 ring-brand-500/20'
+                      : 'bg-surface border-theme hover:border-brand-500/50'
                   }`}
                 >
                   <input
@@ -1134,16 +1184,16 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                       integrations.geminiModel === 'Gemini 3.8 Flash'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
-                    className="mt-1"
+                    className="mt-1 text-brand-600 focus:ring-brand-500"
                   />
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
-                      Gemini 3.8 Flash
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-brand-500/20 text-brand-300 font-semibold uppercase">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-primary flex items-center justify-between gap-1 flex-wrap">
+                      <span>Gemini 3.8 Flash</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-brand-500/15 text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider border border-brand-500/30">
                         Recommended
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-secondary mt-1.5 leading-relaxed">
                       Highest reasoning fidelity for executive pitches, deep technical scoring, and rich 60-second video demo scripts.
                     </p>
                   </div>
@@ -1151,10 +1201,10 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
 
                 {/* Gemini 3.7 Flash */}
                 <label
-                  className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                  className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
                     integrations.geminiModel === 'gemini-3.7-flash' || integrations.geminiModel === 'Gemini 3.7 Flash'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-brand-500/10 border-brand-500 shadow-sm ring-1 ring-brand-500/20'
+                      : 'bg-surface border-theme hover:border-brand-500/50'
                   }`}
                 >
                   <input
@@ -1166,16 +1216,16 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                       integrations.geminiModel === 'Gemini 3.7 Flash'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
-                    className="mt-1"
+                    className="mt-1 text-brand-600 focus:ring-brand-500"
                   />
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
-                      Gemini 3.7 Flash
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-indigo-500/20 text-indigo-300 font-semibold uppercase">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-primary flex items-center justify-between gap-1 flex-wrap">
+                      <span>Gemini 3.7 Flash</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider border border-indigo-500/30">
                         Balanced
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-secondary mt-1.5 leading-relaxed">
                       Ultra-fast hybrid reasoning. Exceptional precision for qualification, audit breakdowns, and proposal hooks.
                     </p>
                   </div>
@@ -1183,10 +1233,10 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
 
                 {/* Gemini 3.5 Flash Lite */}
                 <label
-                  className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                  className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
                     integrations.geminiModel === 'gemini-3.5-flash-lite' || integrations.geminiModel === 'Gemini 3.5 Flash Lite'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      ? 'bg-brand-500/10 border-brand-500 shadow-sm ring-1 ring-brand-500/20'
+                      : 'bg-surface border-theme hover:border-brand-500/50'
                   }`}
                 >
                   <input
@@ -1198,16 +1248,16 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                       integrations.geminiModel === 'Gemini 3.5 Flash Lite'
                     }
                     onChange={(e) => setIntegrations({ ...integrations, geminiModel: e.target.value })}
-                    className="mt-1"
+                    className="mt-1 text-brand-600 focus:ring-brand-500"
                   />
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5 flex-wrap">
-                      Gemini 3.5 Flash Lite
-                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-semibold uppercase">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-primary flex items-center justify-between gap-1 flex-wrap">
+                      <span>Gemini 3.5 Flash Lite</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider border border-emerald-500/30">
                         High Speed
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-secondary mt-1.5 leading-relaxed">
                       Fastest response time and lowest token cost. Ideal for rapid high-volume lead qualification and filtering.
                     </p>
                   </div>
@@ -1216,8 +1266,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Gemini API Key */}
-            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-              <label className="text-xs font-semibold text-slate-200 block">
+            <div className="p-5 rounded-xl bg-card border border-theme shadow-sm space-y-3">
+              <label className="text-xs font-bold text-primary block">
                 Google Gemini API Key
               </label>
               <input
@@ -1225,498 +1275,886 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={integrations.geminiApiKey || ''}
                 onChange={(e) => setIntegrations({ ...integrations, geminiApiKey: e.target.value })}
                 placeholder="AIzaSy..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500 font-mono"
+                className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-mono"
               />
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-secondary">
                 You can obtain an API key for free at{' '}
                 <a
                   href="https://aistudio.google.com/app/apikey"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-brand-400 hover:underline"
+                  className="text-brand-500 hover:underline font-semibold"
                 >
                   Google AI Studio
                 </a>
-                . Keys saved here or in <code className="text-slate-400">server/.env</code> are securely encrypted.
+                . Keys saved here or in <code className="bg-surface px-1 py-0.5 rounded border border-theme text-primary font-mono text-[10px]">server/.env</code> are securely encrypted.
               </p>
             </div>
           </div>
         )}
 
-        {/* TAB 4: DELIVERY CHANNELS */}
+        {/* TAB 4: DELIVERY & EMAIL CHANNELS */}
         {activeTab === 'email' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-base font-bold text-white">Delivery & Email Channels</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Choose how customized sales pitches and follow-up sequences are delivered to prospect decision makers.
-              </p>
+          <div className="space-y-8">
+            {/* Page Header with Flow Pipeline Context */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-theme pb-5">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-brand-500 flex-shrink-0" />
+                  <span>Email Delivery & Response Infrastructure</span>
+                </h3>
+                <p className="text-xs text-secondary mt-1">
+                  End-to-end pipeline for sending automated proposals and detecting incoming prospect replies.
+                </p>
+              </div>
+
+              {/* Visual Workflow Journey Badge */}
+              <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-surface border border-theme text-[11px] text-secondary flex-shrink-0 whitespace-nowrap shadow-sm">
+                <span className="flex items-center gap-1.5 font-medium text-primary whitespace-nowrap flex-shrink-0">
+                  <Send className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
+                  <span className="whitespace-nowrap">1. Dispatch</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                <span className="flex items-center gap-1.5 font-medium text-primary whitespace-nowrap flex-shrink-0">
+                  <Inbox className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  <span className="whitespace-nowrap">2. Reply Sync</span>
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+                <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap flex-shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Auto-Halt</span>
+                </span>
+              </div>
             </div>
 
-            {/* Delivery Provider Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* SMTP Server / Google Workspace */}
-              <label
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  integrations.deliveryProvider === 'smtp'
-                    ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="deliveryProvider"
-                  value="smtp"
-                  checked={integrations.deliveryProvider === 'smtp'}
-                  onChange={(e) => setIntegrations({ ...integrations, deliveryProvider: e.target.value })}
-                  className="hidden"
-                />
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-white">SMTP Server / Google Workspace</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
-                  Direct outbound email delivery with TLS/SSL authentication. Supports Google Workspace, Gmail, Amazon SES, SendGrid, or custom mail servers.
-                </p>
-              </label>
-
-              {/* Resend API */}
-              <label
-                className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                  integrations.deliveryProvider === 'resend'
-                    ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/20'
-                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="deliveryProvider"
-                  value="resend"
-                  checked={integrations.deliveryProvider === 'resend'}
-                  onChange={(e) => setIntegrations({ ...integrations, deliveryProvider: e.target.value })}
-                  className="hidden"
-                />
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-brand-400" />
-                  <span className="text-xs font-bold text-white">Resend API</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
-                  Enterprise transactional email infrastructure with dedicated domain DKIM, SPF verification, and delivery tracking.
-                </p>
-              </label>
-            </div>
-
-            {/* SMTP Inputs */}
-            {integrations.deliveryProvider === 'smtp' && (
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white">SMTP Mail Server Configuration</h4>
-                  <span className="text-[10px] text-slate-400 font-semibold bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                    TLS / SSL Secured
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">SMTP Host</label>
-                    <input
-                      type="text"
-                      value={integrations.smtpConfig?.host || 'smtp.gmail.com'}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          smtpConfig: { ...integrations.smtpConfig, host: e.target.value }
-                        })
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
+            {/* ========================================================================= */}
+            {/* STAGE 1: OUTBOUND SENDING ENGINE                                          */}
+            {/* ========================================================================= */}
+            <div className="p-6 rounded-2xl bg-card border border-theme shadow-sm space-y-6">
+              {/* Step Header */}
+              <div className="flex items-start justify-between flex-wrap gap-3 pb-4 border-b border-theme">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-500 flex items-center justify-center font-bold text-xs">
+                    01
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">SMTP Port</label>
-                    <input
-                      type="number"
-                      value={integrations.smtpConfig?.port || 465}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          smtpConfig: { ...integrations.smtpConfig, port: parseInt(e.target.value) }
-                        })
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                      Gmail / Workspace Email
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="your-email@gmail.com"
-                      value={integrations.smtpConfig?.user || ''}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          smtpConfig: { ...integrations.smtpConfig, user: e.target.value }
-                        })
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                      Google 16-Character App Password
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="abcd efgh ijkl mnop"
-                      value={integrations.smtpConfig?.pass || ''}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          smtpConfig: { ...integrations.smtpConfig, pass: e.target.value }
-                        })
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                    From Display Email & Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder='"Alex from Apex" <alex@apexsolutions.io>'
-                    value={integrations.smtpConfig?.fromEmail || ''}
-                    onChange={(e) =>
-                      setIntegrations({
-                        ...integrations,
-                        smtpConfig: { ...integrations.smtpConfig, fromEmail: e.target.value }
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Resend Inputs */}
-            {integrations.deliveryProvider === 'resend' && (
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
-                <h4 className="text-xs font-bold text-white">Resend API Configuration</h4>
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">Resend API Key</label>
-                  <input
-                    type="password"
-                    placeholder="re_123456789..."
-                    value={integrations.resendConfig?.apiKey || ''}
-                    onChange={(e) =>
-                      setIntegrations({
-                        ...integrations,
-                        resendConfig: { ...integrations.resendConfig, apiKey: e.target.value }
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-400 block mb-1">
-                    Verified Sender Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="outreach@yourdomain.com"
-                    value={integrations.resendConfig?.fromEmail || ''}
-                    onChange={(e) =>
-                      setIntegrations({
-                        ...integrations,
-                        resendConfig: { ...integrations.resendConfig, fromEmail: e.target.value }
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Section: Inbound Email Connection & Reply Detection */}
-            <div className="p-5 rounded-xl bg-card border border-theme space-y-5 shadow-sm dark:shadow-none">
-              <div className="border-b border-theme pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                    <Inbox className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-primary">
-                      Inbound Email Connection & Reply Detection
+                    <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                      Outbound Sending Engine
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                        Pitches & Follow-ups
+                      </span>
                     </h4>
-                    <p className="text-[11px] text-secondary mt-0.5">
-                      Automatically detect when a prospective client replies to your cold outreach. SSOC will immediately change the lead's status to <strong>Replied</strong> and halt all remaining follow-up sequences.
+                    <p className="text-xs text-secondary mt-0.5">
+                      Select and authenticate the mail service used to deliver cold outreach pitches, follow-ups, and calendar links.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Sub-Card 1: Inbound Webhook */}
-              <div className="p-4 rounded-xl bg-card-subtle border border-theme space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      <Link className="w-3.5 h-3.5 text-brand-400" />
-                      Option A: Real-Time Inbound Reply Webhook
-                    </span>
-                    <p className="text-[10px] text-muted mt-0.5">
-                      Direct HTTP webhook compatible with Resend Inbound, SendGrid Inbound Parse, Zapier, Make, and n8n.
-                    </p>
-                  </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-500/10 text-brand-500 border border-brand-500/20">
-                    Instant
-                  </span>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-semibold text-secondary block mb-1">
-                    Your Inbound Webhook Endpoint URL
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={integrations.inboundWebhookUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/email-reply`}
-                      className="flex-1 bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono select-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCopyWebhook}
-                      className="px-3 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-brand-600/20"
-                    >
-                      {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedWebhook ? 'Copied!' : 'Copy URL'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-semibold text-secondary block mb-1">
-                    Optional Webhook Secret Token (Security)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="e.g. whsec_secret_key_123"
-                    value={integrations.inboundWebhookSecret || ''}
-                    onChange={(e) =>
-                      setIntegrations({
-                        ...integrations,
-                        inboundWebhookSecret: e.target.value
-                      })
-                    }
-                    className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
-                  />
-                  <p className="text-[10px] text-muted mt-1">
-                    If set, incoming webhooks must include this token as header <code>x-webhook-secret</code> or query param <code>?secret=...</code>
-                  </p>
-                </div>
-              </div>
-
-              {/* Sub-Card 2: Direct IMAP Mailbox Polling */}
-              <div className="p-4 rounded-xl bg-card-subtle border border-theme space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="enableImap"
-                      checked={integrations.imap?.enabled || false}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          imap: { ...(integrations.imap || {}), enabled: e.target.checked }
-                        })
-                      }
-                      className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
-                    />
-                    <label htmlFor="enableImap" className="text-xs font-bold text-primary cursor-pointer select-none">
-                      Option B: Direct IMAP Mailbox Polling (Gmail / Outlook / Custom Mail)
-                    </label>
-                  </div>
+              {/* Provider Selector Cards (Sleek, integrated side-by-side) */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-bold text-secondary uppercase tracking-wider block">
+                  Select Sending Infrastructure
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* SMTP Card */}
                   <button
                     type="button"
-                    onClick={handleSyncImap}
-                    disabled={syncingImap}
-                    className="px-3 py-1.5 text-xs font-semibold !text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-emerald-600/20 disabled:opacity-50"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${syncingImap ? 'animate-spin' : ''}`} />
-                    <span>{syncingImap ? 'Checking...' : 'Check Inbox Now'}</span>
-                  </button>
-                </div>
-
-                <p className="text-[10px] text-secondary">
-                  Connects directly to your email inbox to scan for replies from active leads. When enabled, SSOC automatically checks your inbox every 30 minutes in the background.
-                </p>
-
-                {imapSyncResult && (
-                  <div
-                    className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 ${
-                      imapSyncResult.success
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
-                        : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                    onClick={() => setIntegrations({ ...integrations, deliveryProvider: 'smtp' })}
+                    className={`p-4 rounded-xl text-left border transition-all cursor-pointer relative flex flex-col justify-between gap-3 ${
+                      integrations.deliveryProvider === 'smtp'
+                        ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/5 shadow-sm'
+                        : 'border-theme bg-surface hover:border-brand-500/40 text-secondary'
                     }`}
                   >
-                    {imapSyncResult.success ? (
-                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    )}
-                    <span>
-                      {imapSyncResult.success
-                        ? `Checked mailbox: scanned ${imapSyncResult.processedCount || 0} messages, matched & updated ${imapSyncResult.matchedLeadsCount || 0} lead replies!`
-                        : `IMAP Check Error: ${imapSyncResult.error || 'Connection failed'}`}
-                    </span>
-                  </div>
-                )}
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-primary">Google Workspace / Custom SMTP</h5>
+                          <span className="text-[10px] text-muted">Standard SMTP · TLS/SSL Direct</span>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          integrations.deliveryProvider === 'smtp'
+                            ? 'border-brand-500 bg-brand-500 text-white'
+                            : 'border-theme'
+                        }`}
+                      >
+                        {integrations.deliveryProvider === 'smtp' && <Check className="w-2.5 h-2.5" />}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-secondary leading-relaxed">
+                      Direct outbound delivery with authentication. Ideal for Gmail, Google Workspace, Microsoft 365, Amazon SES, and private mail servers.
+                    </p>
+                  </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-1">
+                  {/* Resend API Card */}
+                  <button
+                    type="button"
+                    onClick={() => setIntegrations({ ...integrations, deliveryProvider: 'resend' })}
+                    className={`p-4 rounded-xl text-left border transition-all cursor-pointer relative flex flex-col justify-between gap-3 ${
+                      integrations.deliveryProvider === 'resend'
+                        ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/5 shadow-sm'
+                        : 'border-theme bg-surface hover:border-brand-500/40 text-secondary'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-500">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-primary">Resend API</h5>
+                          <span className="text-[10px] text-muted">Developer REST API · Managed DKIM/SPF</span>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          integrations.deliveryProvider === 'resend'
+                            ? 'border-brand-500 bg-brand-500 text-white'
+                            : 'border-theme'
+                        }`}
+                      >
+                        {integrations.deliveryProvider === 'resend' && <Check className="w-2.5 h-2.5" />}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-secondary leading-relaxed">
+                      Enterprise transactional mail infrastructure. Built-in domain authentication, high reputation deliverability, and click/open tracking.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Provider Details Form (Smoothly nested in Stage 1) */}
+              {integrations.deliveryProvider === 'smtp' && (
+                <div className="p-5 rounded-xl bg-surface border border-theme space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h5 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                      <Server className="w-3.5 h-3.5 text-brand-500" />
+                      SMTP Server Authentication
+                    </h5>
+                    {/* Quick Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] text-muted font-medium mr-1">Quick Presets:</span>
+                      {SMTP_PRESETS.map((p) => (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() =>
+                            setIntegrations({
+                              ...integrations,
+                              smtpConfig: {
+                                ...integrations.smtpConfig,
+                                host: p.host,
+                                port: p.port,
+                                secure: p.secure
+                              }
+                            })
+                          }
+                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-card hover:bg-card-subtle border border-theme text-secondary hover:text-primary transition-all cursor-pointer"
+                        >
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="sm:col-span-2 md:col-span-3">
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">SMTP Host</label>
+                      <input
+                        type="text"
+                        placeholder="smtp.gmail.com"
+                        value={integrations.smtpConfig?.host || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            smtpConfig: { ...integrations.smtpConfig, host: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">SMTP Port</label>
+                      <input
+                        type="number"
+                        placeholder="465"
+                        value={integrations.smtpConfig?.port || 465}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            smtpConfig: { ...integrations.smtpConfig, port: parseInt(e.target.value) || 465 }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Account Email / Username
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="alex@apexsolutions.io"
+                        value={integrations.smtpConfig?.user || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            smtpConfig: { ...integrations.smtpConfig, user: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-semibold text-secondary">
+                          App Password / Secret
+                        </label>
+                        <span className="text-[10px] text-muted">16-char Google App Password</span>
+                      </div>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••••••"
+                        value={integrations.smtpConfig?.pass || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            smtpConfig: { ...integrations.smtpConfig, pass: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="text-[11px] font-semibold text-secondary block mb-1">IMAP Host</label>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">
+                      From Display Header (Display Name & Sender Email)
+                    </label>
                     <input
                       type="text"
-                      placeholder="imap.gmail.com"
-                      value={integrations.imap?.host || ''}
+                      placeholder='"Alex from Apex" <alex@apexsolutions.io>'
+                      value={integrations.smtpConfig?.fromEmail || ''}
                       onChange={(e) =>
                         setIntegrations({
                           ...integrations,
-                          imap: { ...(integrations.imap || {}), host: e.target.value }
+                          smtpConfig: { ...integrations.smtpConfig, fromEmail: e.target.value }
                         })
                       }
-                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
                     />
+                    <p className="text-[10px] text-muted mt-1">
+                      This exact string will appear in the recipient's "From" field. Use a friendly name with your domain email.
+                    </p>
                   </div>
+                </div>
+              )}
 
-                  <div>
-                    <label className="text-[11px] font-semibold text-secondary block mb-1">Port</label>
-                    <input
-                      type="number"
-                      placeholder="993"
-                      value={integrations.imap?.port || 993}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          imap: { ...(integrations.imap || {}), port: Number(e.target.value) }
-                        })
-                      }
-                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
-                    />
+              {integrations.deliveryProvider === 'resend' && (
+                <div className="p-5 rounded-xl bg-surface border border-theme space-y-4">
+                  <h5 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-brand-500" />
+                    Resend API Credentials
+                  </h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">Resend API Key</label>
+                      <input
+                        type="password"
+                        placeholder="re_123456789..."
+                        value={integrations.resendConfig?.apiKey || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            resendConfig: { ...integrations.resendConfig, apiKey: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Verified Domain Sender Email
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="outreach@yourdomain.com"
+                        value={integrations.resendConfig?.fromEmail || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            resendConfig: { ...integrations.resendConfig, fromEmail: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
                   </div>
+                  <p className="text-[10px] text-muted">
+                    Sender email must use a domain that is verified with DKIM and SPF records in your Resend account.
+                  </p>
+                </div>
+              )}
+            </div>
 
-                  <div>
-                    <label className="text-[11px] font-semibold text-secondary block mb-1">Email / Username</label>
-                    <input
-                      type="email"
-                      placeholder="alex@apexsolutions.io"
-                      value={integrations.imap?.user || ''}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          imap: { ...(integrations.imap || {}), user: e.target.value }
-                        })
-                      }
-                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
-                    />
+            {/* ========================================================================= */}
+            {/* STAGE 2: INBOUND REPLY TRACKING & LEAD SYNC                               */}
+            {/* ========================================================================= */}
+            <div className="p-6 rounded-2xl bg-card border border-theme shadow-sm space-y-6">
+              {/* Step Header */}
+              <div className="flex items-start justify-between flex-wrap gap-3 pb-4 border-b border-theme">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-xs">
+                    02
                   </div>
-
                   <div>
-                    <label className="text-[11px] font-semibold text-secondary block mb-1">App Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={integrations.imap?.pass || ''}
-                      onChange={(e) =>
-                        setIntegrations({
-                          ...integrations,
-                          imap: { ...(integrations.imap || {}), pass: e.target.value }
-                        })
-                      }
-                      className="w-full bg-surface border border-theme rounded-lg px-2.5 py-1.5 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
-                    />
+                    <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                      Inbound Reply Detection & Auto-Halt
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        Lead Status Sync
+                      </span>
+                    </h4>
+                    <p className="text-xs text-secondary mt-0.5">
+                      Automatically detect prospect email replies. SSOC will immediately tag the lead as <span className="text-primary font-semibold">Replied</span> and halt all pending follow-up sequences.
+                    </p>
                   </div>
                 </div>
               </div>
+
+              {/* Method Selector Segmented Control (NO UGLY BOXES IN BOXES!) */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-bold text-secondary uppercase tracking-wider block">
+                  Choose Reply Detection Method
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1 rounded-xl bg-surface border border-theme">
+                  <button
+                    type="button"
+                    onClick={() => setInboundMethod('imap')}
+                    className={`p-3 rounded-lg text-left transition-all flex items-center gap-3 cursor-pointer ${
+                      inboundMethod === 'imap'
+                        ? 'bg-card text-primary shadow-sm border border-theme font-semibold'
+                        : 'text-secondary hover:text-primary hover:bg-card/50'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        inboundMethod === 'imap' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-surface text-muted'
+                      }`}
+                    >
+                      <Inbox className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        Direct Mailbox Sync (IMAP)
+                        {integrations.imap?.enabled && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        )}
+                      </div>
+                      <div className="text-[10px] text-muted truncate">Automated 30-min background inbox scan</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInboundMethod('webhook')}
+                    className={`p-3 rounded-lg text-left transition-all flex items-center gap-3 cursor-pointer ${
+                      inboundMethod === 'webhook'
+                        ? 'bg-card text-primary shadow-sm border border-theme font-semibold'
+                        : 'text-secondary hover:text-primary hover:bg-card/50'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        inboundMethod === 'webhook' ? 'bg-brand-500/10 text-brand-500' : 'bg-surface text-muted'
+                      }`}
+                    >
+                      <Link className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold">Real-Time Inbound Webhook</div>
+                      <div className="text-[10px] text-muted truncate">Instant stream for Resend, SendGrid, Zapier, n8n</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* DYNAMIC PANEL: DIRECT IMAP */}
+              {inboundMethod === 'imap' && (
+                <div className="p-5 rounded-xl bg-surface border border-theme space-y-4">
+                  {/* Top Control Bar with Modern Toggle Switch & Test Button */}
+                  <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-theme">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-primary">Automated Mailbox Polling Daemon</span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            integrations.imap?.enabled
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                              : 'bg-muted/10 text-muted border-theme'
+                          }`}
+                        >
+                          {integrations.imap?.enabled ? 'Active · Every 30 mins' : 'Inactive'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-secondary mt-0.5">
+                        Automatically connects to your inbox every 30 minutes to check if active prospects replied.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {/* Modern iOS-Style Toggle Switch (NOT a raw checkbox!) */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={integrations.imap?.enabled || false}
+                        onClick={() =>
+                          setIntegrations({
+                            ...integrations,
+                            imap: { ...(integrations.imap || {}), enabled: !integrations.imap?.enabled }
+                          })
+                        }
+                        className="flex items-center gap-2 cursor-pointer select-none"
+                      >
+                        <div
+                          className={`w-11 h-6 rounded-full transition-colors relative p-0.5 flex items-center ${
+                            integrations.imap?.enabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                          }`}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
+                              integrations.imap?.enabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-primary">
+                          {integrations.imap?.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </button>
+
+                      {/* Check Inbox Now Action Button */}
+                      <button
+                        type="button"
+                        onClick={handleSyncImap}
+                        disabled={syncingImap}
+                        className="px-3.5 py-1.5 text-xs font-semibold !text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-emerald-600/20 disabled:opacity-50 whitespace-nowrap"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${syncingImap ? 'animate-spin' : ''}`} />
+                        <span>{syncingImap ? 'Scanning Mailbox...' : 'Check Inbox Now'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sync Result Alert */}
+                  {imapSyncResult && (
+                    <div
+                      className={`p-3 rounded-lg border text-xs flex items-center gap-2 ${
+                        imapSyncResult.success
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                      }`}
+                    >
+                      {imapSyncResult.success ? (
+                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      )}
+                      <span>
+                        {imapSyncResult.success
+                          ? `Mailbox synced: scanned ${imapSyncResult.processedCount || 0} messages, matched & updated ${imapSyncResult.matchedLeadsCount || 0} prospect replies!`
+                          : `IMAP Connection Error: ${imapSyncResult.error || 'Connection failed'}`}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* IMAP Credentials Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">IMAP Host</label>
+                      <input
+                        type="text"
+                        placeholder="imap.gmail.com"
+                        value={integrations.imap?.host || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            imap: { ...(integrations.imap || {}), host: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">IMAP Port</label>
+                      <input
+                        type="number"
+                        placeholder="993"
+                        value={integrations.imap?.port || 993}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            imap: { ...(integrations.imap || {}), port: Number(e.target.value) || 993 }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">Email / Username</label>
+                      <input
+                        type="email"
+                        placeholder="alex@apexsolutions.io"
+                        value={integrations.imap?.user || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            imap: { ...(integrations.imap || {}), user: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">App Password</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••••••"
+                        value={integrations.imap?.pass || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            imap: { ...(integrations.imap || {}), pass: e.target.value }
+                          })
+                        }
+                        className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted">
+                    For Google Workspace or Gmail accounts, use an App Password with IMAP enabled in your Gmail settings.
+                  </p>
+                </div>
+              )}
+
+              {/* DYNAMIC PANEL: REAL-TIME WEBHOOK */}
+              {inboundMethod === 'webhook' && (
+                <div className="p-5 rounded-xl bg-surface border border-theme space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-theme">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-primary">Inbound Reply Webhook Receiver</span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                          Instant Streaming
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-secondary mt-0.5">
+                        Incoming emails sent to this endpoint immediately mark the lead as <span className="font-semibold text-primary">Replied</span> without polling delays.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted">
+                      <span>Compatible with:</span>
+                      <span className="px-1.5 py-0.5 rounded bg-card border border-theme font-medium text-secondary">Resend</span>
+                      <span className="px-1.5 py-0.5 rounded bg-card border border-theme font-medium text-secondary">SendGrid</span>
+                      <span className="px-1.5 py-0.5 rounded bg-card border border-theme font-medium text-secondary">Zapier</span>
+                      <span className="px-1.5 py-0.5 rounded bg-card border border-theme font-medium text-secondary">n8n</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">
+                      Your Inbound Webhook Endpoint URL
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={integrations.inboundWebhookUrl || `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/email-reply`}
+                        className="min-w-0 flex-1 bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono select-all focus:outline-none focus:border-brand-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCopyWebhook}
+                        className="px-3.5 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-sm shadow-brand-600/20 whitespace-nowrap"
+                      >
+                        {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedWebhook ? 'Copied!' : 'Copy Endpoint'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-secondary block mb-1">
+                      Optional Webhook Secret Token (Cryptographic Signature)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="e.g. whsec_secret_key_123"
+                      value={integrations.inboundWebhookSecret || ''}
+                      onChange={(e) =>
+                        setIntegrations({
+                          ...integrations,
+                          inboundWebhookSecret: e.target.value
+                        })
+                      }
+                      className="w-full bg-card border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                    />
+                    <p className="text-[10px] text-muted mt-1">
+                      When set, incoming HTTP POST webhooks must provide this secret token either in header <code className="text-primary font-mono">x-webhook-secret</code> or query parameter <code className="text-primary font-mono">?secret=...</code>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB 5: LEAD SOURCES */}
+        {/* TAB 5: LEAD SOURCES & PLATFORM CHANNELS */}
         {activeTab === 'feeds' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Lead Discovery Sources & Inbound Webhooks</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                The operations center pulls live tech jobs automatically from official JSON APIs, RSS feeds, and direct webhooks.
+              <h3 className="text-base font-bold text-primary">Lead Discovery Sources & Platform Channels</h3>
+              <p className="text-xs text-secondary mt-1">
+                Automated discovery engines, platform profiles, RSS feeds, and inbound webhook connectors.
               </p>
             </div>
 
-            {/* Built-in Active Platform Scrapers */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <h4 className="text-xs font-bold text-white">Active Platform Discovery Engines</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-white">RemoteOK Tech API</div>
-                    <div className="text-[11px] text-slate-500">Live remote engineering & AI opportunities</div>
+            {/* Sourcing Platforms & Active Engines */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
+                Discovery Engines & Platform Integrations
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* LinkedIn Jobs Engine */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-primary text-sm flex items-center gap-1.5">
+                        <span>LinkedIn Jobs Engine</span>
+                      </div>
+                      <div className="text-[11px] text-muted">Public guest search & live job parser</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold border border-sky-500/20">
+                      Active Sourcing
+                    </span>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-                    Active
-                  </span>
+
+                  <div className="space-y-2 pt-1 border-t border-theme">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Sourcing Search Keywords
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Full Stack Developer, AI Engineer, React"
+                        value={integrations.linkedin?.searchKeywords || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            linkedin: { ...(integrations.linkedin || {}), searchKeywords: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Company Page URL (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://linkedin.com/company/your-agency"
+                        value={integrations.linkedin?.companyPageUrl || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            linkedin: { ...(integrations.linkedin || {}), companyPageUrl: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-white">Freelancer.com Projects API</div>
-                    <div className="text-[11px] text-slate-500">Active client posted software projects</div>
+                {/* Freelancer.com Projects */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-primary text-sm">Freelancer.com Projects</div>
+                      <div className="text-[11px] text-muted">Live project search & optional 1-click Bidding API</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                      Active API
+                    </span>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-                    Active
-                  </span>
+
+                  <div className="space-y-2 pt-1 border-t border-theme">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Company Freelancer Username
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. ephlux_solutions"
+                        value={integrations.freelancer?.profileUsername || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            freelancer: { ...(integrations.freelancer || {}), profileUsername: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Personal API Token (Optional for automated bidding)
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Enter token from freelancer.com/developers..."
+                        value={integrations.freelancer?.apiToken || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            freelancer: { ...(integrations.freelancer || {}), apiToken: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-white">Y Combinator & Hacker News API</div>
-                    <div className="text-[11px] text-slate-500">YC startup jobs & founder posts via Firebase</div>
+                {/* Upwork Sourcing & RSS */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-primary text-sm">Upwork Proposals & RSS</div>
+                      <div className="text-[11px] text-muted">Live Upwork RSS feed ingestion & guided web dispatch</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                      Active
+                    </span>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-                    Active
-                  </span>
+
+                  <div className="space-y-2 pt-1 border-t border-theme">
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Target Search Keywords
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Next.js, Node.js, AI Agent, Python"
+                        value={integrations.upwork?.searchKeywords || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            upwork: { ...(integrations.upwork || {}), searchKeywords: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-secondary block mb-1">
+                        Upwork Agency / Profile URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.upwork.com/ag/your-agency"
+                        value={integrations.upwork?.profileUrl || ''}
+                        onChange={(e) =>
+                          setIntegrations({
+                            ...integrations,
+                            upwork: { ...(integrations.upwork || {}), profileUrl: e.target.value }
+                          })
+                        }
+                        className="w-full bg-surface border border-theme rounded-lg px-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-white">WeWorkRemotely RSS Feed</div>
-                    <div className="text-[11px] text-slate-500">Full-stack & AI programming feed</div>
+                {/* RemoteOK Tech API */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-primary text-sm">RemoteOK Tech API</div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                        Active Feed
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted">
+                      Direct REST API connection pulling verified remote developer and AI engineering roles.
+                    </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-                    Active
-                  </span>
+                  <div className="mt-3 text-[11px] text-secondary bg-surface p-2 rounded-lg border border-theme">
+                    Auto-polled during scheduled discovery rounds.
+                  </div>
+                </div>
+
+                {/* WeWorkRemotely RSS Feed */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-primary text-sm">WeWorkRemotely Feed</div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                        Active Feed
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted">
+                      Official full-stack and backend programming category feed with escrow contract verification.
+                    </div>
+                  </div>
+                  <div className="mt-3 text-[11px] text-secondary bg-surface p-2 rounded-lg border border-theme">
+                    Auto-polled during scheduled discovery rounds.
+                  </div>
+                </div>
+
+                {/* Y Combinator & Hacker News API */}
+                <div className="p-4 rounded-xl bg-card border border-theme shadow-sm flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-primary text-sm">Y Combinator & Hacker News</div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                        Active Feed
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted">
+                      Firebase API connection monitoring monthly Who is Hiring threads and early startup founder requests.
+                    </div>
+                  </div>
+                  <div className="mt-3 text-[11px] text-secondary bg-surface p-2 rounded-lg border border-theme">
+                    Auto-polled during scheduled discovery rounds.
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Apollo.io Configuration */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-white">Apollo.io Direct B2B Prospecting</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Search and pull decision-makers (Founders, CTOs, VPs) matching your target keywords.
-                  </p>
-                </div>
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm">
+              <div>
+                <h4 className="text-xs font-bold text-primary">Apollo.io Direct B2B Prospecting</h4>
+                <p className="text-[11px] text-secondary mt-0.5">
+                  Search and pull decision-makers (Founders, CTOs, VPs) matching your target keywords.
+                </p>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">
+                <label className="text-[11px] font-semibold text-secondary block mb-1">
                   Apollo.io API Key
                 </label>
                 <input
@@ -1724,70 +2162,70 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   placeholder="Enter Apollo API Key or keep in server/.env..."
                   value={integrations.apolloApiKey || ''}
                   onChange={(e) => setIntegrations({ ...integrations, apolloApiKey: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white font-mono"
+                  className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-xs text-primary font-mono placeholder:text-muted focus:outline-none focus:border-brand-500"
                 />
               </div>
             </div>
 
             {/* Inbound Webhook Card */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <h4 className="text-xs font-bold text-white">Inbound Lead Webhook URL</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    Connect Make, Zapier, n8n, or custom scrapers to send leads directly to SSOC.
+                  <h4 className="text-xs font-bold text-primary">Inbound Lead Webhook URL</h4>
+                  <p className="text-[11px] text-secondary mt-0.5">
+                    Connect Make, Zapier, n8n, Typeform, or custom scrapers to send leads directly to SSOC.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={copyWebhookUrl}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs bg-brand-600 hover:bg-brand-500 text-white rounded font-medium transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-semibold transition-all shadow-sm cursor-pointer"
                 >
                   {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedWebhook ? 'Copied' : 'Copy Webhook URL'}
+                  <span>{copiedWebhook ? 'Copied' : 'Copy Webhook URL'}</span>
                 </button>
               </div>
 
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 break-all select-all">
+              <div className="p-3 rounded-lg bg-surface border border-theme text-[11px] font-mono text-secondary break-all select-all">
                 {window.location.origin}/api/integrations/inbound-webhook
               </div>
             </div>
 
             {/* Custom RSS Feeds */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <h4 className="text-xs font-bold text-white">Custom RSS Feeds</h4>
+            <div className="p-5 rounded-xl bg-card border border-theme space-y-3 shadow-sm">
+              <h4 className="text-xs font-bold text-primary">Custom RSS Feeds</h4>
               <div className="space-y-2">
                 {(integrations.rssFeeds || []).map((feed) => (
                   <div
                     key={feed.id}
-                    className="flex items-center justify-between p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-xs"
+                    className="flex items-center justify-between p-3 bg-surface border border-theme rounded-lg text-xs"
                   >
                     <div>
-                      <span className="font-semibold text-white">{feed.name}</span>
-                      <span className="ml-2 text-[10px] text-slate-500 font-mono">({feed.platform})</span>
-                      <div className="text-[11px] text-slate-400 truncate max-w-md">{feed.url}</div>
+                      <span className="font-semibold text-primary">{feed.name}</span>
+                      <span className="ml-2 text-[10px] text-muted font-mono uppercase">({feed.platform})</span>
+                      <div className="text-[11px] text-secondary truncate max-w-md">{feed.url}</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleDeleteFeed(feed.id)}
-                      className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                      className="p-1.5 text-muted hover:text-rose-500 transition-colors cursor-pointer"
                       title="Remove feed"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
               </div>
 
               {/* Add Feed Form */}
-              <form onSubmit={handleAddFeed} className="pt-2 border-t border-slate-800/80 space-y-2">
+              <form onSubmit={handleAddFeed} className="pt-3 border-t border-theme space-y-2">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <input
                     type="text"
                     placeholder="Feed Name (e.g. Upwork AI Jobs)"
                     value={newFeedName}
                     onChange={(e) => setNewFeedName(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white text-xs"
+                    className="bg-surface border border-theme rounded-lg px-3 py-2 text-primary text-xs placeholder:text-muted focus:outline-none focus:border-brand-500"
                   />
                   <CustomSelect
                     value={newFeedPlatform}
@@ -1795,11 +2233,11 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                     options={FEED_PLATFORM_OPTIONS}
                     size="sm"
                     className="w-full"
-                    buttonClassName="w-full bg-slate-950 border-slate-800"
+                    buttonClassName="w-full bg-surface border-theme text-primary"
                   />
                   <button
                     type="submit"
-                    className="px-3.5 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded transition-colors whitespace-nowrap"
+                    className="px-4 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 rounded-lg transition-colors whitespace-nowrap cursor-pointer shadow-sm"
                   >
                     Add Feed
                   </button>
@@ -1809,7 +2247,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   placeholder="https://feed-url..."
                   value={newFeedUrl}
                   onChange={(e) => setNewFeedUrl(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-white text-xs"
+                  className="w-full bg-surface border border-theme rounded-lg px-3 py-2 text-primary text-xs placeholder:text-muted focus:outline-none focus:border-brand-500"
                 />
               </form>
             </div>
@@ -1820,8 +2258,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
         {activeTab === 'schedules' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-base font-bold text-white">Automations, Cron Schedules & Maintenance</h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <h3 className="text-base font-bold text-primary">Automations, Cron Schedules & Maintenance</h3>
+              <p className="text-xs text-secondary mt-1">
                 Monitor background automation daemons, run discovery schedules on demand, or reset the pipeline database.
               </p>
             </div>
@@ -1842,42 +2280,42 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             )}
 
             {/* Lead Finder Automation Card */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-5 rounded-xl bg-card border border-theme shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-500">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Daily Lead Finder Cron Job</h4>
-                    <p className="text-[11px] text-slate-400">
+                    <h4 className="text-xs font-bold text-primary">Daily Lead Finder Cron Job</h4>
+                    <p className="text-[11px] text-secondary">
                       Schedule:{' '}
-                      <span className="text-sky-300 font-mono font-semibold">
+                      <span className="text-brand-500 font-mono font-semibold">
                         {schedulerStatus?.leadFinderSchedule || '0 8 * * *'}
                       </span>{' '}
                       ({schedulerStatus?.leadFinderHuman || 'Every day at 8:00 AM'})
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Configured & Active
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-secondary leading-relaxed">
                 Crawls RemoteOK, Freelancer, YC/HN, and RSS feeds. Runs high-efficiency single-call LLM batch evaluation against your company profile, strictly rejecting non-tech roles and bounding discoveries to {company.maxLeadsPerBatch || 20} leads.
               </p>
 
-              <div className="flex items-center justify-between pt-2">
-                <div className="text-[11px] text-slate-400">
-                  Target Bound: <span className="text-white font-semibold">{company.maxLeadsPerBatch || 20} leads / run</span>
+              <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-theme">
+                <div className="text-[11px] text-secondary">
+                  Target Bound: <span className="text-primary font-semibold">{company.maxLeadsPerBatch || 20} leads / run</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleTriggerFinder}
                   disabled={triggeringFinder}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white rounded-lg text-xs font-semibold shadow transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 active:scale-95 !text-white rounded-lg text-xs font-semibold shadow-sm shadow-brand-600/20 transition-all disabled:opacity-50"
                 >
                   <Play className={`w-3.5 h-3.5 ${triggeringFinder ? 'animate-spin' : ''}`} />
                   {triggeringFinder ? 'Running Batch Discovery...' : 'Run Lead Finder Now'}
@@ -1886,73 +2324,73 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Cooldown Tracker Automation Card */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-5 rounded-xl bg-card border border-theme shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Daily Cooldown & Follow-Up Tracker</h4>
-                    <p className="text-[11px] text-slate-400">
+                    <h4 className="text-xs font-bold text-primary">Daily Cooldown & Follow-Up Tracker</h4>
+                    <p className="text-[11px] text-secondary">
                       Schedule:{' '}
-                      <span className="text-amber-300 font-mono font-semibold">
+                      <span className="text-amber-500 font-mono font-semibold">
                         {schedulerStatus?.cooldownSchedule || '0 9 * * *'}
                       </span>{' '}
                       ({schedulerStatus?.cooldownHuman || 'Every day at 9:00 AM'})
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Configured & Active
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-secondary leading-relaxed">
                 Scans contacted prospects and progresses follow-up sequences automatically past Day 2, Day 7, and Day 21 thresholds until a client reply is detected.
               </p>
 
-              <div className="flex items-center justify-end pt-2">
+              <div className="flex items-center justify-end pt-2 border-t border-theme">
                 <button
                   type="button"
                   onClick={handleTriggerCooldown}
                   disabled={triggeringCooldown}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface hover:bg-card-subtle active:scale-95 text-primary border border-theme rounded-lg text-xs font-semibold transition-all disabled:opacity-50 shadow-sm"
                 >
-                  <Play className={`w-3.5 h-3.5 ${triggeringCooldown ? 'animate-spin text-amber-400' : ''}`} />
+                  <Play className={`w-3.5 h-3.5 ${triggeringCooldown ? 'animate-spin text-amber-500' : ''}`} />
                   {triggeringCooldown ? 'Checking Cooldowns...' : 'Check Cooldowns Now'}
                 </button>
               </div>
             </div>
 
             {/* Database Pipeline Reset Card */}
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-rose-950/60 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="p-5 rounded-xl bg-rose-500/5 border border-rose-500/20 space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                  <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
                     <Database className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-white">Database Pipeline Reset</h4>
-                    <p className="text-[11px] text-slate-400">
+                    <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400">Database Pipeline Reset</h4>
+                    <p className="text-[11px] text-secondary">
                       Current Leads in Pipeline:{' '}
-                      <span className="text-white font-bold">{schedulerStatus?.totalLeadsInDb ?? 0}</span>
+                      <span className="text-primary font-bold">{schedulerStatus?.totalLeadsInDb ?? 0}</span>
                     </p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-secondary leading-relaxed">
                 Clearing the database wipes out all leads from the pipeline while safely preserving your company profile, targeting rules, and integration credentials.
               </p>
 
-              <div className="flex items-center justify-end pt-2">
+              <div className="flex items-center justify-end pt-2 border-t border-rose-500/20">
                 <button
                   type="button"
                   onClick={handleResetDatabase}
                   disabled={resettingDb}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600/80 hover:bg-rose-600 active:scale-95 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 !text-white rounded-lg text-xs font-semibold transition-all shadow-sm shadow-rose-600/20 disabled:opacity-50"
                 >
                   <AlertTriangle className="w-4 h-4" />
                   {resettingDb ? 'Clearing Database...' : 'Reset & Clear All Leads'}
@@ -1967,20 +2405,20 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
           <div className="space-y-8">
             {/* Header info */}
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Palette className="w-4 h-4 text-brand-400" />
+              <h3 className="text-base font-bold text-primary flex items-center gap-2">
+                <Palette className="w-4 h-4 text-brand-500" />
                 Appearance & Visual Theme
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-secondary mt-1">
                 Customize your visual environment for maximum readability, fast lead skimming, and comfortable viewing during extended outreach sessions.
               </p>
             </div>
 
             {/* SECTION 1: INTERFACE MODE (LIGHT VS DARK) */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-200 tracking-wide uppercase flex items-center gap-2">
+              <label className="text-xs font-bold text-primary tracking-wide uppercase flex items-center gap-2">
                 <span>1. Interface Mode</span>
-                <span className="text-[10px] font-normal text-slate-400 normal-case">(Optimized for day & night viewing)</span>
+                <span className="text-[10px] font-normal text-muted normal-case">(Optimized for day & night viewing)</span>
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2179,22 +2617,22 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
       {/* QUICK AI AUTO-SETUP MODAL                                    */}
       {/* ============================================================ */}
       {showQuickAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-2xl bg-[#0d1424] border border-slate-800 rounded-2xl p-6 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-2xl bg-card border border-theme rounded-2xl p-6 shadow-2xl relative space-y-4">
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-theme">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-                  <Wand2 className="w-4 h-4 text-brand-300" />
+                <div className="w-8 h-8 rounded-lg bg-brand-500/15 border border-brand-500/30 flex items-center justify-center">
+                  <Wand2 className="w-4 h-4 text-brand-500" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2">
                     Quick AI Auto-Setup
-                    <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                    <span className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30">
                       1-Click Extraction
                     </span>
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-secondary">
                     Paste your agency website copy, LinkedIn bio, or pitch deck summary.
                   </p>
                 </div>
@@ -2202,7 +2640,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               <button
                 type="button"
                 onClick={() => setShowQuickAiModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-secondary hover:text-primary p-1 rounded-lg hover:bg-surface transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2211,13 +2649,13 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             {/* Input area */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-primary">
                   Paste Agency Website or Deck Summary
                 </label>
                 <button
                   type="button"
                   onClick={loadSampleAgencyText}
-                  className="text-[11px] text-brand-400 hover:text-brand-300 font-medium underline flex items-center gap-1"
+                  className="text-[11px] text-brand-500 hover:text-brand-600 font-medium underline flex items-center gap-1 cursor-pointer"
                 >
                   Load Sample Agency (Apex AI)
                 </button>
@@ -2227,19 +2665,19 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 value={quickAiText}
                 onChange={(e) => setQuickAiText(e.target.value)}
                 placeholder="Paste your agency 'About Us' page, services catalog, LinkedIn summary, or capabilities deck here... Gemini will automatically extract and configure your company profile, value proposition, services, keywords, and targeting rules in seconds."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-brand-500 leading-relaxed font-sans placeholder:text-slate-600"
+                className="w-full bg-surface border border-theme rounded-xl p-3 text-xs text-primary focus:outline-none focus:border-brand-500 leading-relaxed font-sans placeholder:text-muted"
               />
             </div>
 
             {/* Alerts */}
             {quickAiError && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 <span>{quickAiError}</span>
               </div>
             )}
             {quickAiSuccess && (
-              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs flex items-center gap-2">
                 <Check className="w-4 h-4 flex-shrink-0" />
                 <span>{quickAiSuccess}</span>
               </div>
@@ -2251,7 +2689,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 type="button"
                 onClick={() => setShowQuickAiModal(false)}
                 disabled={quickAiExtracting}
-                className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-secondary hover:text-primary rounded-lg hover:bg-surface transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -2259,11 +2697,11 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                 type="button"
                 onClick={handleQuickAiExtract}
                 disabled={quickAiExtracting || !quickAiText.trim()}
-                className="px-5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-md shadow-brand-600/30 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2 text-xs font-semibold !text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-md shadow-brand-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {quickAiExtracting ? (
                   <>
-                    <Sparkles className="w-4 h-4 animate-spin text-brand-200" />
+                    <Sparkles className="w-4 h-4 animate-spin text-white" />
                     <span>Analyzing & Extracting...</span>
                   </>
                 ) : (

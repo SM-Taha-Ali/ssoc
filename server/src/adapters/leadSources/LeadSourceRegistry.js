@@ -5,6 +5,7 @@ import { HackerNewsJobAdapter } from './HackerNewsJobAdapter.js';
 import { ApolloLeadAdapter } from './ApolloLeadAdapter.js';
 import { WebhookLeadAdapter } from './WebhookLeadAdapter.js';
 import { ManualPasteAdapter } from './ManualPasteAdapter.js';
+import { LinkedInLeadAdapter } from './LinkedInLeadAdapter.js';
 
 class LeadSourceRegistry {
   constructor() {
@@ -17,6 +18,7 @@ class LeadSourceRegistry {
     this.register('upwork', new RssFeedAdapter());
     this.register('remoteok', new RemoteOkAdapter());
     this.register('freelancer', new FreelancerApiAdapter());
+    this.register('linkedin', new LinkedInLeadAdapter());
     this.register('weworkremotely', new RssFeedAdapter());
     this.register('ycombinator', new HackerNewsJobAdapter());
     this.register('apollo', new ApolloLeadAdapter());

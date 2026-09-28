@@ -50,6 +50,9 @@ router.get('/', requireAuth, async (req, res) => {
     if (safeConfig.resend && safeConfig.resend.apiKey) {
       safeConfig.resend.apiKey = safeConfig.resend.apiKey ? '••••••••' + safeConfig.resend.apiKey.slice(-4) : '';
     }
+    if (safeConfig.freelancer && safeConfig.freelancer.apiToken) {
+      safeConfig.freelancer.apiToken = safeConfig.freelancer.apiToken ? '••••••••' + safeConfig.freelancer.apiToken.slice(-4) : '';
+    }
     if (safeConfig.apolloApiKey) {
       safeConfig.apolloApiKey = safeConfig.apolloApiKey ? '••••••••' + safeConfig.apolloApiKey.slice(-4) : '';
     }
@@ -89,6 +92,9 @@ router.put('/', requireAuth, async (req, res) => {
       }
       if (req.body.apolloApiKey && req.body.apolloApiKey.startsWith('••••••••')) {
         delete req.body.apolloApiKey;
+      }
+      if (req.body.freelancer && req.body.freelancer.apiToken && req.body.freelancer.apiToken.startsWith('••••••••')) {
+        delete req.body.freelancer.apiToken;
       }
 
       Object.assign(config, req.body, { companyId: req.companyId });

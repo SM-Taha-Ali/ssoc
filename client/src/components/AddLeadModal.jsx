@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Plus, FileText, Check } from 'lucide-react';
+import { X, Sparkles, Plus, FileText, Check, Link2, Globe, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import CustomSelect from './CustomSelect.jsx';
 
@@ -17,7 +17,10 @@ const PLATFORM_OPTIONS = [
 export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
   if (!isOpen) return null;
 
-  const [mode, setMode] = useState('paste'); // 'paste' | 'manual'
+  const [mode, setMode] = useState('url'); // 'url' | 'paste' | 'manual'
+  const [urlInput, setUrlInput] = useState('');
+  const [isImportingUrl, setIsImportingUrl] = useState(false);
+  const [importError, setImportError] = useState('');
   const [rawText, setRawText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
 
@@ -33,6 +36,24 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
   const [skills, setSkills] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleImportUrl = async () => {
+    if (!urlInput.trim()) return;
+    setIsImportingUrl(true);
+    setImportError('');
+    try {
+      const res = await axios.post('/api/leads/import-url', { url: urlInput.trim() });
+      if (res.data?.success && res.data.lead) {
+        onClose();
+        if (window.__refreshLeads) window.__refreshLeads();
+      } else {
+        setImportError(res.data?.error || 'Could not import job details from URL');
+      }
+    } catch (err) {
+      setImportError(err.response?.data?.error || 'Failed to import listing from URL');
+    } finally {
+      setIsImportingUrl(false);
+    }
+  };
 
   const handleParseRawText = async () => {
     if (!rawText.trim()) return;
@@ -128,21 +149,32 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
         {/* Tab switch */}
         <div className="flex border-b border-theme bg-card-subtle text-xs font-semibold px-4">
           <button
-            onClick={() => setMode('paste')}
-            className={`py-2.5 px-3 border-b-2 flex items-center gap-1.5 transition-colors ${
-              mode === 'paste'
-                ? 'border-brand-500 text-brand-400 font-bold'
+            onClick={() => setMode('url')}
+            className={`py-2.5 px-3 border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+              mode === 'url'
+                ? 'border-brand-500 text-brand-500 font-bold'
                 : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+            <Link2 className="w-3.5 h-3.5" />
+            Import from URL
+          </button>
+          <button
+            onClick={() => setMode('paste')}
+            className={`py-2.5 px-3 border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
+              mode === 'paste'
+                ? 'border-brand-500 text-brand-500 font-bold'
+                : 'border-transparent text-secondary hover:text-primary'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
             Quick AI Paste
           </button>
           <button
             onClick={() => setMode('manual')}
-            className={`py-2.5 px-3 border-b-2 flex items-center gap-1.5 transition-colors ${
+            className={`py-2.5 px-3 border-b-2 flex items-center gap-1.5 transition-colors cursor-pointer ${
               mode === 'manual'
-                ? 'border-brand-500 text-brand-400 font-bold'
+                ? 'border-brand-500 text-brand-500 font-bold'
                 : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
@@ -153,7 +185,47 @@ export default function AddLeadModal({ isOpen, onClose, onLeadCreated }) {
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
-          {mode === 'paste' ? (
+          {mode === 'url' ? (
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-card border border-theme space-y-1">
+                <span className="text-xs font-semibold text-primary block">Supported Listing Sources</span>
+                <p className="text-[11px] text-secondary leading-relaxed">
+                  Paste any public link from <b>LinkedIn</b>, <b>Freelancer.com</b>, <b>Upwork</b>, <b>RemoteOK</b>, or corporate websites. SSOC captures role requirements, scores competency fit, and prepares your custom pitch automatically.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-secondary block">Job or Opportunity URL *</label>
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => {
+                    setUrlInput(e.target.value);
+                    if (importError) setImportError('');
+                  }}
+                  placeholder="https://www.linkedin.com/jobs/view/... or freelancer.com/projects/..."
+                  className="w-full bg-card-subtle border border-theme rounded-xl px-4 py-2.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500 font-medium shadow-sm"
+                />
+              </div>
+
+              {importError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{importError}</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleImportUrl}
+                disabled={isImportingUrl || !urlInput.trim()}
+                className="w-full py-2.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl transition-all shadow-md shadow-brand-600/20 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                <Link2 className={`w-4 h-4 ${isImportingUrl ? 'animate-spin' : ''}`} />
+                <span>{isImportingUrl ? 'Extracting & Scoring Opportunity...' : 'Import & Analyze Opportunity'}</span>
+              </button>
+            </div>
+          ) : mode === 'paste' ? (
             <div className="space-y-3">
               <p className="text-xs text-secondary dark:text-slate-400">
                 Paste any job posting description, client email, or platform post. Gemini will parse it into a clean structured lead for your operations pipeline.

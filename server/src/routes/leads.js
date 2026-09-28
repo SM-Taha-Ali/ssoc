@@ -4,6 +4,9 @@ import { CompanyProfile } from '../models/CompanyProfile.js';
 import { IntegrationConfig } from '../models/IntegrationConfig.js';
 import { deliveryRegistry } from '../adapters/delivery/DeliveryRegistry.js';
 import { requireAuth } from '../middleware/auth.js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import { leadSourceRegistry } from '../adapters/leadSources/LeadSourceRegistry.js';
 import {
   scoreAndAuditLead,
   generatePitchDraft,
@@ -128,6 +131,149 @@ router.post('/paste-parse', async (req, res) => {
 
     res.json(parsed);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/leads/import-url - Import and parse any job posting from LinkedIn, Freelancer, Upwork, or public URL
+ */
+router.post('/import-url', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+      return res.status(400).json({ error: 'A valid HTTP/HTTPS job listing URL is required.' });
+    }
+
+    let platform = 'manual';
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('linkedin.com')) platform = 'linkedin';
+    else if (lowerUrl.includes('freelancer.com')) platform = 'freelancer';
+    else if (lowerUrl.includes('upwork.com')) platform = 'upwork';
+    else if (lowerUrl.includes('remoteok.com')) platform = 'remoteok';
+    else if (lowerUrl.includes('weworkremotely.com')) platform = 'weworkremotely';
+
+    let jobTitle = '';
+    let companyName = '';
+    let description = '';
+    let clientLocation = 'Remote / Global';
+
+    if (platform === 'linkedin') {
+      const adapter = leadSourceRegistry.get('linkedin');
+      if (adapter && typeof adapter.fetchJobDetails === 'function') {
+        const details = await adapter.fetchJobDetails(url);
+        if (details) {
+          jobTitle = details.title;
+          companyName = details.company;
+          description = details.description;
+          clientLocation = details.location;
+        }
+      }
+    }
+
+    // Generic scrape fallback if adapter did not return full text
+    if (!description || !jobTitle) {
+      try {
+        const resp = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          },
+          timeout: 10000
+        });
+        const $ = cheerio.load(resp.data);
+        if (!jobTitle) {
+          jobTitle = $('meta[property="og:title"]').attr('content') || $('title').text().trim() || 'Imported Opportunity';
+        }
+        if (!companyName) {
+          companyName = $('meta[property="og:site_name"]').attr('content') || $('meta[name="author"]').attr('content') || 'Hiring Client';
+        }
+        if (!description) {
+          description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || $('article').text().trim() || $('main').text().trim() || $('body').text().trim();
+        }
+      } catch (scrapeErr) {
+        console.warn('[import-url] Direct scrape notice:', scrapeErr.message);
+      }
+    }
+
+    if (!jobTitle) jobTitle = 'Imported Project Opportunity';
+    if (!description) description = `Imported from ${url}`;
+
+    // Clean description length
+    description = description.replace(/\s+/g, ' ').trim().substring(0, 4000);
+
+    // AI scoring & pitch generation if API key is present
+    const config = await IntegrationConfig.findOne({ companyId: req.companyId });
+    let companyProfile = await CompanyProfile.findOne({ companyId: req.companyId });
+    if (!companyProfile) companyProfile = await CompanyProfile.create({ companyId: req.companyId, name: req.company.companyName });
+
+    const apiKey = config?.geminiApiKey || process.env.GEMINI_API_KEY;
+    let matchScore = 85;
+    let matchReasoning = 'Directly imported listing matching workspace competencies.';
+    let demoAngle = 'Custom interactive prototype showcase';
+    let pitchDraft = { subject: `Regarding your ${jobTitle} project`, body: '' };
+
+    if (apiKey) {
+      try {
+        const audit = await scoreAndAuditLead(
+          { title: jobTitle, description, platform, budget: { amount: 0, type: 'unspecified' }, skillsRequired: [] },
+          companyProfile,
+          apiKey,
+          config?.geminiModel
+        );
+        matchScore = audit.matchScore;
+        matchReasoning = audit.matchReasoning;
+        demoAngle = audit.demoAngle;
+
+        const pitch = await generatePitchDraft(
+          { title: jobTitle, description, platform, clientName: companyName, clientInfo: { company: companyName } },
+          companyProfile,
+          apiKey,
+          config?.geminiModel
+        );
+        pitchDraft = {
+          subject: pitch.subject,
+          body: pitch.body,
+          generatedAt: new Date()
+        };
+      } catch (aiErr) {
+        console.warn('[import-url] AI evaluation error:', aiErr.message);
+      }
+    }
+
+    const lead = new Lead({
+      companyId: req.companyId,
+      title: jobTitle,
+      description,
+      platform,
+      sourceUrl: url,
+      externalId: `${platform}_${Date.now()}`,
+      clientName: companyName || 'Hiring Client',
+      clientInfo: {
+        name: companyName || 'Hiring Client',
+        company: companyName || 'Client Entity',
+        location: clientLocation,
+        email: '',
+        website: ''
+      },
+      skillsRequired: companyProfile.targetKeywords?.slice(0, 5) || ['Full-Stack Development'],
+      matchScore,
+      matchReasoning,
+      demoAngle,
+      pitchDraft,
+      stage: 'discovered',
+      activityLogs: [
+        {
+          action: 'Imported via URL',
+          details: `Directly captured from ${platform.toUpperCase()} (${url})`
+        }
+      ]
+    });
+
+    await lead.save();
+    res.status(201).json({ success: true, lead });
+  } catch (err) {
+    console.error('[import-url] Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -379,8 +525,18 @@ router.post('/:id/send', async (req, res) => {
       }
     ];
 
+    const fullPitchPayload = {
+      subject: finalSubject,
+      body: finalBody,
+      demoVideoUrl: lead.demoVideoUrl || '',
+      actionUrl: dispatchResult.actionUrl || lead.sourceUrl || '',
+      platform: lead.platform,
+      provider,
+      clientName: lead.clientInfo?.name || lead.clientName || 'Client'
+    };
+
     await lead.save();
-    res.json({ success: true, lead, dispatchResult });
+    res.json({ success: true, lead, dispatchResult, fullPitchPayload });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

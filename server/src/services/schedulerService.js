@@ -54,6 +54,14 @@ export async function runLeadFinderTask(companyId = null) {
         options: { limit: 12 }
       },
       {
+        name: 'LinkedIn Public Tech Jobs',
+        platform: 'linkedin',
+        options: {
+          limit: 10,
+          keywords: config.linkedin?.searchKeywords || 'Full Stack AI Developer'
+        }
+      },
+      {
         name: 'Y Combinator & Hacker News Jobs',
         platform: 'ycombinator',
         options: { limit: 10 }

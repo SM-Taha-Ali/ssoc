@@ -323,6 +323,7 @@ export default function App() {
       {selectedLead && (
         <LeadModal
           lead={selectedLead}
+          company={company}
           onClose={() => setSelectedLead(null)}
           onUpdateStage={handleUpdateStage}
           onRunAudit={handleRunAudit}

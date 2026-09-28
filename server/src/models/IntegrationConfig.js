@@ -58,6 +58,22 @@ const integrationConfigSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    freelancer: {
+      apiToken: { type: String, default: '' },
+      profileUsername: { type: String, default: '' },
+      enabled: { type: Boolean, default: true }
+    },
+    upwork: {
+      profileUrl: { type: String, default: '' },
+      agencyName: { type: String, default: '' },
+      searchKeywords: { type: String, default: 'React, Node, AI, Full Stack' },
+      enabled: { type: Boolean, default: true }
+    },
+    linkedin: {
+      searchKeywords: { type: String, default: 'Full Stack AI Developer' },
+      companyPageUrl: { type: String, default: '' },
+      enabled: { type: Boolean, default: true }
+    },
     rssFeeds: [
       {
         id: { type: String, required: true },

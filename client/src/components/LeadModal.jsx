@@ -31,6 +31,7 @@ import { STAGES } from './PipelineView.jsx';
 
 export default function LeadModal({
   lead,
+  company,
   onClose,
   onUpdateStage,
   onRunAudit,
@@ -161,7 +162,7 @@ export default function LeadModal({
   };
 
   const handleCopyPitch = () => {
-    const full = `Subject: ${pitchSubject}\n\n${pitchBody}`;
+    const full = `Subject: ${pitchSubject}\n\n${pitchBody}${lead.demoVideoUrl && !pitchBody.includes(lead.demoVideoUrl) ? '\n\nInteractive 60-Second Demo: ' + lead.demoVideoUrl : ''}`;
     navigator.clipboard.writeText(full);
     setCopiedPitch(true);
     setTimeout(() => setCopiedPitch(false), 2000);
@@ -169,20 +170,37 @@ export default function LeadModal({
 
   const handleDispatch = async (provider = 'manual') => {
     setSendSuccessMsg('');
+    const fullPitchToCopy = `${pitchSubject ? 'Subject: ' + pitchSubject + '\n\n' : ''}${pitchBody}${lead.demoVideoUrl && !pitchBody.includes(lead.demoVideoUrl) ? '\n\nInteractive 60-Second Demo: ' + lead.demoVideoUrl : ''}`;
+    try {
+      await navigator.clipboard.writeText(fullPitchToCopy);
+      setCopiedPitch(true);
+    } catch (e) {
+      console.warn('Clipboard write warning:', e);
+    }
+
     const res = await onSendPitch(lead._id, {
       subject: pitchSubject,
       messageBody: pitchBody,
       providerOverride: provider
     });
+
     if (res?.success) {
-      setSendSuccessMsg(res.dispatchResult?.details || 'Pitch dispatched successfully!');
-      if (res.dispatchResult?.actionUrl) {
-        window.open(res.dispatchResult.actionUrl, '_blank');
+      const targetPlatform = lead.platform ? (lead.platform.charAt(0).toUpperCase() + lead.platform.slice(1)) : 'Platform';
+      if (provider === 'manual' || !provider || provider === 'fallback') {
+        setSendSuccessMsg(`Pitch & demo link copied to clipboard! Opened ${targetPlatform} listing.`);
+      } else {
+        setSendSuccessMsg(res.dispatchResult?.details || 'Pitch dispatched successfully!');
       }
+
+      const actionUrl = res.dispatchResult?.actionUrl || lead.sourceUrl;
+      if (actionUrl) {
+        window.open(actionUrl, '_blank');
+      }
+
       // After dispatching, smoothly advance to followups cooldown tab
       setTimeout(() => {
         setActiveTab('followups');
-      }, 1500);
+      }, 1600);
     }
   };
 
@@ -406,81 +424,7 @@ export default function LeadModal({
                 )}
               </div>
 
-              {/* 1. SOURCE LISTING & COUNTER-VERIFICATION (ALWAYS AVAILABLE IN LEAD DETAILS & FIT) */}
-              <div className="p-4 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-theme">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
-                      <Link2 className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-primary flex items-center gap-2">
-                        <span>Original Job Listing & Counter-Verification</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 capitalize border border-brand-500/20">
-                          {lead.platform || 'Platform'}
-                        </span>
-                      </h4>
-                      <p className="text-[11px] text-secondary mt-0.5">
-                        Verify this posting on the original host platform to counter-check job authenticity, client reputation, and active status.
-                      </p>
-                    </div>
-                  </div>
-
-                  {lead.sourceUrl && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleCopySourceUrl}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg border border-theme transition-all cursor-pointer"
-                        title="Copy source listing URL"
-                      >
-                        {copiedSourceUrl ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5 text-muted" />
-                            <span>Copy Link</span>
-                          </>
-                        )}
-                      </button>
-                      <a
-                        href={lead.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-lg shadow-sm transition-all cursor-pointer"
-                      >
-                        <span>Open Original Listing</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {lead.sourceUrl ? (
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card-subtle border border-theme text-xs font-mono">
-                    <span className="text-muted shrink-0 text-[11px] font-sans font-medium">Verified Source Link:</span>
-                    <a
-                      href={lead.sourceUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-600 dark:text-brand-400 hover:underline truncate flex-1 font-medium"
-                      title={lead.sourceUrl}
-                    >
-                      {lead.sourceUrl}
-                    </a>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-lg bg-card-subtle border border-theme text-xs text-secondary flex items-center justify-between">
-                    <span>Direct Inbound / Manual Entry (No external URL attached)</span>
-                    <span className="text-[10px] font-medium text-muted uppercase">Direct Origin</span>
-                  </div>
-                )}
-              </div>
-
-              {/* 2. PROPER SECTION-WISE CLIENT & CONTACT INTELLIGENCE */}
+              {/* CLIENT CONTACT DETAILS */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -489,15 +433,15 @@ export default function LeadModal({
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-primary">
-                        Client & Contact Intelligence
+                        Client Contact Details
                       </h4>
                       <p className="text-[11px] text-secondary mt-0.5">
-                        Verified contact profile, organizational details, and engagement scope.
+                        Contact profile, organization details, and primary outreach channel.
                       </p>
                     </div>
                   </div>
                   <span className="text-[10px] font-semibold text-muted px-2 py-0.5 rounded-md bg-card-subtle border border-theme">
-                    Primary Point of Contact
+                    {lead.platform || 'Direct'}
                   </span>
                 </div>
 
@@ -528,37 +472,49 @@ export default function LeadModal({
                     <span className="text-[10px] text-muted block">Client Entity</span>
                   </div>
 
-                  {/* Contact Email / Channel */}
-                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1">
+                  {/* Primary Outreach Channel */}
+                  <div className="p-3.5 rounded-xl bg-card border border-theme shadow-sm dark:shadow-none space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-muted text-[11px] font-medium">
-                        <Mail className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Outreach Email / Channel</span>
+                        <Send className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Primary Outreach Route</span>
                       </div>
-                      {lead.clientInfo?.email && (
-                        <button
-                          type="button"
-                          onClick={() => handleCopyContactEmail(lead.clientInfo.email)}
-                          className="text-[10px] text-brand-600 hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                        >
-                          {copiedContactEmail ? 'Copied' : 'Copy'}
-                        </button>
-                      )}
+                      {/* Platform Tag Badge */}
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                        {lead.clientInfo?.email ? 'Direct Email' : (lead.platform || 'Direct')}
+                      </span>
                     </div>
                     <p className="font-semibold text-primary truncate text-sm">
                       {lead.clientInfo?.email ? (
-                        <a
-                          href={`mailto:${lead.clientInfo.email}`}
-                          className="hover:underline text-brand-600 dark:text-brand-400"
-                        >
-                          {lead.clientInfo.email}
-                        </a>
+                        <div className="flex items-center justify-between">
+                          <a
+                            href={`mailto:${lead.clientInfo.email}`}
+                            className="hover:underline text-brand-600 dark:text-brand-400 truncate"
+                          >
+                            {lead.clientInfo.email}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyContactEmail(lead.clientInfo.email)}
+                            className="text-[10px] text-brand-600 hover:underline shrink-0 ml-2 font-medium cursor-pointer"
+                          >
+                            {copiedContactEmail ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                      ) : lead.platform === 'freelancer' ? (
+                        `Bid as ${company?.companyName || 'Company Profile'}`
+                      ) : lead.platform === 'upwork' ? (
+                        `Submit Proposal as ${company?.companyName || 'Company Profile'}`
+                      ) : lead.platform === 'linkedin' ? (
+                        'Direct InMail / Message'
                       ) : (
-                        'Platform Direct / Bid System'
+                        `Direct Application on ${(lead.platform || 'Platform').toUpperCase()}`
                       )}
                     </p>
-                    <span className="text-[10px] text-muted block">
-                      {lead.clientInfo?.email ? 'Direct Inbox Available' : 'Dispatched via In-Platform Messaging'}
+                    <span className="text-[10px] text-muted block truncate">
+                      {lead.clientInfo?.email
+                        ? 'Direct Inbox Dispatch Available'
+                        : '1-Click Guided Dispatch (Ready to Paste + Demo Video)'}
                     </span>
                   </div>
 
@@ -942,43 +898,77 @@ export default function LeadModal({
                 />
               </div>
 
-              {/* Dispatch Section */}
-              <div className="p-5 rounded-xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
-                <div className="flex items-center justify-between">
+              {/* Executive Outreach Dispatch Console */}
+              <div className="p-5 rounded-2xl bg-card border border-theme space-y-4 shadow-sm dark:shadow-none">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <h4 className="text-xs font-bold text-primary">Select Dispatch Channel</h4>
+                    <h4 className="text-xs font-bold text-primary flex items-center gap-2">
+                      <Send className="w-4 h-4 text-brand-500" />
+                      Executive Outreach Dispatch
+                    </h4>
                     <p className="text-[11px] text-secondary mt-0.5">
-                      Dispatching moves the lead to <b>Contacted</b> and starts the 3-touch follow-up timeline.
+                      Dispatching moves the lead to <b>Contacted</b>, prepares complete collateral, and schedules the 3-touch follow-up timeline.
                     </p>
                   </div>
                   {sendSuccessMsg && (
-                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                    <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
                       <Check className="w-4 h-4 flex-shrink-0" />
                       <span>{sendSuccessMsg}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Copy & Open Job Listing */}
+                {/* Intelligent Smart Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {/* Guided Fallback Action (Always Reliable, 1-Click Complete Pitch + Demo Copy + Open) */}
                   <button
                     onClick={() => handleDispatch('manual')}
                     disabled={isSending}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 rounded-xl border border-theme transition-all shadow-sm cursor-pointer"
+                    className="flex items-center justify-center gap-2.5 px-4 py-3 text-xs font-semibold text-secondary hover:text-primary bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-700 active:scale-95 rounded-xl border border-theme transition-all shadow-sm cursor-pointer group"
                   >
-                    <ExternalLink className="w-4 h-4 text-brand-500" />
-                    <span>Copy & Open Job Listing</span>
+                    <ExternalLink className="w-4 h-4 text-brand-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <span>
+                      {lead.platform === 'freelancer'
+                        ? 'Copy Pitch & Open Freelancer Listing ↗'
+                        : lead.platform === 'upwork'
+                        ? 'Copy Pitch & Open Upwork Job ↗'
+                        : lead.platform === 'linkedin'
+                        ? 'Copy Pitch & Open LinkedIn ↗'
+                        : 'Copy Pitch & Open Platform Listing ↗'}
+                    </span>
                   </button>
 
-                  {/* Send Email via SMTP */}
-                  <button
-                    onClick={() => handleDispatch('smtp')}
-                    disabled={isSending}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-xl shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50 cursor-pointer"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>{isSending ? 'Dispatching Email...' : 'Send Email via SMTP'}</span>
-                  </button>
+                  {/* Direct Automated Dispatch (Email via SMTP / Google Workspace) */}
+                  {lead.clientInfo?.email ? (
+                    <button
+                      onClick={() => handleDispatch('smtp')}
+                      disabled={isSending}
+                      className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 rounded-xl shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>{isSending ? 'Dispatching Direct Email...' : `Send Email to ${lead.clientInfo.email}`}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDispatch('manual')}
+                      disabled={isSending}
+                      className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 rounded-xl shadow-md shadow-brand-600/25 transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>
+                        {lead.platform === 'freelancer'
+                          ? `Ready to Bid as ${company?.companyName || 'Agency'}`
+                          : lead.platform === 'upwork'
+                          ? `Ready to Submit as ${company?.companyName || 'Agency'}`
+                          : 'Mark Dispatched & Start Timeline'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-muted px-1 flex-wrap gap-2">
+                  <span>✓ 60-sec demo link automatically embedded</span>
+                  <span>✓ 3-touch follow-up engine armed</span>
                 </div>
               </div>
             </div>
