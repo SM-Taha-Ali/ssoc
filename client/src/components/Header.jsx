@@ -201,9 +201,9 @@ export default function Header({
 
                 {/* Sleek Floating Dropdown Menu */}
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-surface border border-theme shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-surface border border-theme shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-1">
                     {/* Workspace Header */}
-                    <div className="px-3 py-2.5 rounded-lg bg-card-subtle border border-theme mb-1">
+                    <div className="px-3 py-2.5 rounded-lg bg-card-subtle border border-theme">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
                           {companyInitial}
@@ -233,8 +233,6 @@ export default function Header({
                       <Settings className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors flex-shrink-0" />
                       <span className="flex-1 font-medium">Workspace Settings</span>
                     </button>
-
-                    <div className="h-px bg-theme my-1" />
 
                     {/* Sign Out Item */}
                     <button
