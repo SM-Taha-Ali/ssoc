@@ -23,8 +23,18 @@ const companySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Method to verify password
+// Method to verify password (supports bcrypt hash and plaintext fallback with auto-upgrade)
 companySchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password || !candidatePassword) return false;
+  if (this.password === candidatePassword) {
+    try {
+      this.password = await bcrypt.hash(candidatePassword, 10);
+      await this.save();
+    } catch (e) {
+      console.error('[Auth] Failed to auto-hash plaintext password:', e);
+    }
+    return true;
+  }
   return bcrypt.compare(candidatePassword, this.password);
 };
 

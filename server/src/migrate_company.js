@@ -51,6 +51,42 @@ export async function ensureDefaultCompany() {
     console.log(`[Auth Migration] Migrated ${configResult.modifiedCount} integration configs to "${apexCompany.companyName}".`);
   }
 
+  // Ensure QuminAI workspace
+  const quminKey = 'quminai';
+  let quminCompany = await Company.findOne({ companyKey: quminKey });
+  const quminHashed = await bcrypt.hash('Qumin@2026', 10);
+  if (!quminCompany) {
+    quminCompany = await Company.create({
+      companyName: 'QuminAI',
+      companyKey: quminKey,
+      password: quminHashed
+    });
+    console.log(`[Auth Migration] Created initial company: "${quminCompany.companyName}" (ID: ${quminCompany._id})`);
+  } else {
+    quminCompany.password = quminHashed;
+    await quminCompany.save();
+  }
+
+  // Ensure Company Profile for QuminAI
+  const quminProfile = await CompanyProfile.findOne({ companyId: quminCompany._id });
+  if (!quminProfile) {
+    await CompanyProfile.create({
+      companyId: quminCompany._id,
+      name: 'QuminAI',
+      tagline: 'Autonomous AI Sales Operations & Pipeline Intelligence',
+      senderName: 'QuminAI Team'
+    });
+  }
+
+  // Ensure Integration Config for QuminAI
+  const quminConfig = await IntegrationConfig.findOne({ companyId: quminCompany._id });
+  if (!quminConfig) {
+    await IntegrationConfig.create({
+      companyId: quminCompany._id,
+      geminiModel: 'gemini-3.5-flash-lite'
+    });
+  }
+
   defaultCompanyEnsured = true;
   return apexCompany;
 }
