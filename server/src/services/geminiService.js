@@ -95,6 +95,11 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
       const isRecoverable = err.message && (
         err.message.includes('404') ||
         err.message.includes('400') ||
+        err.message.includes('503') ||
+        err.message.includes('429') ||
+        err.message.includes('high demand') ||
+        err.message.includes('temporarily') ||
+        err.message.includes('Resource has been exhausted') ||
         err.message.includes('not found') ||
         err.message.includes('not supported') ||
         err.message.includes('unexpected model name format') ||
