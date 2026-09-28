@@ -162,8 +162,9 @@ export default function Header({
 
             {/* Light/Dark Mode Toggle */}
             <button
+              type="button"
               onClick={toggleMode}
-              className="p-1.5 rounded-lg border text-secondary hover:text-primary bg-card-subtle hover:bg-card border-theme transition-all active:scale-95 shrink-0"
+              className="p-1.5 rounded-lg border text-secondary hover:text-primary bg-card-subtle hover:bg-card border-theme transition-all active:scale-95 shrink-0 focus:outline-none focus:ring-0"
               title={`Switch to ${mode === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
               {mode === 'dark' ? (
@@ -179,15 +180,20 @@ export default function Header({
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer ${
+                  className={`flex items-center gap-2 pl-2 pr-2 py-1.5 rounded-lg border text-xs font-semibold transition-all select-none cursor-pointer focus:outline-none focus:ring-0 ${
                     isDropdownOpen
                       ? 'bg-card border-brand-500/50 ring-2 ring-brand-500/10 text-primary'
                       : 'bg-card-subtle hover:bg-slate-100 dark:hover:bg-slate-800/80 border-theme text-primary hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                   title={`Workspace: ${company.companyName}`}
                 >
-                  <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-brand-600 to-indigo-600 !text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm">
-                    <span className="!text-white text-white font-bold leading-none">{companyInitial}</span>
+                  <div
+                    className="w-5 h-5 rounded-md text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm"
+                    style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: '#ffffff' }}
+                  >
+                    <span className="font-bold leading-none select-none" style={{ color: '#ffffff' }}>
+                      {companyInitial}
+                    </span>
                   </div>
                   <span className="max-w-[110px] sm:max-w-[140px] md:max-w-[180px] truncate text-left">
                     {company.companyName}
@@ -205,8 +211,13 @@ export default function Header({
                     {/* Workspace Header */}
                     <div className="px-3 py-2.5 rounded-lg bg-card-subtle border border-theme">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 !text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
-                          <span className="!text-white text-white font-bold leading-none">{companyInitial}</span>
+                        <div
+                          className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 shadow-sm"
+                          style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', color: '#ffffff' }}
+                        >
+                          <span className="font-bold leading-none select-none" style={{ color: '#ffffff' }}>
+                            {companyInitial}
+                          </span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-primary truncate">

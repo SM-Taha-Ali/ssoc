@@ -14,6 +14,7 @@ import {
   User,
   DollarSign
 } from 'lucide-react';
+import { PipelineSkeleton } from './Skeletons.jsx';
 
 export const STAGES = [
   { id: 'discovered', label: '1. Discovered', icon: Sparkles, color: 'text-sky-400', border: 'border-sky-500/30', bg: 'bg-sky-500/10' },
@@ -28,10 +29,15 @@ export const STAGES = [
 
 export default function PipelineView({
   leads = [],
+  loading = false,
   selectedLead,
   onSelectLead,
   onAdvanceStage
 }) {
+  if (loading) {
+    return <PipelineSkeleton />;
+  }
+
   return (
     <div className="flex-1 overflow-x-auto p-6">
       <div className="inline-flex gap-4 min-w-full pb-4">

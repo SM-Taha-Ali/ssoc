@@ -9,12 +9,18 @@ import {
   User,
   Sparkles
 } from 'lucide-react';
+import { PriorityInboxSkeleton } from './Skeletons.jsx';
 
 export default function PriorityInbox({
   leads = [],
+  loading = false,
   onSelectLead,
   onUpdateStage
 }) {
+  if (loading) {
+    return <PriorityInboxSkeleton />;
+  }
+
   const repliedLeads = leads.filter((l) => l.stage === 'replied');
   const cooldownReadyLeads = leads.filter(
     (l) => l.stage === 'cooldown' || (l.followUps && l.followUps.some((f) => f.status === 'ready'))

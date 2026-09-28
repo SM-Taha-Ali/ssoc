@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import CustomSelect from './CustomSelect.jsx';
 import { useTheme, ACCENT_THEMES } from '../context/ThemeContext.jsx';
+import { SettingsSkeleton } from './Skeletons.jsx';
 
 const SMTP_PRESETS = [
   { name: 'Gmail / Workspace', host: 'smtp.gmail.com', port: 465, secure: true },
@@ -475,11 +476,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
   ];
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
-        Loading operations settings...
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   return (
@@ -594,7 +591,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
                   <Wand2 className="w-5 h-5" />
@@ -865,7 +862,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
                   <Wand2 className="w-5 h-5" />
@@ -979,7 +976,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
             </div>
 
             {/* Quick AI Auto-Setup Banner */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-brand-50/90 via-indigo-50/60 to-white dark:from-brand-900/40 dark:via-indigo-900/30 dark:to-purple-900/20 border border-brand-200/80 dark:border-brand-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm dark:shadow-lg dark:shadow-indigo-950/20 transition-all">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm transition-all">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 dark:border-brand-500/30 flex items-center justify-center flex-shrink-0 text-brand-600 dark:text-brand-300 shadow-sm">
                   <Wand2 className="w-5 h-5" />

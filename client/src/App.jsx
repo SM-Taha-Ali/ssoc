@@ -9,6 +9,7 @@ import SettingsPage from './components/SettingsPage.jsx';
 import CustomSelect from './components/CustomSelect.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
+import { SettingsSkeleton, PipelineSkeleton, PriorityInboxSkeleton } from './components/Skeletons.jsx';
 import { Search, Filter, RefreshCw, AlertCircle, X } from 'lucide-react';
 
 const PLATFORM_FILTER_OPTIONS = [
@@ -297,10 +298,13 @@ export default function App() {
       {/* Main View Area */}
       <main className="flex-1 flex overflow-hidden min-h-0">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-muted text-xs gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-brand-400" />
-            Loading operations center...
-          </div>
+          activeView === 'settings' ? (
+            <SettingsSkeleton />
+          ) : activeView === 'inbox' ? (
+            <PriorityInboxSkeleton />
+          ) : (
+            <PipelineSkeleton />
+          )
         ) : activeView === 'settings' ? (
           <SettingsPage onBackToPipeline={() => setActiveView('pipeline')} />
         ) : activeView === 'pipeline' ? (
