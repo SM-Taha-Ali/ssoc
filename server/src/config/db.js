@@ -14,9 +14,9 @@ export const connectDB = async () => {
 
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ssoc';
+    // Removed bufferCommands: false to prevent crashes on fast concurrent requests before handshake completes
     cachedConnection = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 8000,
-      bufferCommands: false
+      serverSelectionTimeoutMS: 10000
     });
     console.log(`[Database] MongoDB connected successfully`);
     return cachedConnection;

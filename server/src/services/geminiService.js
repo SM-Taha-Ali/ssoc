@@ -1,4 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios from 'axios';
+
+let cachedAvailableModels = null;
+let lastModelFetch = 0;
 
 /**
  * Extracts and parses valid JSON from LLM string output, even if wrapped in markdown blocks
@@ -13,7 +17,6 @@ function cleanAndParseJSON(text) {
     if (match && match[1]) {
       return JSON.parse(match[1].trim());
     }
-    // Fallback: search for first { or [ and last } or ]
     const firstBrace = trimmed.search(/[\{\[]/);
     const lastBrace = Math.max(trimmed.lastIndexOf('}'), trimmed.lastIndexOf(']'));
     if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -27,6 +30,38 @@ function cleanAndParseJSON(text) {
 }
 
 /**
+ * Dynamically queries Google's ModelService to get the exact list of available models for this specific API key
+ */
+async function getAvailableGeminiModels(apiKey) {
+  const now = Date.now();
+  if (cachedAvailableModels && (now - lastModelFetch < 300000)) {
+    return cachedAvailableModels;
+  }
+  try {
+    const res = await axios.get(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, { timeout: 7000 });
+    const models = res.data?.models || [];
+    const supported = models
+      .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map(m => m.name.replace(/^models\//, ''));
+    if (supported.length > 0) {
+      cachedAvailableModels = supported;
+      lastModelFetch = now;
+      console.log('[Gemini Dynamic Discovery] Available models for this key:', supported);
+      return supported;
+    }
+  } catch (err) {
+    console.warn('[Gemini Model Discovery Warning]:', err.message);
+  }
+  return [
+    'gemini-2.0-flash',
+    'gemini-2.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-pro-latest',
+    'gemini-pro'
+  ];
+}
+
+/**
  * Normalizes model names and UI labels into official Google Gemini API slugs
  */
 export function resolveGeminiModelName(modelName) {
@@ -34,19 +69,18 @@ export function resolveGeminiModelName(modelName) {
   const str = String(modelName).trim().toLowerCase();
 
   // Canonical valid Google API slugs
-  if (str === 'gemini-2.0-flash' || str === 'gemini-1.5-flash' || str === 'gemini-1.5-flash-8b' || str === 'gemini-1.5-pro') {
+  if (str === 'gemini-2.0-flash' || str === 'gemini-2.5-flash' || str === 'gemini-1.5-flash-latest' || str === 'gemini-pro') {
     return str;
   }
 
   // Map enterprise/product UI labels to active production Gemini endpoints
   if (str.includes('3.8')) return 'gemini-2.0-flash';
   if (str.includes('3.7')) return 'gemini-2.0-flash';
-  if (str.includes('3.5') || str.includes('lite')) return 'gemini-1.5-flash-8b';
+  if (str.includes('3.5') || str.includes('lite')) return 'gemini-2.0-flash';
   if (str.includes('2.0')) return 'gemini-2.0-flash';
-  if (str.includes('1.5') && str.includes('8b')) return 'gemini-1.5-flash-8b';
-  if (str.includes('1.5')) return 'gemini-1.5-flash';
+  if (str.includes('2.5')) return 'gemini-2.5-flash';
+  if (str.includes('1.5')) return 'gemini-1.5-flash-latest';
 
-  // Fallback: strip spaces and invalid characters
   const slug = str.replace(/\s+/g, '-').replace(/[^a-z0-9.-]/g, '');
   return slug || 'gemini-2.0-flash';
 }
@@ -64,12 +98,18 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
   const rawModel = modelNameOverride || process.env.GEMINI_MODEL || 'Gemini 3.8 Flash';
   const resolvedModel = resolveGeminiModelName(rawModel);
 
-  // Candidate models: ONLY valid, lowercase API slugs (no labels or spaces)
+  // Dynamically inspect permitted models for this account
+  const availableModels = await getAvailableGeminiModels(apiKey);
+
+  // Candidate models: start with resolved preference, then matched discovered models
   const candidateModels = [
     resolvedModel,
+    ...availableModels.filter(m => m.includes('2.0') || m.includes('2.5')),
+    ...availableModels.filter(m => m.includes('flash')),
+    ...availableModels,
     'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-8b'
+    'gemini-2.5-flash',
+    'gemini-pro'
   ].filter((v, i, a) => a.indexOf(v) === i && Boolean(v) && !v.includes(' '));
 
   let lastError = null;
