@@ -45,11 +45,14 @@ export default function AuthPage() {
         await register(companyName.trim(), password.trim());
       }
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          err.message ||
-          'Authentication failed. Please check credentials and try again.'
-      );
+      const rawError = err.response?.data?.error || err.response?.data?.message || err.message;
+      let displayError = 'Authentication failed. Please check credentials and try again.';
+      if (typeof rawError === 'string') {
+        displayError = rawError;
+      } else if (rawError && typeof rawError === 'object') {
+        displayError = rawError.message || rawError.code || JSON.stringify(rawError);
+      }
+      setError(displayError);
     } finally {
       setSubmitting(false);
     }
@@ -150,7 +153,7 @@ export default function AuthPage() {
             {error && (
               <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start space-x-2.5 text-xs text-red-500 animate-fadeIn">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
+                <span>{typeof error === 'string' ? error : (error?.message || error?.code || JSON.stringify(error))}</span>
               </div>
             )}
 
