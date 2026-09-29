@@ -21,10 +21,11 @@ export const STAGES = [
   { id: 'pre_reqs', label: '2. Needs Demo', icon: Video, color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-500/10' },
   { id: 'draft_ready', label: '3. Draft Ready', icon: FileText, color: 'text-indigo-400', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10' },
   { id: 'sent', label: '4. Contacted', icon: Send, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
-  { id: 'cooldown', label: '5. Cooldown', icon: Clock, color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10' },
+  { id: 'cooldown', label: '5. Follow-up', icon: Clock, color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10' },
   { id: 'replied', label: '6. Client Replied', icon: MessageSquare, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' },
   { id: 'meeting', label: '7. Meeting Booked', icon: Calendar, color: 'text-teal-400', border: 'border-teal-500/30', bg: 'bg-teal-500/10' },
-  { id: 'closed_won', label: '8. Won', icon: CheckCircle2, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' }
+  { id: 'closed_won', label: '8. Won', icon: CheckCircle2, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
+  { id: 'closed_lost', label: '9. Lost', icon: XCircle, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' }
 ];
 
 export default function PipelineView({
@@ -142,14 +143,21 @@ export default function PipelineView({
 
                         {/* Stage Specific Badges */}
                         {stage.id === 'cooldown' && (
-                          <div className="mt-2 text-[10px] font-medium text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 flex items-center justify-between">
-                            <span>Cooldown active</span>
-                            <Clock className="w-3 h-3" />
+                          <div className="mt-2 text-[10px] font-medium text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 flex items-center justify-between">
+                            <span>Follow-up active</span>
+                            <Clock className="w-3 h-3 text-purple-400" />
+                          </div>
+                        )}
+
+                        {stage.id === 'closed_lost' && (
+                          <div className="mt-2 text-[10px] font-medium text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center justify-between">
+                            <span>Closed Lost</span>
+                            <XCircle className="w-3 h-3 text-rose-400" />
                           </div>
                         )}
 
                         {stage.id === 'replied' && (
-                          <div className="mt-2 text-[10px] font-bold text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center justify-between">
+                          <div className="mt-2 text-[10px] font-bold text-rose-600 dark:text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 flex items-center justify-between">
                             <span>Client Replied! Follow-ups Stopped</span>
                             <MessageSquare className="w-3 h-3 text-rose-400" />
                           </div>

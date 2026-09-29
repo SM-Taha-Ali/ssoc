@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
+  XCircle,
   FileText,
   AlertCircle,
   Cpu,
@@ -28,6 +29,7 @@ import {
   Link2
 } from 'lucide-react';
 import { STAGES } from './PipelineView.jsx';
+import CustomSelect from './CustomSelect.jsx';
 
 export default function LeadModal({
   lead,
@@ -238,7 +240,7 @@ export default function LeadModal({
     {
       id: 'followups',
       number: '4',
-      title: 'Cooldown & Follow-ups',
+      title: 'Follow-up Sequence',
       isCompleted: isContacted,
       isActive: activeTab === 'followups',
       icon: Clock
@@ -320,6 +322,20 @@ export default function LeadModal({
 
           {/* Action buttons on the right */}
           <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
+            {onUpdateStage && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-muted hidden sm:inline">Stage:</span>
+                <CustomSelect
+                  value={lead.stage}
+                  onChange={(val) => onUpdateStage(lead._id, val)}
+                  options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
+                  size="sm"
+                  className="w-36"
+                  buttonClassName="py-1 px-2.5 text-xs font-semibold bg-card-subtle text-primary border-theme"
+                />
+              </div>
+            )}
+
             {lead.sourceUrl && (
               <a
                 href={lead.sourceUrl}
@@ -968,26 +984,26 @@ export default function LeadModal({
 
                 <div className="flex items-center justify-between text-[11px] text-muted px-1 flex-wrap gap-2">
                   <span>✓ 60-sec demo link automatically embedded</span>
-                  <span>✓ 3-touch follow-up engine armed</span>
+                  <span>✓ 6-touch follow-up engine armed (Day 7, Day 21 & 4 Monthly touches)</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* ============================================================ */}
-          {/* TAB 4: COOLDOWN & FOLLOW-UPS SEQUENCE                        */}
+          {/* TAB 4: FOLLOW-UP SEQUENCE (DAY 7, DAY 21, MONTHLY FOR 4M)    */}
           {/* ============================================================ */}
           {activeTab === 'followups' && (
-            <div className="space-y-6 max-w-4xl mx-auto">
-              {/* Cooldown Header Banner */}
+            <div className="space-y-6 max-w-4xl mx-auto pb-10">
+              {/* Follow-up Header Banner */}
               <div className="p-5 rounded-xl bg-card border border-theme flex items-center justify-between gap-4 flex-wrap shadow-sm dark:shadow-none">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-purple-500 dark:text-purple-400" />
-                    Automated Cooldown & 3-Touch Follow-up Sequence
+                    Automated Follow-up Sequence (6 Touches Across 4 Months)
                   </h3>
-                  <p className="text-[11px] text-secondary mt-1">
-                    Sequences pause immediately the exact second a client replies, preventing embarrassing spam.
+                  <p className="text-[11px] text-secondary mt-1 max-w-2xl">
+                    Cadence: Day 7 → Day 21 → Monthly check-ins for 4 months. Sequences halt instantly if the client replies. Leads without a response after 4 months are automatically moved to <strong>9. Lost</strong>.
                   </p>
                 </div>
 
@@ -1012,50 +1028,73 @@ export default function LeadModal({
                 {(lead.followUps?.length
                   ? lead.followUps
                   : [
-                      { stage: 'day_2', delayDays: 2, status: 'pending', subject: 'Quick Bump & Context Re-check' },
-                      { stage: 'day_7', delayDays: 7, status: 'pending', subject: 'Technical Value-Add Architecture Tip' },
-                      { stage: 'day_21', delayDays: 21, status: 'pending', subject: 'Closing Project File & Final Check-in' }
+                      { stage: 'day_7', delayDays: 7, status: 'pending', subject: 'Technical Value-Add Architecture Tip & Demo Check' },
+                      { stage: 'day_21', delayDays: 21, status: 'pending', subject: 'Re-checking Priorities & Architectural Blueprint' },
+                      { stage: 'month_1', delayDays: 51, status: 'pending', subject: 'Month 1 Check-in & Engineering Bandwidth Update' },
+                      { stage: 'month_2', delayDays: 81, status: 'pending', subject: 'Month 2 Periodic Follow-up & Implementation Review' },
+                      { stage: 'month_3', delayDays: 111, status: 'pending', subject: 'Month 3 Initiative Progress Check' },
+                      { stage: 'month_4', delayDays: 141, status: 'pending', subject: 'Final Check-in (Auto-Closed to Lost if no reply)' }
                     ]
-                ).map((followUp, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl bg-card border border-theme space-y-2 hover:border-brand-300 dark:hover:border-slate-700 transition-colors shadow-sm dark:shadow-none"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-card-subtle text-secondary border border-theme text-xs font-bold flex items-center justify-center">
-                          {idx + 1}
-                        </span>
-                        <span className="text-xs font-bold text-primary">
-                          Touch {idx + 1}: After {followUp.delayDays || (idx === 0 ? 2 : idx === 1 ? 7 : 21)} Days
+                ).map((followUp, idx) => {
+                  const getTimingBadge = (f, i) => {
+                    if (f.delayDays === 7 || f.stage === 'day_7') return 'Touch 1: Day 7 (Week 1)';
+                    if (f.delayDays === 21 || f.stage === 'day_21') return 'Touch 2: Day 21 (Week 3)';
+                    if (f.delayDays === 51 || f.stage === 'month_1') return 'Touch 3: Month 1 (+30d)';
+                    if (f.delayDays === 81 || f.stage === 'month_2') return 'Touch 4: Month 2 (+60d)';
+                    if (f.delayDays === 111 || f.stage === 'month_3') return 'Touch 5: Month 3 (+90d)';
+                    if (f.delayDays === 141 || f.stage === 'month_4') return 'Touch 6: Month 4 (Final Touch)';
+                    return `Touch ${i + 1}: After ${f.delayDays || 7} Days`;
+                  };
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-4 rounded-xl bg-card border border-theme space-y-2 hover:border-brand-300 dark:hover:border-slate-700 transition-colors shadow-sm dark:shadow-none"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-card-subtle text-secondary border border-theme text-xs font-bold flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-primary">
+                            {getTimingBadge(followUp, idx)}
+                          </span>
+                        </div>
+
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-md ${
+                            followUp.status === 'sent'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                              : followUp.status === 'ready'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse'
+                              : followUp.status === 'skipped'
+                              ? 'bg-card-subtle text-muted border border-theme'
+                              : 'bg-card-subtle text-secondary border border-theme'
+                          }`}
+                        >
+                          {followUp.status || 'pending'}
                         </span>
                       </div>
 
-                      <span
-                        className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-md ${
-                          followUp.status === 'sent'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            : followUp.status === 'ready'
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse'
-                            : followUp.status === 'skipped'
-                            ? 'bg-card-subtle text-muted border border-theme'
-                            : 'bg-card-subtle text-secondary border border-theme'
-                        }`}
-                      >
-                        {followUp.status || 'pending'}
-                      </span>
+                      {followUp.subject && (
+                        <p className="text-xs text-brand-600 dark:text-brand-300 font-medium pl-8">{followUp.subject}</p>
+                      )}
+                      {followUp.body && (
+                        <p className="text-xs text-secondary whitespace-pre-wrap bg-surface p-3 rounded-xl border border-theme ml-8 leading-relaxed">
+                          {followUp.body}
+                        </p>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {followUp.subject && (
-                      <p className="text-xs text-brand-600 dark:text-brand-300 font-medium pl-8">{followUp.subject}</p>
-                    )}
-                    {followUp.body && (
-                      <p className="text-xs text-secondary whitespace-pre-wrap bg-surface p-3 rounded-xl border border-theme ml-8 leading-relaxed">
-                        {followUp.body}
-                      </p>
-                    )}
-                  </div>
-                ))}
+              {/* Pipeline Cleanliness & Auto-Lost Info Banner */}
+              <div className="p-4 rounded-xl bg-card-subtle border border-theme flex items-center gap-3 text-xs text-muted shadow-sm">
+                <AlertCircle className="w-4 h-4 text-brand-500 flex-shrink-0" />
+                <span>
+                  <strong>Automated Lost Pipeline Protection:</strong> If all 6 touches across the 4-month cadence conclude without a client response, the system automatically marks this lead as <strong>9. Lost</strong> so your active funnel stays pristine. You can still message, review, or manually move the lead back to any stage at any time.
+                </span>
               </div>
             </div>
           )}

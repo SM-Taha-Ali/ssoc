@@ -105,7 +105,7 @@ export default function PriorityInbox({
 
         {cooldownReadyLeads.length === 0 ? (
           <div className="p-8 text-center bg-card border border-theme rounded-xl text-muted text-xs">
-            No follow-ups due right now. The background tracker checks cooldown thresholds every day at 9:00 AM.
+            No follow-ups due right now. The background tracker checks follow-up schedules every day at 9:00 AM.
           </div>
         ) : (
           <div className="space-y-3">
@@ -120,8 +120,8 @@ export default function PriorityInbox({
                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-card-subtle text-secondary border border-theme">
                       {lead.platform}
                     </span>
-                    <span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                      Cooldown Follow-Up Ready
+                    <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                      Follow-Up Ready
                     </span>
                   </div>
                   <h4 className="text-xs font-semibold text-primary">{lead.title}</h4>

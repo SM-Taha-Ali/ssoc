@@ -808,9 +808,9 @@ export default function SettingsModal({ isOpen, onClose }) {
                           <Clock className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-white">Daily Cooldown & Follow-Up Tracker</h4>
+                          <h4 className="text-xs font-bold text-white">Daily Follow-Up & Lost Lead Tracker</h4>
                           <p className="text-[11px] text-slate-400">
-                            Schedule: <span className="text-amber-300 font-mono font-semibold">{schedulerStatus?.cooldownSchedule || '0 9 * * *'}</span> ({schedulerStatus?.cooldownHuman || 'Every day at 9:00 AM'})
+                            Schedule: <span className="text-purple-300 font-mono font-semibold">{schedulerStatus?.cooldownSchedule || '0 9 * * *'}</span> ({schedulerStatus?.cooldownHuman || 'Every day at 9:00 AM'})
                           </p>
                         </div>
                       </div>
@@ -821,7 +821,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     </div>
 
                     <p className="text-[11px] text-slate-400">
-                      Scans leads in sent/cooldown stage. Progresses follow-ups automatically after Day 2, Day 7, and Day 21 thresholds until a response is detected.
+                      Scans leads in sent/follow-up stage. Progresses follow-ups automatically after Day 7, Day 21, and monthly for 4 months. Unreplied leads are automatically moved to <strong>9. Lost</strong>.
                     </p>
 
                     <div className="flex items-center justify-end pt-1">
@@ -831,8 +831,8 @@ export default function SettingsModal({ isOpen, onClose }) {
                         disabled={triggeringCooldown}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 border border-slate-700 rounded text-xs font-semibold transition-all disabled:opacity-50"
                       >
-                        <Play className={`w-3 h-3 ${triggeringCooldown ? 'animate-spin text-amber-400' : ''}`} />
-                        {triggeringCooldown ? 'Checking Cooldowns...' : 'Check Cooldowns Now'}
+                        <Play className={`w-3 h-3 ${triggeringCooldown ? 'animate-spin text-purple-400' : ''}`} />
+                        {triggeringCooldown ? 'Checking Follow-ups...' : 'Check Follow-ups Now'}
                       </button>
                     </div>
                   </div>

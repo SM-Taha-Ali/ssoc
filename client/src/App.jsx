@@ -203,9 +203,9 @@ export default function App() {
     try {
       const res = await axios.post('/api/scheduler/run-cooldown');
       fetchLeads();
-      showBannerNotice(`Cooldown Tracker updated ${res.data?.updatedCount || 0} follow-ups.`);
+      showBannerNotice(`Follow-up Tracker updated ${res.data?.updatedCount || 0} leads/follow-ups.`);
     } catch (err) {
-      alert('Error checking cooldowns: ' + (err.response?.data?.error || err.message));
+      alert('Error checking follow-ups: ' + (err.response?.data?.error || err.message));
     } finally {
       setIsCooldownRunning(false);
     }

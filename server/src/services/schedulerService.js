@@ -220,10 +220,11 @@ export async function runLeadFinderTask(companyId = null) {
 }
 
 /**
- * Runs the Cooldown & Follow-Up Tracker
+ * Runs the Follow-Up & Cooldown Tracker
+ * Cadence: Day 7 -> Day 21 -> Monthly for 4 months (Day 51, 81, 111, 141) -> Auto-mark Lost
  */
 export async function runCooldownTrackerTask(companyId = null) {
-  console.log('[Scheduler] Starting Cooldown & Follow-Up Tracker Task...');
+  console.log('[Scheduler] Starting Follow-Up Tracker Task...');
   try {
     const leadQuery = {
       stage: { $in: ['sent', 'cooldown'] },
@@ -239,33 +240,50 @@ export async function runCooldownTrackerTask(companyId = null) {
 
     for (const lead of leadsInCooldown) {
       const daysSinceContact = Math.floor((now - new Date(lead.lastContactedAt)) / (1000 * 60 * 60 * 24));
+      let leadUpdated = false;
 
-      // Find pending follow-ups
+      // Check pending follow-ups based on delayDays
       for (const followUp of lead.followUps || []) {
         if (followUp.status === 'pending') {
-          if (
-            (followUp.stage === 'day_2' && daysSinceContact >= 2) ||
-            (followUp.stage === 'day_7' && daysSinceContact >= 7) ||
-            (followUp.stage === 'day_21' && daysSinceContact >= 21)
-          ) {
+          const threshold = followUp.delayDays || 7;
+          if (daysSinceContact >= threshold) {
             followUp.status = 'ready';
             lead.stage = 'cooldown';
             lead.activityLogs.push({
               action: 'Follow-Up Ready',
-              details: `Follow-up ${followUp.stage} is now ready to review and send (${daysSinceContact} days since last contact).`
+              details: `Follow-up "${followUp.stage}" (${threshold} days) is now ready to review and send (${daysSinceContact} days since initial contact).`
             });
+            leadUpdated = true;
             updatedCount++;
           }
         }
       }
 
-      await lead.save();
+      // Auto-Mark Lost Strategy:
+      // If 4 months (~141 days) have passed since initial contact and client never replied,
+      // or if all 6 follow-up touches are completed (sent/skipped) without reply:
+      const allFollowUpsHandled = (lead.followUps || []).length > 0 &&
+        lead.followUps.every((f) => f.status === 'sent' || f.status === 'skipped');
+
+      if ((daysSinceContact >= 141 || (allFollowUpsHandled && daysSinceContact >= 141)) && lead.stage !== 'replied' && lead.stage !== 'closed_won') {
+        lead.stage = 'closed_lost';
+        lead.activityLogs.push({
+          action: 'Auto-Marked Lost',
+          details: `4-month follow-up sequence completed without client response (${daysSinceContact} days since contact). Lead automatically moved to Lost.`
+        });
+        leadUpdated = true;
+        updatedCount++;
+      }
+
+      if (leadUpdated) {
+        await lead.save();
+      }
     }
 
-    console.log(`[Scheduler] Cooldown Tracker finished. Updated ${updatedCount} follow-ups.`);
+    console.log(`[Scheduler] Follow-Up Tracker finished. Updated ${updatedCount} leads/follow-ups.`);
     return { success: true, updatedCount };
   } catch (err) {
-    console.error('[Scheduler] Cooldown Tracker error:', err.message);
+    console.error('[Scheduler] Follow-Up Tracker error:', err.message);
     return { success: false, error: err.message };
   }
 }

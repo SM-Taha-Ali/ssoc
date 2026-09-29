@@ -140,15 +140,15 @@ export default function Header({
               <span className="hidden lg:inline">{isScanning ? 'Scanning...' : 'Scan Leads'}</span>
             </button>
 
-            {/* Check Cooldown Button */}
+            {/* Check Follow-up Button */}
             <button
               onClick={onRunCooldown}
               disabled={isCooldownRunning}
               className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-secondary hover:text-primary bg-card-subtle hover:bg-card active:scale-95 rounded-lg border border-theme transition-all disabled:opacity-50"
-              title="Check follow-up cooldown thresholds (Day 2, Day 7, Day 21)"
+              title="Check follow-up schedule (Day 7, Day 21, Monthly for 4 months, and Auto-Lost)"
             >
               <Clock className={`w-3.5 h-3.5 ${isCooldownRunning ? 'animate-spin text-amber-500' : 'text-muted'}`} />
-              <span className="hidden lg:inline">{isCooldownRunning ? 'Checking...' : 'Check Cooldowns'}</span>
+              <span className="hidden lg:inline">{isCooldownRunning ? 'Checking...' : 'Check Follow-ups'}</span>
             </button>
 
             {/* Add Lead Primary CTA */}

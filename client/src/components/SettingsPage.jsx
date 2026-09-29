@@ -2320,18 +2320,18 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               </div>
             </div>
 
-            {/* Cooldown Tracker Automation Card */}
+            {/* Follow-Up Tracker Automation Card */}
             <div className="p-5 rounded-xl bg-card border border-theme shadow-sm space-y-3.5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-primary">Daily Cooldown & Follow-Up Tracker</h4>
+                    <h4 className="text-xs font-bold text-primary">Daily Follow-Up & Lost Lead Tracker</h4>
                     <p className="text-[11px] text-secondary">
                       Schedule:{' '}
-                      <span className="text-amber-500 font-mono font-semibold">
+                      <span className="text-purple-600 dark:text-purple-400 font-mono font-semibold">
                         {schedulerStatus?.cooldownSchedule || '0 9 * * *'}
                       </span>{' '}
                       ({schedulerStatus?.cooldownHuman || 'Every day at 9:00 AM'})
@@ -2345,7 +2345,7 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
               </div>
 
               <p className="text-[11px] text-secondary leading-relaxed">
-                Scans contacted prospects and progresses follow-up sequences automatically past Day 2, Day 7, and Day 21 thresholds until a client reply is detected.
+                Scans contacted prospects and progresses follow-up sequences automatically past Day 7, Day 21, and monthly check-ins for 4 months. Unreplied leads are automatically moved to <strong>9. Lost</strong>. Sequences halt the instant a client replies.
               </p>
 
               <div className="flex items-center justify-end pt-2 border-t border-theme">
@@ -2355,8 +2355,8 @@ We strictly work with B2B SaaS, FinTech, and venture-backed tech startups. We de
                   disabled={triggeringCooldown}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 bg-surface hover:bg-card-subtle active:scale-95 text-primary border border-theme rounded-lg text-xs font-semibold transition-all disabled:opacity-50 shadow-sm"
                 >
-                  <Play className={`w-3.5 h-3.5 ${triggeringCooldown ? 'animate-spin text-amber-500' : ''}`} />
-                  {triggeringCooldown ? 'Checking Cooldowns...' : 'Check Cooldowns Now'}
+                  <Play className={`w-3.5 h-3.5 ${triggeringCooldown ? 'animate-spin text-purple-500' : ''}`} />
+                  {triggeringCooldown ? 'Checking Follow-ups...' : 'Check Follow-ups Now'}
                 </button>
               </div>
             </div>

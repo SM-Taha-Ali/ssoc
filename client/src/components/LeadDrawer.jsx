@@ -173,7 +173,7 @@ export default function LeadDrawer({
           }`}
         >
           <Clock className="w-3.5 h-3.5 text-purple-400" />
-          Cooldown & Follow-ups
+          Follow-up Sequence
         </button>
 
         <button
@@ -404,10 +404,10 @@ export default function LeadDrawer({
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-purple-400" />
-                  Cooldown & Follow-up Tracker
+                  Follow-up Sequence Tracker (4-Month Cadence)
                 </h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Follow-ups pause instantly the moment a client replies.
+                  Day 7 → Day 21 → Monthly check-ins for 4 months. Leads unreplied after 4 months auto-move to Lost.
                 </p>
               </div>
 
@@ -432,9 +432,12 @@ export default function LeadDrawer({
             {/* Sequence Cards */}
             <div className="space-y-3">
               {(lead.followUps?.length ? lead.followUps : [
-                { stage: 'day_2', delayDays: 2, status: 'pending', subject: 'Day 2 Quick bump' },
-                { stage: 'day_7', delayDays: 7, status: 'pending', subject: 'Day 7 Value-add tip' },
-                { stage: 'day_21', delayDays: 21, status: 'pending', subject: 'Day 21 Closing file check-in' }
+                { stage: 'day_7', delayDays: 7, status: 'pending', subject: 'Day 7: Architecture Tip & Walkthrough Check' },
+                { stage: 'day_21', delayDays: 21, status: 'pending', subject: 'Day 21: Case Study & Re-checking Priority' },
+                { stage: 'month_1', delayDays: 51, status: 'pending', subject: 'Month 1: Engineering Bandwidth Check-in' },
+                { stage: 'month_2', delayDays: 81, status: 'pending', subject: 'Month 2: Periodic Follow-up' },
+                { stage: 'month_3', delayDays: 111, status: 'pending', subject: 'Month 3: Initiative Progress Review' },
+                { stage: 'month_4', delayDays: 141, status: 'pending', subject: 'Month 4: Final Touch (Auto-Closed to Lost if no reply)' }
               ]).map((followUp, idx) => (
                 <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">

@@ -110,7 +110,11 @@ export function PipelineSkeleton() {
           { label: 'Needs Demo', count: 2 },
           { label: 'Draft Ready', count: 2 },
           { label: 'Contacted', count: 1 },
-          { label: 'Cooldown', count: 1 }
+          { label: 'Follow-up', count: 1 },
+          { label: 'Replied', count: 1 },
+          { label: 'Meeting', count: 1 },
+          { label: 'Won', count: 1 },
+          { label: 'Lost', count: 0 }
         ].map((col, idx) => (
           <div
             key={idx}

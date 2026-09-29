@@ -512,28 +512,52 @@ router.post('/:id/send', async (req, res) => {
 
     lead.followUps = [
       {
-        stage: 'day_2',
-        delayDays: 2,
-        status: 'pending',
-        scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        subject: followUpTexts?.day_2?.subject || `Quick bump: ${finalSubject}`,
-        body: followUpTexts?.day_2?.body || `Hi ${lead.clientInfo?.name || 'there'},\n\nJust wanted to make sure you had a chance to view the 60-second demo I recorded for you: ${lead.demoVideoUrl || ''}.\n\nBest,\n${companyProfile.senderName}`
-      },
-      {
         stage: 'day_7',
         delayDays: 7,
         status: 'pending',
         scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         subject: followUpTexts?.day_7?.subject || `Thought you might find this helpful regarding ${lead.title}`,
-        body: followUpTexts?.day_7?.body || `Hi ${lead.clientInfo?.name || 'there'},\n\nFollowing up with a quick thought on your architecture regarding ${lead.title}.\n\nWould you be open to a 10-minute chat this week?\n\nBest,\n${companyProfile.senderName}`
+        body: followUpTexts?.day_7?.body || `Hi ${lead.clientInfo?.name || 'there'},\n\nFollowing up on my previous message regarding ${lead.title}. Just wanted to check if you had a chance to view the 60-second video demo I prepared: ${lead.demoVideoUrl || ''}.\n\nWould you be open to a 10-minute chat this week?\n\nBest,\n${companyProfile.senderName}`
       },
       {
         stage: 'day_21',
         delayDays: 21,
         status: 'pending',
         scheduledDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
-        subject: followUpTexts?.day_21?.subject || `Final check-in on ${lead.title}`,
-        body: followUpTexts?.day_21?.body || `Hi ${lead.clientInfo?.name || 'there'},\n\nI assume your priorities may have shifted, so I won't follow up again. If you ever need help with this, feel free to reach out anytime!\n\nBest,\n${companyProfile.senderName}`
+        subject: followUpTexts?.day_21?.subject || `Re-checking priorities on ${lead.title}`,
+        body: followUpTexts?.day_21?.body || `Hi ${lead.clientInfo?.name || 'there'},\n\nRe-surfacing this in case ${lead.title} is still on your radar. We recently delivered an identical solution and I would love to share key benchmarks with you.\n\nBest,\n${companyProfile.senderName}`
+      },
+      {
+        stage: 'month_1',
+        delayDays: 51,
+        status: 'pending',
+        scheduledDate: new Date(Date.now() + 51 * 24 * 60 * 60 * 1000),
+        subject: `Monthly check-in regarding ${lead.title}`,
+        body: `Hi ${lead.clientInfo?.name || 'there'},\n\nChecking back in to see if you are still looking for support with ${lead.title}. Our team has specialized engineering bandwidth ready if you would like to revisit this.\n\nBest,\n${companyProfile.senderName}`
+      },
+      {
+        stage: 'month_2',
+        delayDays: 81,
+        status: 'pending',
+        scheduledDate: new Date(Date.now() + 81 * 24 * 60 * 60 * 1000),
+        subject: `Quick update on ${lead.title}`,
+        body: `Hi ${lead.clientInfo?.name || 'there'},\n\nFollowing up with a quick touchpoint regarding ${lead.title}. Let me know if priorities have evolved and we can schedule a quick implementation review.\n\nBest,\n${companyProfile.senderName}`
+      },
+      {
+        stage: 'month_3',
+        delayDays: 111,
+        status: 'pending',
+        scheduledDate: new Date(Date.now() + 111 * 24 * 60 * 60 * 1000),
+        subject: `Project check-in: ${lead.title}`,
+        body: `Hi ${lead.clientInfo?.name || 'there'},\n\nReaching out to see if the initiative for ${lead.title} is currently active. Happy to answer any technical questions or provide a tailored estimate whenever you are ready.\n\nBest,\n${companyProfile.senderName}`
+      },
+      {
+        stage: 'month_4',
+        delayDays: 141,
+        status: 'pending',
+        scheduledDate: new Date(Date.now() + 141 * 24 * 60 * 60 * 1000),
+        subject: `Final follow-up on ${lead.title}`,
+        body: `Hi ${lead.clientInfo?.name || 'there'},\n\nThis is my final check-in regarding ${lead.title}. I assume your priorities may have shifted, so I will close this file on our end to respect your inbox. If you ever need assistance in the future, don't hesitate to reach back out!\n\nBest,\n${companyProfile.senderName}`
       }
     ];
 

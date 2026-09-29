@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const followUpSchema = new mongoose.Schema({
   stage: {
     type: String,
-    enum: ['day_2', 'day_7', 'day_21'],
     required: true
   },
   delayDays: {
