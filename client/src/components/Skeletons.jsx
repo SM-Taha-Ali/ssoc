@@ -39,9 +39,10 @@ export function SettingsSkeleton() {
           <div className="h-8 w-28 rounded-lg skeleton-shimmer" />
         </div>
 
-        {/* Scrollable Form Body Skeleton */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-6 max-w-4xl mx-auto w-full">
-          {/* Header Description */}
+        {/* Scrollable Content (Scrollbar is flush against the right edge of the screen, matching SettingsPage.jsx) */}
+        <div className="flex-1 h-full overflow-y-auto min-h-0">
+          <div className="max-w-4xl mx-auto p-8 space-y-6">
+            {/* Header Description */}
           <div className="space-y-2">
             <div className="h-6 w-48 rounded-lg skeleton-shimmer" />
             <div className="h-3.5 w-3/4 rounded skeleton-shimmer opacity-70" />
@@ -94,7 +95,8 @@ export function SettingsSkeleton() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
     </div>
   );
 }
