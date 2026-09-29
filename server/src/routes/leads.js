@@ -98,7 +98,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const lead = await Lead.findOne({ _id: req.params.id, companyId: req.companyId });
+    const lead = await Lead.findOne({ _id: req.params.id, companyId: req.companyId }).lean();
     if (!lead) return res.status(404).json({ error: 'Lead not found in this company workspace' });
     res.json(lead);
   } catch (err) {

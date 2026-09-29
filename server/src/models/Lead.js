@@ -172,4 +172,7 @@ leadSchema.index({ companyId: 1, platform: 1, isArchived: 1, matchScore: -1, cre
 // High-performance index for daily follow-up scheduler
 leadSchema.index({ stage: 1, lastContactedAt: 1, companyId: 1 });
 
+// High-performance index for inbound reply webhooks & email matching
+leadSchema.index({ 'clientInfo.email': 1 });
+
 export const Lead = mongoose.model('Lead', leadSchema);

@@ -22,7 +22,7 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ error: 'Session expired or invalid token. Please sign in again.' });
     }
 
-    const company = await Company.findById(decoded.companyId).select('-password');
+    const company = await Company.findById(decoded.companyId).select('_id companyName companyKey').lean();
     if (!company) {
       return res.status(401).json({ error: 'Company workspace not found.' });
     }
