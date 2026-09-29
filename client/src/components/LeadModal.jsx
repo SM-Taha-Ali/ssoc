@@ -635,28 +635,28 @@ export default function LeadModal({
             <div className="relative space-y-6 max-w-4xl mx-auto">
               {/* FUTURISTIC AI LOADING OVERLAY (Active during generation) */}
               {isAuditing && (
-                <div className="absolute inset-0 z-30 bg-[#0c1222]/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+                <div className="absolute inset-0 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-brand-500/20 dark:border-brand-500/30 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 shadow-xl shadow-brand-500/5 dark:shadow-2xl">
                   {/* Cyber glowing orb */}
                   <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-xl animate-pulse" />
-                    <div className="w-16 h-16 rounded-full border-2 border-brand-500/40 border-t-brand-400 border-r-indigo-400 animate-spin" />
-                    <Cpu className="w-8 h-8 text-brand-400 absolute" />
+                    <div className="absolute inset-0 rounded-full bg-brand-500/15 dark:bg-brand-500/25 blur-xl animate-pulse" />
+                    <div className="w-16 h-16 rounded-full border-2 border-brand-500/30 dark:border-brand-500/40 border-t-brand-600 dark:border-t-brand-400 border-r-indigo-500 dark:border-r-indigo-400 animate-spin" />
+                    <Cpu className="w-8 h-8 text-brand-600 dark:text-brand-400 absolute" />
                   </div>
 
                   {/* Scanning beam effect */}
-                  <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden mb-4 relative">
+                  <div className="w-64 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mb-4 relative shadow-inner">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500 to-transparent w-1/2 animate-shimmer" />
                   </div>
 
-                  <h3 className="text-sm font-bold text-white tracking-wide">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-wide">
                     Gemini Autonomous AI Preparing 60s Demo Script
                   </h3>
 
-                  <p className="text-xs text-brand-300 mt-2 font-medium min-h-[20px] transition-all">
+                  <p className="text-xs text-brand-600 dark:text-brand-300 mt-2 font-semibold min-h-[20px] transition-all">
                     {auditSteps[aiStepIndex]}
                   </p>
 
-                  <span className="text-[10px] text-slate-500 mt-4 uppercase tracking-wider font-semibold">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-4 uppercase tracking-wider font-semibold">
                     Synthesizing hooks • Identifying micro-solution • Crafting profile tips
                   </span>
                 </div>
@@ -818,26 +818,26 @@ export default function LeadModal({
             <div className="relative space-y-6 max-w-4xl mx-auto">
               {/* FUTURISTIC AI LOADING OVERLAY (Active during pitch generation) */}
               {isGeneratingPitch && (
-                <div className="absolute inset-0 z-30 bg-[#0c1222]/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+                <div className="absolute inset-0 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-emerald-500/25 dark:border-emerald-500/30 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 shadow-xl shadow-emerald-500/5 dark:shadow-2xl">
                   <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl animate-pulse" />
-                    <div className="w-16 h-16 rounded-full border-2 border-emerald-500/40 border-t-emerald-400 border-r-brand-400 animate-spin" />
-                    <Send className="w-8 h-8 text-emerald-400 absolute" />
+                    <div className="absolute inset-0 rounded-full bg-emerald-500/15 dark:bg-emerald-500/25 blur-xl animate-pulse" />
+                    <div className="w-16 h-16 rounded-full border-2 border-emerald-500/30 dark:border-emerald-500/40 border-t-emerald-600 dark:border-t-emerald-400 border-r-brand-500 dark:border-r-brand-400 animate-spin" />
+                    <Send className="w-8 h-8 text-emerald-600 dark:text-emerald-400 absolute" />
                   </div>
 
-                  <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden mb-4 relative">
+                  <div className="w-64 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mb-4 relative shadow-inner">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500 to-transparent w-1/2 animate-shimmer" />
                   </div>
 
-                  <h3 className="text-sm font-bold text-white tracking-wide">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-wide">
                     Gemini Synthesizing High-Conversion Outreach Pitch
                   </h3>
 
-                  <p className="text-xs text-emerald-300 mt-2 font-medium min-h-[20px] transition-all">
+                  <p className="text-xs text-emerald-600 dark:text-emerald-300 mt-2 font-semibold min-h-[20px] transition-all">
                     {pitchSteps[aiStepIndex]}
                   </p>
 
-                  <span className="text-[10px] text-slate-500 mt-4 uppercase tracking-wider font-semibold">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-4 uppercase tracking-wider font-semibold">
                     Embedding demo link • Personalizing hook • Formatting delivery channels
                   </span>
                 </div>
