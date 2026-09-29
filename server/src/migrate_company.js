@@ -67,6 +67,15 @@ export async function ensureDefaultCompany() {
     await quminCompany.save();
   }
 
+  // Ensure all unassigned or legacy leads belong to QuminAI
+  const quminLeadsCount = await Lead.countDocuments({ companyId: quminCompany._id });
+  if (quminLeadsCount === 0) {
+    await Lead.updateMany(
+      { $or: [{ companyId: apexCompany._id }, { companyId: null }, { companyId: { $exists: false } }] },
+      { $set: { companyId: quminCompany._id } }
+    );
+  }
+
   // Ensure Company Profile for QuminAI
   const quminProfile = await CompanyProfile.findOne({ companyId: quminCompany._id });
   if (!quminProfile) {

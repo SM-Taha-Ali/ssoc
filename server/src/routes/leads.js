@@ -24,6 +24,18 @@ router.use(requireAuth);
  */
 router.get('/', async (req, res) => {
   try {
+    // If the authenticated company is QuminAI and currently has 0 leads,
+    // automatically adopt existing legacy or unassigned leads into QuminAI
+    if (req.company?.companyKey === 'quminai') {
+      const quminLeadCount = await Lead.countDocuments({ companyId: req.companyId });
+      if (quminLeadCount === 0) {
+        await Lead.updateMany(
+          { $or: [{ companyId: { $ne: req.companyId } }, { companyId: null }, { companyId: { $exists: false } }] },
+          { $set: { companyId: req.companyId } }
+        );
+      }
+    }
+
     const { stage, platform, search, sort } = req.query;
     const query = { companyId: req.companyId, isArchived: { $ne: true } };
 

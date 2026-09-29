@@ -139,6 +139,18 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Incorrect password for this company.' });
     }
 
+    // Auto-migrate leads to QuminAI if it has 0 leads
+    if (company.companyKey === 'quminai') {
+      const { Lead } = await import('../models/Lead.js');
+      const quminLeadCount = await Lead.countDocuments({ companyId: company._id });
+      if (quminLeadCount === 0) {
+        await Lead.updateMany(
+          { $or: [{ companyId: { $ne: company._id } }, { companyId: null }, { companyId: { $exists: false } }] },
+          { $set: { companyId: company._id } }
+        );
+      }
+    }
+
     const token = generateToken(company);
 
     res.json({
