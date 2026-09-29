@@ -114,13 +114,15 @@ export default function App() {
       setSelectedLead(null);
       return;
     }
-    setSelectedLead(lead);
-    if (!lead.description || !lead.pitchDraft?.body) {
+    const needsDetails = !lead.description || !lead.activityLogs;
+    setSelectedLead({ ...lead, _isLoadingDetails: needsDetails });
+    if (needsDetails) {
       try {
         const res = await axios.get(`/api/leads/${lead._id}`);
-        setSelectedLead((prev) => (prev?._id === lead._id ? res.data : prev));
+        setSelectedLead((prev) => (prev?._id === lead._id ? { ...res.data, _isLoadingDetails: false } : prev));
       } catch (err) {
         console.error('Failed to load rich lead details in background:', err);
+        setSelectedLead((prev) => (prev?._id === lead._id ? { ...prev, _isLoadingDetails: false } : prev));
       }
     }
   };

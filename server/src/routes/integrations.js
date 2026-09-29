@@ -217,8 +217,12 @@ router.post('/inbound-webhook', async (req, res) => {
  */
 router.get('/scheduler-status', requireAuth, async (req, res) => {
   try {
-    const config = await IntegrationConfig.findOne({ companyId: req.companyId });
-    const totalLeads = await Lead.countDocuments({ companyId: req.companyId, isArchived: { $ne: true } });
+    const [config, totalLeads] = await Promise.all([
+      IntegrationConfig.findOne({ companyId: req.companyId })
+        .select('leadFinderSchedule cooldownSchedule apolloApiKey')
+        .lean(),
+      Lead.countDocuments({ companyId: req.companyId, isArchived: { $ne: true } })
+    ]);
 
     res.json({
       status: 'active',

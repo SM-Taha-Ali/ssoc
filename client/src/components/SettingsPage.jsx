@@ -56,10 +56,14 @@ const FEED_PLATFORM_OPTIONS = [
 ];
 import axios from 'axios';
 
+// Module-level in-memory cache for instant 0ms Settings page transitions (SWR pattern)
+let cachedSettingsData = null;
+let cachedSchedulerStatus = null;
+
 export default function SettingsPage({ onBackToPipeline }) {
   const { mode, setMode, accent, setAccent } = useTheme();
   const [activeTab, setActiveTab] = useState('company');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedSettingsData);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState('');
   const [copiedWebhook, setCopiedWebhook] = useState(false);
@@ -71,8 +75,8 @@ export default function SettingsPage({ onBackToPipeline }) {
   const [quickAiSuccess, setQuickAiSuccess] = useState('');
   const [quickAiError, setQuickAiError] = useState('');
 
-  // Company Profile state
-  const [company, setCompany] = useState({
+  // Company Profile state (hydrated instantly from cache if available)
+  const [company, setCompany] = useState(() => cachedSettingsData?.company || {
     name: '',
     tagline: '',
     website: '',
@@ -87,16 +91,16 @@ export default function SettingsPage({ onBackToPipeline }) {
     senderEmail: ''
   });
 
-  const [servicesStr, setServicesStr] = useState('');
-  const [strengthsStr, setStrengthsStr] = useState('');
-  const [keywordsStr, setKeywordsStr] = useState('');
-  const [negativeKeywordsStr, setNegativeKeywordsStr] = useState('');
-  const [industriesStr, setIndustriesStr] = useState('');
-  const [rolesStr, setRolesStr] = useState('');
-  const [disqualifiersStr, setDisqualifiersStr] = useState('');
+  const [servicesStr, setServicesStr] = useState(() => cachedSettingsData?.servicesStr || '');
+  const [strengthsStr, setStrengthsStr] = useState(() => cachedSettingsData?.strengthsStr || '');
+  const [keywordsStr, setKeywordsStr] = useState(() => cachedSettingsData?.keywordsStr || '');
+  const [negativeKeywordsStr, setNegativeKeywordsStr] = useState(() => cachedSettingsData?.negativeKeywordsStr || '');
+  const [industriesStr, setIndustriesStr] = useState(() => cachedSettingsData?.industriesStr || '');
+  const [rolesStr, setRolesStr] = useState(() => cachedSettingsData?.rolesStr || '');
+  const [disqualifiersStr, setDisqualifiersStr] = useState(() => cachedSettingsData?.disqualifiersStr || '');
 
-  // Integrations state
-  const [integrations, setIntegrations] = useState({
+  // Integrations state (hydrated instantly from cache if available)
+  const [integrations, setIntegrations] = useState(() => cachedSettingsData?.integrations || {
     geminiApiKey: '',
     geminiModel: 'gemini-3.8-flash',
     deliveryProvider: 'smtp',
@@ -169,13 +173,17 @@ export default function SettingsPage({ onBackToPipeline }) {
     try {
       const res = await axios.get('/api/integrations/scheduler-status');
       setSchedulerStatus(res.data);
+      cachedSchedulerStatus = res.data;
     } catch (e) {
       console.error('Failed to fetch scheduler status:', e);
     }
   };
 
   const fetchSettings = async () => {
-    setLoading(true);
+    // Only trigger full-screen skeleton if we don't have cached data yet
+    if (!cachedSettingsData) {
+      setLoading(true);
+    }
     try {
       const [compRes, intRes] = await Promise.all([
         axios.get('/api/company-profile'),
@@ -184,32 +192,56 @@ export default function SettingsPage({ onBackToPipeline }) {
 
       if (compRes.data) {
         setCompany(compRes.data);
-        setServicesStr((compRes.data.targetServices || []).join('\n'));
-        setStrengthsStr((compRes.data.coreStrengths || []).join('\n'));
-        setKeywordsStr((compRes.data.targetKeywords || []).join(', '));
-        setNegativeKeywordsStr((compRes.data.negativeKeywords || []).join(', '));
-        setIndustriesStr((compRes.data.idealClientProfile?.industries || []).join(', '));
-        setRolesStr((compRes.data.idealClientProfile?.targetRoles || []).join(', '));
-        setDisqualifiersStr((compRes.data.disqualifiers || []).join('\n'));
+        const sStr = (compRes.data.targetServices || []).join('\n');
+        const stStr = (compRes.data.coreStrengths || []).join('\n');
+        const kStr = (compRes.data.targetKeywords || []).join(', ');
+        const nkStr = (compRes.data.negativeKeywords || []).join(', ');
+        const indStr = (compRes.data.idealClientProfile?.industries || []).join(', ');
+        const rStr = (compRes.data.idealClientProfile?.targetRoles || []).join(', ');
+        const disqStr = (compRes.data.disqualifiers || []).join('\n');
+
+        setServicesStr(sStr);
+        setStrengthsStr(stStr);
+        setKeywordsStr(kStr);
+        setNegativeKeywordsStr(nkStr);
+        setIndustriesStr(indStr);
+        setRolesStr(rStr);
+        setDisqualifiersStr(disqStr);
       }
 
       if (intRes.data) {
-        setIntegrations((prev) => ({
-          ...prev,
-          ...intRes.data,
-          smtpConfig: { ...prev.smtpConfig, ...(intRes.data.smtpConfig || {}) },
-          resendConfig: { ...prev.resendConfig, ...(intRes.data.resendConfig || {}) },
-          imap: { ...prev.imap, ...(intRes.data.imap || {}) },
-          freelancer: { ...prev.freelancer, ...(intRes.data.freelancer || {}) },
-          upwork: { ...prev.upwork, ...(intRes.data.upwork || {}) },
-          linkedin: { ...prev.linkedin, ...(intRes.data.linkedin || {}) }
-        }));
+        setIntegrations((prev) => {
+          const merged = {
+            ...prev,
+            ...intRes.data,
+            smtpConfig: { ...prev.smtpConfig, ...(intRes.data.smtpConfig || {}) },
+            resendConfig: { ...prev.resendConfig, ...(intRes.data.resendConfig || {}) },
+            imap: { ...prev.imap, ...(intRes.data.imap || {}) },
+            freelancer: { ...prev.freelancer, ...(intRes.data.freelancer || {}) },
+            upwork: { ...prev.upwork, ...(intRes.data.upwork || {}) },
+            linkedin: { ...prev.linkedin, ...(intRes.data.linkedin || {}) }
+          };
+          return merged;
+        });
         if (intRes.data.imap?.enabled) {
           setInboundMethod('imap');
         } else if (intRes.data.inboundWebhookSecret) {
           setInboundMethod('webhook');
         }
       }
+
+      // Update module-level cache for instant subsequent renders
+      cachedSettingsData = {
+        company: compRes.data,
+        servicesStr: (compRes.data?.targetServices || []).join('\n'),
+        strengthsStr: (compRes.data?.coreStrengths || []).join('\n'),
+        keywordsStr: (compRes.data?.targetKeywords || []).join(', '),
+        negativeKeywordsStr: (compRes.data?.negativeKeywords || []).join(', '),
+        industriesStr: (compRes.data?.idealClientProfile?.industries || []).join(', '),
+        rolesStr: (compRes.data?.idealClientProfile?.targetRoles || []).join(', '),
+        disqualifiersStr: (compRes.data?.disqualifiers || []).join('\n'),
+        integrations: intRes.data
+      };
     } catch (err) {
       console.error('Error fetching settings:', err);
     } finally {
@@ -239,6 +271,18 @@ export default function SettingsPage({ onBackToPipeline }) {
         axios.put('/api/company-profile', updatedProfile),
         axios.put('/api/integrations', integrations)
       ]);
+
+      cachedSettingsData = {
+        company: updatedProfile,
+        servicesStr,
+        strengthsStr,
+        keywordsStr,
+        negativeKeywordsStr,
+        industriesStr,
+        rolesStr,
+        disqualifiersStr,
+        integrations
+      };
 
       setSaveSuccess('Settings saved successfully!');
       setTimeout(() => setSaveSuccess(''), 4000);

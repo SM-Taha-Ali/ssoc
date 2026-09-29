@@ -426,10 +426,17 @@ export default function LeadModal({
                     Source: <span className="text-primary dark:text-slate-200 capitalize font-medium">{lead.platform}</span>
                   </span>
                 </div>
-                <p className="text-xs text-secondary dark:text-slate-300 leading-relaxed">
-                  {lead.matchReasoning ||
-                    'Identified as a high-affinity project matching your agency capabilities, technology stack, and business requirements.'}
-                </p>
+                {lead._isLoadingDetails && !lead.matchReasoning ? (
+                  <div className="space-y-1.5 py-1">
+                    <div className="h-3 w-11/12 rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                    <div className="h-3 w-4/5 rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                  </div>
+                ) : (
+                  <p className="text-xs text-secondary dark:text-slate-300 leading-relaxed">
+                    {lead.matchReasoning ||
+                      'Identified as a high-affinity project matching your agency capabilities, technology stack, and business requirements.'}
+                  </p>
+                )}
                 {lead.demoAngle && (
                   <div className="pt-2 border-t border-theme flex items-start gap-2 text-xs">
                     <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5">
@@ -618,9 +625,18 @@ export default function LeadModal({
                     </span>
                   )}
                 </div>
-                <div className="p-5 rounded-xl bg-card border border-theme text-xs text-secondary whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-sans shadow-sm dark:shadow-none select-text">
-                  {lead.description || 'No extended description provided.'}
-                </div>
+                {lead._isLoadingDetails && !lead.description ? (
+                  <div className="p-5 rounded-xl bg-card border border-theme space-y-2.5">
+                    <div className="h-3 w-11/12 rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                    <div className="h-3 w-full rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                    <div className="h-3 w-4/5 rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                    <div className="h-3 w-5/6 rounded bg-slate-200/80 dark:bg-slate-700/60 animate-pulse" />
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-xl bg-card border border-theme text-xs text-secondary whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-sans shadow-sm dark:shadow-none select-text">
+                    {lead.description || 'No extended description provided.'}
+                  </div>
+                )}
               </div>
 
               {/* STEP 1 FOOTER: NEXT STEP BUTTON */}

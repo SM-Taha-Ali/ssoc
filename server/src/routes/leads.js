@@ -48,11 +48,11 @@ router.get('/', async (req, res) => {
     if (sort === 'oldest') sortOption = { createdAt: 1 };
     if (sort === 'newest') sortOption = { createdAt: -1 };
 
-    // Lightweight projection: Exclude heavy bodies (full description, pitch draft body, demo script, activity logs)
-    // from the pipeline listing to reduce payload size by ~90%, saving Vercel memory and speeding up wire transfer.
-    // Rich details are fetched on demand when a lead is opened in modal.
+    // High-performance lean projection: Excludes only very heavy bodies (raw scraped full description,
+    // full demo scripts, and activityLogs) to keep payloads lean, while retaining AI match reasoning,
+    // demo angle, and tab status indicators so the UI renders seamlessly without layout shift or text jumping.
     const leadProjection =
-      '_id companyId title platform stage matchScore clientInfo budget skillsRequired createdAt updatedAt sourceUrl isArchived lastContactedAt lastRepliedAt followUps.status followUps.delayDays followUps.stage followUps.scheduledDate';
+      '_id companyId title platform stage matchScore matchReasoning demoAngle demoVideoUrl demoScript.hook pitchDraft.body clientInfo budget skillsRequired createdAt updatedAt sourceUrl isArchived lastContactedAt lastRepliedAt followUps.status followUps.delayDays followUps.stage followUps.scheduledDate';
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 0;
