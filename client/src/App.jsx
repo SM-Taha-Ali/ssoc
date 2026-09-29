@@ -9,7 +9,7 @@ import SettingsPage from './components/SettingsPage.jsx';
 import CustomSelect from './components/CustomSelect.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
-import { SettingsSkeleton, PipelineSkeleton, PriorityInboxSkeleton } from './components/Skeletons.jsx';
+import { SettingsSkeleton, PipelineSkeleton, PriorityInboxSkeleton, FullPageSkeleton } from './components/Skeletons.jsx';
 import { Search, Filter, RefreshCw, AlertCircle, X } from 'lucide-react';
 
 const PLATFORM_FILTER_OPTIONS = [
@@ -26,7 +26,7 @@ const PLATFORM_FILTER_OPTIONS = [
 ];
 
 export default function App() {
-  const { isAuthenticated, isLoading: authLoading, company } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, company, token } = useAuth();
 
   const [activeView, setActiveView] = useState('pipeline'); // 'pipeline' | 'inbox' | 'settings'
   const [leads, setLeads] = useState([]);
@@ -218,16 +218,12 @@ export default function App() {
     setSelectedLead(res.data);
   };
 
-  if (authLoading) {
-    return (
-      <div className="h-screen w-screen bg-surface flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin" />
-        <span className="text-xs text-muted font-medium">Loading Workspace...</span>
-      </div>
-    );
+  // If session is verifying and a token is present, directly show the full application skeleton
+  if (authLoading && token) {
+    return <FullPageSkeleton />;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !authLoading) {
     return <AuthPage />;
   }
 

@@ -192,3 +192,41 @@ export function PriorityInboxSkeleton() {
     </div>
   );
 }
+
+export function FullPageSkeleton() {
+  return (
+    <div className="h-screen max-h-screen bg-canvas text-primary flex flex-col font-sans overflow-hidden animate-in fade-in duration-200">
+      {/* Top Header Skeleton */}
+      <header className="h-16 border-b border-theme bg-surface px-6 flex items-center justify-between flex-shrink-0 z-20">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 rounded-lg skeleton-shimmer" />
+          <div className="space-y-1 hidden sm:block">
+            <div className="h-3.5 w-36 rounded skeleton-shimmer" />
+            <div className="h-2.5 w-48 rounded skeleton-shimmer opacity-60" />
+          </div>
+          <div className="h-8 w-44 rounded-xl skeleton-shimmer ml-4 hidden md:block" />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-24 rounded-lg skeleton-shimmer hidden sm:block" />
+          <div className="h-8 w-24 rounded-lg skeleton-shimmer hidden sm:block" />
+          <div className="h-8 w-24 rounded-lg skeleton-shimmer" />
+          <div className="h-8 w-8 rounded-lg skeleton-shimmer" />
+          <div className="h-8 w-28 rounded-lg skeleton-shimmer" />
+        </div>
+      </header>
+
+      {/* Subheader / Filter Bar Skeleton */}
+      <div className="border-b border-theme bg-surface/60 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 flex-shrink-0">
+        <div className="h-9 w-full sm:w-80 rounded-xl skeleton-shimmer" />
+        <div className="h-8 w-36 rounded-lg skeleton-shimmer self-end sm:self-auto" />
+      </div>
+
+      {/* Pipeline Kanban Skeleton */}
+      <main className="flex-1 flex overflow-hidden min-h-0">
+        <PipelineSkeleton />
+      </main>
+    </div>
+  );
+}
+
