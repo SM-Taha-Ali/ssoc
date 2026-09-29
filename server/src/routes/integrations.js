@@ -13,9 +13,9 @@ const router = express.Router();
  */
 router.get('/', requireAuth, async (req, res) => {
   try {
-    let config = await IntegrationConfig.findOne({ companyId: req.companyId });
+    let config = await IntegrationConfig.findOne({ companyId: req.companyId }).lean();
     if (!config) {
-      config = await IntegrationConfig.create({
+      const created = await IntegrationConfig.create({
         companyId: req.companyId,
         rssFeeds: [
           {
@@ -34,10 +34,11 @@ router.get('/', requireAuth, async (req, res) => {
           }
         ]
       });
+      config = created.toObject();
     }
 
     // Mask sensitive passwords before sending to client
-    const safeConfig = config.toObject();
+    const safeConfig = { ...config };
     if (safeConfig.smtp && safeConfig.smtp.pass) {
       safeConfig.smtp.pass = '••••••••';
     }

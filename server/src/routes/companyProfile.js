@@ -14,7 +14,7 @@ router.use(requireAuth);
  */
 router.get('/', async (req, res) => {
   try {
-    let profile = await CompanyProfile.findOne({ companyId: req.companyId });
+    let profile = await CompanyProfile.findOne({ companyId: req.companyId }).lean();
     if (!profile) {
       profile = await CompanyProfile.create({
         companyId: req.companyId,

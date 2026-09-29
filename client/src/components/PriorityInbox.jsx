@@ -30,10 +30,26 @@ export default function PriorityInbox({
     return <PriorityInboxSkeleton />;
   }
 
-  const repliedLeads = leads.filter((l) => l.stage === 'replied');
-  const cooldownReadyLeads = leads.filter(
-    (l) => l.stage === 'cooldown' || (l.followUps && l.followUps.some((f) => f.status === 'ready'))
-  );
+  const repliedLeads = leads
+    .filter((l) => l.stage === 'replied')
+    .sort((a, b) => {
+      const scoreA = typeof a.matchScore === 'number' ? a.matchScore : 0;
+      const scoreB = typeof b.matchScore === 'number' ? b.matchScore : 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+
+  const cooldownReadyLeads = leads
+    .filter(
+      (l) => l.stage === 'cooldown' || (l.followUps && l.followUps.some((f) => f.status === 'ready'))
+    )
+    .sort((a, b) => {
+      const scoreA = typeof a.matchScore === 'number' ? a.matchScore : 0;
+      const scoreB = typeof b.matchScore === 'number' ? b.matchScore : 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+
   const totalActionItems = repliedLeads.length + cooldownReadyLeads.length;
 
   return (

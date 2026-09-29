@@ -159,6 +159,17 @@ const leadSchema = new mongoose.Schema(
 
 // Compound index to guarantee no duplicate external leads per platform for each company
 leadSchema.index({ companyId: 1, platform: 1, externalId: 1 }, { unique: true, sparse: true });
-leadSchema.index({ companyId: 1, stage: 1, isArchived: 1 });
+
+// High-performance index for match % sorted queries (highest match % first)
+leadSchema.index({ companyId: 1, isArchived: 1, matchScore: -1, createdAt: -1 });
+
+// High-performance index for stage-filtered queries & pipeline views
+leadSchema.index({ companyId: 1, stage: 1, isArchived: 1, matchScore: -1, createdAt: -1 });
+
+// High-performance index for platform-filtered queries
+leadSchema.index({ companyId: 1, platform: 1, isArchived: 1, matchScore: -1, createdAt: -1 });
+
+// High-performance index for daily follow-up scheduler
+leadSchema.index({ stage: 1, lastContactedAt: 1, companyId: 1 });
 
 export const Lead = mongoose.model('Lead', leadSchema);

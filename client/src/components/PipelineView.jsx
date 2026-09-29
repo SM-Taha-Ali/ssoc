@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Sparkles,
   Video,
@@ -11,6 +11,7 @@ import {
   XCircle,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   User,
   DollarSign
 } from 'lucide-react';
@@ -28,6 +29,8 @@ export const STAGES = [
   { id: 'closed_lost', label: '9. Lost', icon: XCircle, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' }
 ];
 
+const COLUMN_PAGE_SIZE = 25;
+
 export default function PipelineView({
   leads = [],
   loading = false,
@@ -35,6 +38,8 @@ export default function PipelineView({
   onSelectLead,
   onAdvanceStage
 }) {
+  const [visibleCounts, setVisibleCounts] = useState({});
+
   if (loading) {
     return <PipelineSkeleton />;
   }
@@ -44,7 +49,30 @@ export default function PipelineView({
       <div className="inline-flex gap-4 min-w-full pb-4">
         {STAGES.map((stage) => {
           const StageIcon = stage.icon;
-          const stageLeads = leads.filter((l) => l.stage === stage.id);
+
+          // Strictly sort leads so highest % match always appears at the top of every column
+          const stageLeads = leads
+            .filter((l) => l.stage === stage.id)
+            .sort((a, b) => {
+              const scoreA = typeof a.matchScore === 'number' ? a.matchScore : 0;
+              const scoreB = typeof b.matchScore === 'number' ? b.matchScore : 0;
+              if (scoreB !== scoreA) return scoreB - scoreA;
+              return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
+
+          const currentLimit = visibleCounts[stage.id] || COLUMN_PAGE_SIZE;
+          const visibleLeads = stageLeads.slice(0, currentLimit);
+          const hasMoreInStage = stageLeads.length > currentLimit;
+
+          const handleColumnScroll = (e) => {
+            const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+            if (scrollHeight - scrollTop - clientHeight < 100 && hasMoreInStage) {
+              setVisibleCounts((prev) => ({
+                ...prev,
+                [stage.id]: (prev[stage.id] || COLUMN_PAGE_SIZE) + COLUMN_PAGE_SIZE
+              }));
+            }
+          };
 
           return (
             <div
@@ -67,13 +95,16 @@ export default function PipelineView({
               </div>
 
               {/* Column Content */}
-              <div className="p-3 flex-1 overflow-y-auto space-y-3">
+              <div
+                onScroll={handleColumnScroll}
+                className="p-3 flex-1 overflow-y-auto space-y-3"
+              >
                 {stageLeads.length === 0 ? (
                   <div className="h-32 border-2 border-dashed border-theme rounded-xl flex items-center justify-center text-muted text-xs font-medium">
                     No leads in this stage
                   </div>
                 ) : (
-                  stageLeads.map((lead) => {
+                  visibleLeads.map((lead) => {
                     const isSelected = selectedLead?._id === lead._id;
                     const matchScore = lead.matchScore || 0;
 
@@ -165,6 +196,22 @@ export default function PipelineView({
                       </div>
                     );
                   })
+                )}
+
+                {hasMoreInStage && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleCounts((prev) => ({
+                        ...prev,
+                        [stage.id]: (prev[stage.id] || COLUMN_PAGE_SIZE) + COLUMN_PAGE_SIZE
+                      }))
+                    }
+                    className="w-full py-2 px-3 rounded-xl bg-card hover:bg-card-subtle border border-theme text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-500 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-2"
+                  >
+                    <span>Load more ({stageLeads.length - currentLimit} remaining)</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
             </div>

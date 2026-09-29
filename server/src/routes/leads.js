@@ -24,19 +24,7 @@ router.use(requireAuth);
  */
 router.get('/', async (req, res) => {
   try {
-    // If the authenticated company is QuminAI and currently has 0 leads,
-    // automatically adopt existing legacy or unassigned leads into QuminAI
-    if (req.company?.companyKey === 'quminai') {
-      const quminLeadCount = await Lead.countDocuments({ companyId: req.companyId });
-      if (quminLeadCount === 0) {
-        await Lead.updateMany(
-          { $or: [{ companyId: { $ne: req.companyId } }, { companyId: null }, { companyId: { $exists: false } }] },
-          { $set: { companyId: req.companyId } }
-        );
-      }
-    }
-
-    const { stage, platform, search, sort } = req.query;
+    const { stage, platform, search, sort, page, limit } = req.query;
     const query = { companyId: req.companyId, isArchived: { $ne: true } };
 
     if (stage && stage !== 'all') {
@@ -45,22 +33,47 @@ router.get('/', async (req, res) => {
     if (platform && platform !== 'all') {
       query.platform = platform;
     }
-    if (search) {
+    if (search && search.trim()) {
+      const s = search.trim();
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { 'clientInfo.name': { $regex: search, $options: 'i' } },
-        { 'clientInfo.company': { $regex: search, $options: 'i' } }
+        { title: { $regex: s, $options: 'i' } },
+        { description: { $regex: s, $options: 'i' } },
+        { 'clientInfo.name': { $regex: s, $options: 'i' } },
+        { 'clientInfo.company': { $regex: s, $options: 'i' } }
       ];
     }
 
-    const sortOption = sort === 'oldest' ? { createdAt: 1 } : { createdAt: -1 };
-    const leads = await Lead.find(query).sort(sortOption);
+    // Default sort: highest matchScore first, then newest createdAt
+    let sortOption = { matchScore: -1, createdAt: -1 };
+    if (sort === 'oldest') sortOption = { createdAt: 1 };
+    if (sort === 'newest') sortOption = { createdAt: -1 };
 
-    // Also calculate quick stage counts strictly scoped to company
-    const counts = await Lead.aggregate([
-      { $match: { companyId: req.companyId, isArchived: { $ne: true } } },
-      { $group: { _id: '$stage', count: { $sum: 1 } } }
+    // Lightweight projection: Exclude heavy bodies (full description, pitch draft body, demo script, activity logs)
+    // from the pipeline listing to reduce payload size by ~90%, saving Vercel memory and speeding up wire transfer.
+    // Rich details are fetched on demand when a lead is opened in modal.
+    const leadProjection =
+      '_id companyId title platform stage matchScore clientInfo budget skillsRequired createdAt updatedAt sourceUrl isArchived lastContactedAt lastRepliedAt followUps.status followUps.delayDays followUps.stage followUps.scheduledDate';
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 0;
+
+    let leadsQuery = Lead.find(query)
+      .select(leadProjection)
+      .sort(sortOption)
+      .lean();
+
+    if (limitNum > 0) {
+      leadsQuery = leadsQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+    }
+
+    // Concurrently fetch leads and stage counts using MongoDB pipeline
+    const [leads, counts, totalCount] = await Promise.all([
+      leadsQuery.exec(),
+      Lead.aggregate([
+        { $match: { companyId: req.companyId, isArchived: { $ne: true } } },
+        { $group: { _id: '$stage', count: { $sum: 1 } } }
+      ]),
+      limitNum > 0 ? Lead.countDocuments(query) : Promise.resolve(null)
     ]);
 
     const stageCounts = counts.reduce((acc, curr) => {
@@ -68,7 +81,13 @@ router.get('/', async (req, res) => {
       return acc;
     }, {});
 
-    res.json({ leads, stageCounts });
+    res.json({
+      leads,
+      stageCounts,
+      total: totalCount !== null ? totalCount : leads.length,
+      page: pageNum,
+      hasMore: limitNum > 0 ? pageNum * limitNum < totalCount : false
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

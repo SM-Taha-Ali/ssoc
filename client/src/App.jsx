@@ -99,12 +99,29 @@ export default function App() {
       // Keep selected lead in sync if drawer is open
       if (selectedLead) {
         const updated = (res.data.leads || []).find((l) => l._id === selectedLead._id);
-        if (updated) setSelectedLead(updated);
+        if (updated) setSelectedLead((prev) => ({ ...updated, ...prev }));
       }
     } catch (err) {
       console.error('Failed to fetch leads:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Ultra-fast modal opening: render immediately with card fields, then fetch complete rich payload in background
+  const handleSelectLead = async (lead) => {
+    if (!lead) {
+      setSelectedLead(null);
+      return;
+    }
+    setSelectedLead(lead);
+    if (!lead.description || !lead.pitchDraft?.body) {
+      try {
+        const res = await axios.get(`/api/leads/${lead._id}`);
+        setSelectedLead((prev) => (prev?._id === lead._id ? res.data : prev));
+      } catch (err) {
+        console.error('Failed to load rich lead details in background:', err);
+      }
     }
   };
 
@@ -307,13 +324,13 @@ export default function App() {
           <PipelineView
             leads={leads}
             selectedLead={selectedLead}
-            onSelectLead={(lead) => setSelectedLead(lead)}
+            onSelectLead={handleSelectLead}
             onAdvanceStage={handleUpdateStage}
           />
         ) : (
           <PriorityInbox
             leads={leads}
-            onSelectLead={(lead) => setSelectedLead(lead)}
+            onSelectLead={handleSelectLead}
             onUpdateStage={handleUpdateStage}
           />
         )}
