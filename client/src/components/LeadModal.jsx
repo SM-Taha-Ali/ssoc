@@ -632,10 +632,10 @@ export default function LeadModal({
           {/* TAB 2: DEMO SCRIPT & PRE-REQS (WITH AUTONOMOUS AI OVERLAY)    */}
           {/* ============================================================ */}
           {activeTab === 'demo' && (
-            <div className="relative space-y-6 max-w-4xl mx-auto">
+            <div className="relative space-y-6 max-w-4xl mx-auto pb-10 md:pb-14">
               {/* FUTURISTIC AI LOADING OVERLAY (Active during generation) */}
               {isAuditing && (
-                <div className="absolute inset-0 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-brand-500/20 dark:border-brand-500/30 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 shadow-xl shadow-brand-500/5 dark:shadow-2xl">
+                <div className="absolute inset-x-0 top-0 bottom-8 md:bottom-10 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-brand-500/20 dark:border-brand-500/30 flex flex-col items-center justify-center p-8 pb-12 text-center animate-in fade-in duration-300 shadow-xl shadow-brand-500/5 dark:shadow-2xl">
                   {/* Cyber glowing orb */}
                   <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-brand-500/15 dark:bg-brand-500/25 blur-xl animate-pulse" />
@@ -815,10 +815,10 @@ export default function LeadModal({
           {/* TAB 3: OUTREACH PITCH (WITH AUTONOMOUS AI OVERLAY)           */}
           {/* ============================================================ */}
           {activeTab === 'pitch' && (
-            <div className="relative space-y-6 max-w-4xl mx-auto">
+            <div className="relative space-y-6 max-w-4xl mx-auto pb-10 md:pb-14">
               {/* FUTURISTIC AI LOADING OVERLAY (Active during pitch generation) */}
               {isGeneratingPitch && (
-                <div className="absolute inset-0 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-emerald-500/25 dark:border-emerald-500/30 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 shadow-xl shadow-emerald-500/5 dark:shadow-2xl">
+                <div className="absolute inset-x-0 top-0 bottom-8 md:bottom-10 z-30 min-h-[380px] bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md rounded-2xl border border-emerald-500/25 dark:border-emerald-500/30 flex flex-col items-center justify-center p-8 pb-12 text-center animate-in fade-in duration-300 shadow-xl shadow-emerald-500/5 dark:shadow-2xl">
                   <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-emerald-500/15 dark:bg-emerald-500/25 blur-xl animate-pulse" />
                     <div className="w-16 h-16 rounded-full border-2 border-emerald-500/30 dark:border-emerald-500/40 border-t-emerald-600 dark:border-t-emerald-400 border-r-brand-500 dark:border-r-brand-400 animate-spin" />
