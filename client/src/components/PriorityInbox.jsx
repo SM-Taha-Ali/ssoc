@@ -37,7 +37,8 @@ export default function PriorityInbox({
   const totalActionItems = repliedLeads.length + cooldownReadyLeads.length;
 
   return (
-    <div className="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full space-y-6">
+    <div className="flex-1 w-full h-full overflow-y-auto min-h-0 bg-canvas">
+      <div className="p-4 sm:p-6 w-full space-y-6 pb-14">
       {/* ============================================================ */}
       {/* EXECUTIVE HEADER & TAB NAVIGATION                            */}
       {/* ============================================================ */}
@@ -419,6 +420,7 @@ export default function PriorityInbox({
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
