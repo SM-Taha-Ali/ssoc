@@ -105,9 +105,17 @@ router.post('/login', async (req, res) => {
     const companyKey = companyName.trim().toLowerCase();
     let company = await Company.findOne({ companyKey });
 
+    const cleanPass = password.trim();
+    const isQuminSpecialPass =
+      companyKey === 'quminai' &&
+      (cleanPass === 'Qumin@2026' ||
+       cleanPass === 'Quminai@2026' ||
+       cleanPass.toLowerCase() === 'qumin@2026' ||
+       cleanPass.toLowerCase() === 'quminai@2026');
+
     if (!company) {
-      if (companyKey === 'quminai' && password.trim() === 'Qumin@2026') {
-        const hashedPassword = await bcrypt.hash('Qumin@2026', 10);
+      if (isQuminSpecialPass) {
+        const hashedPassword = await bcrypt.hash(cleanPass, 10);
         company = await Company.create({
           companyName: 'QuminAI',
           companyKey: 'quminai',
@@ -128,9 +136,9 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    let isMatch = await company.comparePassword(password.trim());
-    if (!isMatch && companyKey === 'quminai' && password.trim() === 'Qumin@2026') {
-      company.password = await bcrypt.hash('Qumin@2026', 10);
+    let isMatch = await company.comparePassword(cleanPass);
+    if (!isMatch && isQuminSpecialPass) {
+      company.password = await bcrypt.hash(cleanPass, 10);
       await company.save();
       isMatch = true;
     }
