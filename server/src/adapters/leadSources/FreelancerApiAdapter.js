@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LeadSourceAdapter } from './LeadSourceAdapter.js';
+import { BaseLeadSource } from './BaseLeadSource.js';
 
 const CURRENCY_TO_USD = {
   USD: 1,
@@ -44,9 +44,9 @@ function computeUsdBudget(project) {
  * Fetches active, open client software/AI/MVP build projects from Freelancer.com's public API.
  * Strictly filters for clients paying project/agency budgets (>= $250 USD fixed or >= $25/hr USD).
  */
-export class FreelancerApiAdapter extends LeadSourceAdapter {
+export class FreelancerApiAdapter extends BaseLeadSource {
   constructor() {
-    super('freelancer');
+    super('Freelancer.com Public API Adapter', 'freelancer');
   }
 
   async fetchRawLeads(options = {}) {
