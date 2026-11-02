@@ -215,7 +215,7 @@ export async function runLeadFinderTask(companyId = null) {
       config = await IntegrationConfig.create({ companyId: targetCompanyId });
     }
 
-    const maxLeads = companyProfile.maxLeadsPerBatch || 20;
+    const maxLeads = Math.max(Number(companyProfile.maxLeadsPerBatch) || 15, 12);
 
     // Compile active client-project sources (strictly clients paying for software/AI/MVP project builds, never employee job boards)
     const sourcesToQuery = [

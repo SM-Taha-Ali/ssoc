@@ -35,7 +35,7 @@ export function buildSmartFounderOutreachFallback(founder, companyProfile = {}) 
 }
 
 const EXCLUDED_NON_STARTUP_COMPANIES =
-  /\b(microsoft|google|meta|facebook|amazon|aws|apple|netflix|uber|airbnb|stripe|shopify|atlassian|elastic|oracle|ibm|intel|nvidia|amd|salesforce|adobe|cisco|vmware|redhat|red hat|zoom|toptal|proxify|accenture|deloitte|infosys|tcs|wipro|cognizant|capgemini|university|college|institute|school|student|freelance|self-employed|none|n\/a)\b/i;
+  /\b(microsoft|google|meta|facebook|amazon|aws|apple|netflix|uber|airbnb|stripe|shopify|atlassian|elastic|oracle|ibm|intel|nvidia|amd|salesforce|adobe|cisco|vmware|redhat|red hat|zoom|toptal|proxify|accenture|deloitte|infosys|tcs|wipro|cognizant|capgemini|university|college|institute|school|student|freelance|self-employed|none|n\/a|building|learning|studying|open source|opensource|personal|independent|consulting|stealth)\b/i;
 
 /**
  * Checks whether a candidate founder record is a 100% real, verified startup founder
@@ -49,15 +49,18 @@ export function isVerifiedStartupFounder(candidate) {
 
   // Must have a real human First + Last name (no placeholders like "Leadership" or "Founder (username)")
   if (!name || !name.includes(' ')) return false;
-  if (/leadership|founder\s*\(|hiring\s+lead|team|admin|unknown/i.test(name)) return false;
+  if (/leadership|founder\s*\(|hiring\s+lead|team|admin|unknown|^mr\s+/i.test(name)) return false;
 
   // Must have a direct personal LinkedIn profile URL (https://www.linkedin.com/in/<handle>)
   if (!linkedinUrl.includes('linkedin.com/in/') || linkedinUrl.includes('/search/results/')) {
     return false;
   }
 
-  // Must have a real startup company name (not big tech or university)
-  if (!company || company.length < 2 || EXCLUDED_NON_STARTUP_COMPANIES.test(company)) {
+  // Must have a real startup company name (not big tech, university, generic verb, or the person's own name)
+  if (!company || company.length < 3 || EXCLUDED_NON_STARTUP_COMPANIES.test(company)) {
+    return false;
+  }
+  if (company.toLowerCase() === name.toLowerCase()) {
     return false;
   }
 
@@ -479,18 +482,30 @@ export async function discoverFoundersForCompany(companyId, options = {}) {
   const newCandidates = [];
   const seenExternalIds = new Set();
   const seenLinkedinUrls = new Set();
+  const seenNames = new Set();
 
   for (const candidate of allRaw) {
     const normLi = candidate.linkedinUrl.toLowerCase().replace(/\/+$/, '');
-    if (!candidate.externalId || seenExternalIds.has(candidate.externalId) || seenLinkedinUrls.has(normLi)) {
+    const normName = candidate.name.toLowerCase().trim();
+    if (
+      !candidate.externalId ||
+      seenExternalIds.has(candidate.externalId) ||
+      seenLinkedinUrls.has(normLi) ||
+      seenNames.has(normName)
+    ) {
       continue;
     }
     seenExternalIds.add(candidate.externalId);
     seenLinkedinUrls.add(normLi);
+    seenNames.add(normName);
 
     const exists = await FounderProspect.findOne({
       companyId,
-      $or: [{ externalId: candidate.externalId }, { linkedinUrl: candidate.linkedinUrl }]
+      $or: [
+        { externalId: candidate.externalId },
+        { linkedinUrl: candidate.linkedinUrl },
+        { name: candidate.name }
+      ]
     })
       .select('_id')
       .lean();
