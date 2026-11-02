@@ -94,10 +94,13 @@ export function isFullTimeEmployeeJob(lead) {
     return true;
   }
 
-  // RemoteOK or LinkedIn listings that have zero project/contract/freelance signal (only when description is loaded)
+  // RemoteOK, WeWorkRemotely, RSS, or LinkedIn listings that have zero project/contract/freelance signal (only when description is loaded)
   if (
     lead.description &&
-    (lead.platform === 'remoteok' || lead.platform === 'linkedin') &&
+    (lead.platform === 'remoteok' ||
+      lead.platform === 'linkedin' ||
+      lead.platform === 'weworkremotely' ||
+      lead.platform === 'rss') &&
     !hasProjectSignal
   ) {
     return true;
@@ -229,22 +232,12 @@ export async function runLeadFinderTask(companyId = null) {
 
     const maxLeads = companyProfile.maxLeadsPerBatch || 20;
 
-    // Compile active project/freelance sources
+    // Compile active project/freelance sources (prioritizing live client project marketplaces first)
     const sourcesToQuery = [
-      ...((config.rssFeeds || []).filter((f) => f.enabled).map((f) => ({
-        name: f.name,
-        platform: f.platform || 'rss',
-        options: { url: f.url, platform: f.platform, limit: 10 }
-      }))),
       {
         name: 'Freelancer.com Live Client Projects',
         platform: 'freelancer',
         options: { limit: 16 }
-      },
-      {
-        name: 'Hacker News Seeking Freelancer Projects',
-        platform: 'ycombinator',
-        options: { limit: 12 }
       },
       {
         name: 'LinkedIn Contract & Project Engagements',
@@ -255,10 +248,20 @@ export async function runLeadFinderTask(companyId = null) {
         }
       },
       {
+        name: 'Hacker News Seeking Freelancer Projects',
+        platform: 'ycombinator',
+        options: { limit: 12 }
+      },
+      {
         name: 'RemoteOK Contract & Freelance Tech',
         platform: 'remoteok',
         options: { limit: 10, tag: 'dev' }
-      }
+      },
+      ...((config.rssFeeds || []).filter((f) => f.enabled).map((f) => ({
+        name: f.name,
+        platform: f.platform || 'rss',
+        options: { url: f.url, platform: f.platform, limit: 10 }
+      })))
     ];
 
     const apolloKey = config.apolloApiKey || process.env.APOLLO_API_KEY;
