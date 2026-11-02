@@ -76,11 +76,9 @@ export function getCandidateModelChain(targetModel) {
   } else if (primary === 'gemini-3.7-flash') {
     alternatives = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'];
   } else {
-    // gemini-3.8-flash or other
     alternatives = ['gemini-3.7-flash', 'gemini-3.5-flash-lite'];
   }
 
-  // Stable production tiers prevent hard failures when preview models experience Google load surges
   const stableTiers = ['gemini-2.5-flash', 'gemini-flash-latest'];
   return [primary, ...alternatives, ...stableTiers].filter((v, i, a) => a.indexOf(v) === i && Boolean(v));
 }
@@ -108,7 +106,6 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
       console.log(`[Gemini Engine] Invoking model: "${candidateModel}" (User configured: "${rawModel}")`);
       const generativeModel = genAI.getGenerativeModel({ model: candidateModel });
 
-      // Handle momentary 503 high demand spikes with a fast 1-second retry
       let result;
       try {
         result = await generativeModel.generateContent(prompt);
@@ -153,7 +150,6 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
     }
   }
 
-  // Provide a clear message pointing to the user's requested model if high demand occurred
   if (lastError?.message?.includes('503') || lastError?.message?.includes('high demand')) {
     throw new Error(`Google Gemini service is temporarily experiencing high demand for model "${rawModel}". Please try again in a few moments.`);
   }
@@ -165,9 +161,8 @@ async function executeGeminiPrompt(apiKeyOverride, modelNameOverride, prompt) {
  * Evaluates lead fit, generates profile optimization tips, and crafts a 60-second video demo script
  */
 export async function scoreAndAuditLead(lead, companyProfile, apiKey, modelName) {
-
   const prompt = `
-You are a Principal AI & Tech Sales Solutions Architect. Evaluate this tech job lead against the company profile and criteria.
+You are a Principal AI & Tech Sales Solutions Architect. Evaluate this project/freelance lead against the company profile and criteria.
 
 COMPANY PROFILE & GROUND-TRUTH DIGITAL ASSETS:
 - Name: ${companyProfile.name || companyProfile.companyName || 'Agency'}
@@ -181,7 +176,7 @@ ${companyProfile.websiteData?.rawTextSummary ? `- Live Website Intelligence & Ca
 ${companyProfile.upworkData?.rawTextSummary ? `- Live Upwork Profile (Headline, Overview, Skills):\n${companyProfile.upworkData.rawTextSummary.slice(0, 800)}` : ''}
 ${companyProfile.linkedinData?.rawTextSummary ? `- Live LinkedIn Profile (Headline & About):\n${companyProfile.linkedinData.rawTextSummary.slice(0, 800)}` : ''}
 
-JOB LEAD:
+JOB / PROJECT LEAD:
 - Title: ${lead.title}
 - Platform: ${lead.platform}
 - Skills: ${lead.skillsRequired?.join(', ') || 'N/A'}
@@ -190,9 +185,9 @@ JOB LEAD:
 ${lead.description}
 
 YOUR TASKS:
-1. Calculate a matchScore (integer from 0 to 100) based on how well this job matches the company's real target services, skills, and budget. Penalize heavily if it hits negative keywords or is below minimum budget.
+1. Calculate a matchScore (integer from 0 to 100) based on how well this project matches the company's real target services, skills, and budget. Penalize heavily if it is a full-time W-2 employee role rather than a project/contract/freelance engagement, or if it hits negative keywords.
 2. Provide a 2-sentence matchReasoning explaining the score.
-3. List 3 concrete, personalized profileOptimizationTips: compare their real ground-truth Upwork headline, LinkedIn about section, or website case studies against this exact job posting. Give precise recommendations on what words to highlight, how to adjust their headline, and which specific proof point to put first.
+3. List 3 concrete, personalized profileOptimizationTips: compare their real ground-truth Upwork headline, LinkedIn about section, or website case studies against this exact project posting. Give precise recommendations on what words to highlight, how to adjust their headline, and which specific proof point to put first.
 4. Write a 60-second video demo script:
    - hook: (0-10 sec) Compelling personal opening directly addressing their specific pain point.
    - problemStatement: (10-25 sec) Articulate the exact technical difficulty they are facing.
@@ -225,7 +220,7 @@ Output ONLY a valid JSON object matching this schema:
 export async function generatePitchDraft(lead, companyProfile, apiKey, modelName) {
   const prompt = `
 You are a world-class elite B2B tech copywriter and sales strategist.
-Draft a concise, punchy, hyper-personalized pitch for this lead.
+Draft a concise, punchy, hyper-personalized pitch for this project lead.
 
 COMPANY INFO:
 - Sender Name: ${companyProfile.senderName || 'Lead Tech Lead'}
@@ -245,7 +240,7 @@ ${lead.description}
 
 GUIDELINES:
 - Under 150 words. No corporate fluff, no generic pleasantries like "I hope this email finds you well".
-- Focus directly on their outcome.
+- Focus directly on their project outcome.
 - Mention that a custom 60-second video demonstration was prepared specifically for them, linking directly to ${lead.demoVideoUrl || 'the recorded demo'}.
 - Tone: Technical peer, confident, consultative.
 
@@ -261,9 +256,28 @@ Output ONLY a valid JSON object:
 }
 
 /**
- * Generates dynamic 3-touch follow-up sequence (Day 2, Day 7, Day 21)
+ * Generates dynamic follow-up sequence (Day 7, Day 21)
  */
 export async function generateFollowUpSequence(lead, companyProfile, apiKey, modelName) {
+  const prompt = `
+You are an elite B2B sales strategist. Generate a 2-touch follow-up sequence (Day 7 and Day 21) for this project lead.
+
+COMPANY: ${companyProfile.name || 'Agency'} (Sender: ${companyProfile.senderName || 'Solutions Architect'})
+LEAD: ${lead.title} (${lead.clientInfo?.company || lead.clientInfo?.name || 'Client'})
+DEMO URL: ${lead.demoVideoUrl || ''}
+
+Output ONLY a valid JSON object:
+{
+  "day_7": {
+    "subject": "Quick follow-up re: ${lead.title}",
+    "body": "Short helpful 60-word follow-up..."
+  },
+  "day_21": {
+    "subject": "Checking in on ${lead.title}",
+    "body": "Short value-driven 60-word follow-up..."
+  }
+}
+`;
   const responseText = await executeGeminiPrompt(apiKey, modelName, prompt);
   return cleanAndParseJSON(responseText);
 }
@@ -298,13 +312,13 @@ Output ONLY a valid JSON object with these keys:
 
 /**
  * Evaluates a batch of raw candidate leads in a SINGLE LLM prompt.
- * Highly cost-efficient, lightning fast, and strictly filters out irrelevant jobs.
+ * Highly cost-efficient, lightning fast, and strictly filters out full-time jobs and irrelevant roles.
  */
 export async function batchEvaluateLeads(candidates, companyProfile, apiKey, modelName) {
   if (!candidates || candidates.length === 0) return [];
 
   const prompt = `
-You are an expert Chief Revenue Officer and Technical Lead Auditor evaluating job listings for a software engineering & AI agency.
+You are an expert Chief Revenue Officer and Technical Lead Auditor evaluating project & contract opportunities for a software engineering & AI agency.
 
 ### COMPANY OFFERINGS & SPECIALTIES:
 - Agency Name: ${companyProfile.name || 'Tech Solutions'}
@@ -316,13 +330,14 @@ ${(companyProfile.coreStrengths || []).map((s) => `  * ${s}`).join('\n')}
 - Value Proposition: ${companyProfile.valueProposition || 'Custom AI agents, workflow automation, and MERN apps'}
 
 ### STRICT DISQUALIFICATION RULES (DISCARD IMMEDIATELY):
-1. Foreign-Language Specific: Any role requiring non-English languages (e.g., Spanish speaking, German speaking, French speaking, Portuguese speaking).
-2. Non-Technical / Sales / Recruiting: Pure sales (SDR/BDR/Account Executive), recruiters, HR coordinators, telemarketing, data entry, virtual assistants, customer support agents with NO coding.
-3. Incompatible terms: Unpaid, volunteer, commission-only with 0 base.
-4. Non-Software: Hardware, physical engineering, manufacturing, automotive mechanics, medical billing.
-${(companyProfile.disqualifiers || []).map((d) => `5. Disqualifier: ${d}`).join('\n')}
+1. FULL-TIME EMPLOYEE ROLES (CRITICAL): Strictly reject any permanent full-time salaried employee position (W-2, internal staff engineer, annual salary with health/401k benefits, or roles stating "no agencies / no C2C"). Companies hiring a permanent employee will NOT entertain an external agency/freelance partner. ONLY approve project-based, freelance, contract, fractional, MVP build, consulting, or B2B agency opportunities!
+2. Foreign-Language Specific: Any role requiring non-English languages (e.g., Spanish speaking, German speaking, French speaking, Portuguese speaking).
+3. Non-Technical / Sales / Recruiting: Pure sales (SDR/BDR/Account Executive), recruiters, HR coordinators, telemarketing, data entry, virtual assistants, customer support agents with NO coding.
+4. Incompatible terms: Unpaid, volunteer, commission-only with 0 base.
+5. Non-Software: Hardware, physical engineering, manufacturing, automotive mechanics, medical billing.
+${(companyProfile.disqualifiers || []).map((d) => `6. Disqualifier: ${d}`).join('\n')}
 
-### CANDIDATE JOBS TO EVALUATE:
+### CANDIDATE PROJECTS / JOBS TO EVALUATE:
 ${candidates
   .map(
     (c, i) => `
@@ -338,8 +353,8 @@ Summary: ${(c.description || '').substring(0, 300)}...
 
 ### TASK:
 1. Review each candidate against our company's actual technical services (AI agents, automations, React/Node/MERN, Cloud/AWS).
-2. Strictly reject any job that violates the disqualification rules or is not a genuine software/AI/automation need.
-3. Select up to a maximum of 20 TOP approved leads.
+2. Strictly reject any job that violates the disqualification rules (especially full-time employee jobs) or is not a genuine software/AI/automation project/contract need.
+3. Select up to a maximum of 20 TOP approved project/freelance/contract leads.
 4. Return a valid JSON array of objects for the approved candidates ONLY.
 
 Schema:
@@ -348,7 +363,7 @@ Schema:
     "id": 0,
     "approved": true,
     "matchScore": 88,
-    "matchReasoning": "1 concise sentence explaining exactly why this is a high-fit client for our AI/full-stack team.",
+    "matchReasoning": "1 concise sentence explaining why this project/contract is a high-fit engagement for our AI/full-stack team.",
     "extractedTechStack": ["React", "Node.js", "AWS"],
     "demoAngle": "Brief 1-sentence recommended angle for outreach"
   }
@@ -392,6 +407,7 @@ Return ONLY a valid JSON object with the following fields:
   "targetKeywords": ["Keyword 1", "Keyword 2", "Keyword 3", "Tech 4"],
   "negativeKeywords": ["telemarketer", "data entry", "unpaid", "commission only"],
   "disqualifiers": [
+    "Full-time salaried employee roles (W-2 only)",
     "Non-technical or administrative listings",
     "Unpaid or 100% equity-only roles with no budget",
     "Roles requiring non-English primary languages"
@@ -405,3 +421,111 @@ Return ONLY a valid JSON object with the following fields:
   return cleanAndParseJSON(responseText);
 }
 
+/**
+ * Generates hyper-personalized LinkedIn/Social outreach messages for a batch of discovered Founders & Decision Makers
+ */
+export async function batchGenerateFounderOutreach(founders, companyProfile, apiKey, modelName) {
+  if (!founders || founders.length === 0) return [];
+
+  const senderName = companyProfile.senderName || 'Founder';
+  const companyName = companyProfile.name || companyProfile.companyName || 'QuminAI';
+
+  const prompt = `
+You are an elite B2B Founder-to-Founder Growth Strategist.
+We are reaching out directly to startup Founders, CEOs, CTOs, and Technical Decision Makers on LinkedIn and social platforms to offer project/engineering/AI partnership.
+
+### OUR AGENCY / COMPANY PROFILE:
+- Name: ${companyName}
+- Sender: ${senderName} (${companyProfile.senderTitle || 'Solutions Architect'})
+- Value Proposition: ${companyProfile.valueProposition || 'We build production AI agents, workflow automations, and scalable full-stack web products rapidly.'}
+- Core Services: ${(companyProfile.targetServices || []).join(', ')}
+- Tech Stack: ${(companyProfile.targetKeywords || []).join(', ')}
+
+### DISCOVERED FOUNDERS & DECISION MAKERS:
+${founders
+  .map(
+    (f, i) => `
+[FOUNDER ID ${i}]
+Name: ${f.name}
+Role: ${f.role}
+Company: ${f.company}
+Platform: ${f.platform}
+Signal / Context: ${f.signal || ''}
+Bio / Summary: ${(f.bio || '').substring(0, 280)}
+`
+  )
+  .join('\n---\n')}
+
+### TASK:
+For each founder, calculate a matchScore (65-99) and write:
+1. "matchReasoning": 1 crisp sentence on why their startup/company is a strong fit for our engineering/AI services.
+2. "outreachMessage": A natural, high-converting LinkedIn DM (under 95 words). Peer-to-peer founder tone, zero corporate fluff, referencing their company/context and offering a concrete low-friction way to help accelerate their roadmap or AI/product build. Sign off with "${senderName}".
+3. "connectionNote": A short LinkedIn Connection Request Note (strictly under 260 characters) in case LinkedIn requires a connection note first.
+4. "emailSubject": A crisp email subject line in case we also email them.
+
+Return ONLY a valid JSON array matching this schema:
+[
+  {
+    "id": 0,
+    "matchScore": 92,
+    "matchReasoning": "String",
+    "outreachMessage": "Hi [First Name], ...",
+    "connectionNote": "Hi [First Name], ...",
+    "emailSubject": "Quick idea for [Company]"
+  }
+]
+`;
+
+  try {
+    const rawOutput = await executeGeminiPrompt(apiKey, modelName, prompt);
+    const parsed = cleanAndParseJSON(rawOutput);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('[Gemini Founder Outreach Batch Error]:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Generates or regenerates a personalized LinkedIn/Social outreach message for a single Founder
+ */
+export async function generateSingleFounderOutreach(founder, companyProfile, customAngle = '', apiKey, modelName) {
+  const senderName = companyProfile.senderName || 'Founder';
+  const companyName = companyProfile.name || companyProfile.companyName || 'QuminAI';
+
+  const prompt = `
+You are an elite B2B Founder-to-Founder Growth Strategist.
+Write a hyper-personalized LinkedIn outreach message and connection note for this Founder / Decision Maker.
+
+OUR COMPANY:
+- Name: ${companyName}
+- Sender: ${senderName} (${companyProfile.senderTitle || 'Solutions Architect'})
+- Value Proposition: ${companyProfile.valueProposition || 'Custom AI agents, workflow automations, and full-stack product engineering.'}
+- Services: ${(companyProfile.targetServices || []).join(', ')}
+
+TARGET FOUNDER:
+- Name: ${founder.name}
+- Role: ${founder.role}
+- Company: ${founder.company}
+- Signal / Trigger: ${founder.signal || ''}
+- Bio / Details: ${founder.bio || ''}
+${customAngle ? `- Custom Angle / Instruction: ${customAngle}` : ''}
+
+GUIDELINES:
+- "outreachMessage": Under 95 words. Conversational, peer-to-peer, specific to ${founder.company || 'their work'}. No "I hope this finds you well". Offer concrete project/engineering/AI velocity. Sign off as ${senderName}.
+- "connectionNote": Strictly under 260 characters for LinkedIn's "Add a note" limit.
+- "emailSubject": Short, curiosity-driven subject line.
+
+Return ONLY a valid JSON object:
+{
+  "matchScore": 92,
+  "matchReasoning": "1 sentence fit summary",
+  "outreachMessage": "Hi ...",
+  "connectionNote": "Hi ...",
+  "emailSubject": "Quick question re: ${founder.company || 'your roadmap'}"
+}
+`;
+
+  const rawOutput = await executeGeminiPrompt(apiKey, modelName, prompt);
+  return cleanAndParseJSON(rawOutput);
+}

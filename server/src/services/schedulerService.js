@@ -1,10 +1,10 @@
 import cron from 'node-cron';
+import axios from 'axios';
 import { Lead } from '../models/Lead.js';
 import { CompanyProfile } from '../models/CompanyProfile.js';
 import { IntegrationConfig } from '../models/IntegrationConfig.js';
 import { leadSourceRegistry } from '../adapters/leadSources/LeadSourceRegistry.js';
 import { scoreAndAuditLead, generateFollowUpSequence, batchEvaluateLeads } from './geminiService.js';
-
 import { Company } from '../models/Company.js';
 
 let leadFinderJob = null;
@@ -12,17 +12,191 @@ let cooldownJob = null;
 let imapJob = null;
 
 /**
- * Runs the Lead Finder: scrapes raw candidates, runs high-efficiency single-call LLM batch evaluation,
- * and saves top strictly vetted leads (bounded to ~15-20 per run).
+ * Checks if a lead is a full-time permanent salaried employee position rather than
+ * a project, contract, freelance, MVP build, or B2B agency opportunity.
+ */
+export function isFullTimeEmployeeJob(lead) {
+  const title = (lead.title || '').toLowerCase();
+  const desc = (lead.description || '').toLowerCase();
+  const combined = `${title} ${desc}`;
+
+  const projectIndicators = [
+    'contract',
+    'contractor',
+    'freelance',
+    'freelancer',
+    'project',
+    'consultant',
+    'consulting',
+    'agency',
+    'b2b',
+    'c2c',
+    'corp-to-corp',
+    '1099',
+    'fractional',
+    'mvp',
+    'part-time',
+    'temporary',
+    'fixed-price',
+    'hourly',
+    'seeking freelancer'
+  ];
+  const hasProjectSignal = projectIndicators.some((kw) => combined.includes(kw));
+
+  // Hard full-time employee only signals
+  const hardFullTimeSignals = [
+    'w-2 only',
+    'w2 only',
+    'no agencies',
+    'no c2c',
+    'no corp-to-corp',
+    'no third parties',
+    'no contractors',
+    'full-time employee',
+    'permanent employee',
+    '401(k)',
+    '401k matching',
+    'medical, dental, and vision',
+    'health, dental, vision',
+    'unlimited pto'
+  ];
+  if (hardFullTimeSignals.some((kw) => combined.includes(kw)) && !title.includes('contract') && !title.includes('freelance')) {
+    return true;
+  }
+
+  // Legacy YC job board postings ("at <Company> (YC ...)") that aren't from Ask HN: Seeking Freelancer
+  if (
+    lead.platform === 'ycombinator' &&
+    !combined.includes('seeking freelancer') &&
+    !combined.includes('contract') &&
+    !combined.includes('freelance')
+  ) {
+    return true;
+  }
+
+  // Annual salary full-time job board listings without project/contract indicators
+  if (
+    lead.platform !== 'freelancer' &&
+    lead.platform !== 'upwork' &&
+    lead.budget?.amount >= 55000 &&
+    !hasProjectSignal
+  ) {
+    return true;
+  }
+
+  // RemoteOK or LinkedIn listings that have zero project/contract/freelance signal
+  if ((lead.platform === 'remoteok' || lead.platform === 'linkedin') && !hasProjectSignal) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Automatically deletes closed leads, expired postings, and full-time employee jobs
+ * so they never pollute the database or pipeline UI.
+ */
+export async function pruneClosedLeads(companyId = null) {
+  try {
+    const scope = companyId ? { companyId } : {};
+    let deletedCount = 0;
+
+    // 1. Delete all explicitly closed / lost / archived leads
+    const closedRes = await Lead.deleteMany({
+      ...scope,
+      $or: [
+        { stage: { $in: ['closed_lost', 'closed', 'lost'] } },
+        { isArchived: true }
+      ]
+    });
+    deletedCount += closedRes.deletedCount || 0;
+
+    // 2. Delete stale uncontacted ('discovered') leads older than 14 days (closed/filled on source platforms)
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    const staleRes = await Lead.deleteMany({
+      ...scope,
+      stage: 'discovered',
+      $or: [
+        { postedAt: { $lt: fourteenDaysAgo } },
+        { createdAt: { $lt: fourteenDaysAgo } }
+      ]
+    });
+    deletedCount += staleRes.deletedCount || 0;
+
+    // 3. Inspect remaining 'discovered' leads to remove full-time employee roles & closed Freelancer.com projects
+    const discoveredLeads = await Lead.find({
+      ...scope,
+      stage: 'discovered'
+    })
+      .select('_id title description platform externalId budget postedAt createdAt')
+      .lean();
+
+    const idsToDelete = [];
+    const freelancerMap = new Map(); // projectId -> lead._id
+
+    for (const lead of discoveredLeads) {
+      if (isFullTimeEmployeeJob(lead)) {
+        idsToDelete.push(lead._id);
+        continue;
+      }
+      if (lead.platform === 'freelancer' && lead.externalId?.startsWith('freelancer_')) {
+        const pid = lead.externalId.replace('freelancer_', '');
+        if (/^\d+$/.test(pid)) {
+          freelancerMap.set(Number(pid), lead._id);
+        }
+      }
+    }
+
+    // Verify live open/closed status on Freelancer.com API in a single batch call
+    if (freelancerMap.size > 0) {
+      try {
+        const projectIds = Array.from(freelancerMap.keys()).slice(0, 50);
+        const queryParams = projectIds.map((id) => `projects[]=${id}`).join('&');
+        const resp = await axios.get(`https://www.freelancer.com/api/projects/0.1/projects?${queryParams}`, {
+          timeout: 6000
+        });
+        const projects = resp.data?.result?.projects || {};
+        for (const [pid, leadId] of freelancerMap.entries()) {
+          const p = projects[pid] || projects[String(pid)];
+          if (p && (p.deleted || (p.status && p.status !== 'active') || (p.frontend_project_status && p.frontend_project_status !== 'open'))) {
+            idsToDelete.push(leadId);
+          }
+        }
+      } catch (_) {
+        // Non-fatal if Freelancer status check times out
+      }
+    }
+
+    if (idsToDelete.length > 0) {
+      const delRes = await Lead.deleteMany({ _id: { $in: idsToDelete } });
+      deletedCount += delRes.deletedCount || 0;
+    }
+
+    if (deletedCount > 0) {
+      console.log(`[Scheduler] Auto-deleted ${deletedCount} closed/expired/full-time leads.`);
+    }
+    return deletedCount;
+  } catch (err) {
+    console.warn('[Scheduler] pruneClosedLeads warning:', err.message);
+    return 0;
+  }
+}
+
+/**
+ * Runs the Lead Finder: scrapes raw project/freelance candidates, prunes closed leads,
+ * runs high-efficiency single-call LLM batch evaluation, and saves top vetted project leads.
  */
 export async function runLeadFinderTask(companyId = null) {
-  console.log('[Scheduler] Starting Daily Lead Finder Task (Single-Call Batch LLM Architecture)...');
+  console.log('[Scheduler] Starting Daily Project & Freelance Lead Finder Task...');
   try {
     let targetCompanyId = companyId;
     if (!targetCompanyId) {
       const defaultCo = await Company.findOne();
       targetCompanyId = defaultCo?._id;
     }
+
+    // Automatically clean out closed, expired, or full-time leads before discovering fresh ones
+    await pruneClosedLeads(targetCompanyId);
 
     let companyProfile = await CompanyProfile.findOne({ companyId: targetCompanyId });
     if (!companyProfile) {
@@ -36,7 +210,7 @@ export async function runLeadFinderTask(companyId = null) {
 
     const maxLeads = companyProfile.maxLeadsPerBatch || 20;
 
-    // Compile active sources with tight, balanced limits
+    // Compile active project/freelance sources
     const sourcesToQuery = [
       ...((config.rssFeeds || []).filter((f) => f.enabled).map((f) => ({
         name: f.name,
@@ -44,27 +218,27 @@ export async function runLeadFinderTask(companyId = null) {
         options: { url: f.url, platform: f.platform, limit: 10 }
       }))),
       {
-        name: 'RemoteOK Live Tech API',
-        platform: 'remoteok',
-        options: { limit: 12, tag: 'dev' }
+        name: 'Freelancer.com Live Client Projects',
+        platform: 'freelancer',
+        options: { limit: 16 }
       },
       {
-        name: 'Freelancer.com Live Projects',
-        platform: 'freelancer',
+        name: 'Hacker News Seeking Freelancer Projects',
+        platform: 'ycombinator',
         options: { limit: 12 }
       },
       {
-        name: 'LinkedIn Public Tech Jobs',
+        name: 'LinkedIn Contract & Project Engagements',
         platform: 'linkedin',
         options: {
           limit: 10,
-          keywords: config.linkedin?.searchKeywords || 'Full Stack AI Developer'
+          keywords: config.linkedin?.searchKeywords || 'AI Automation Full Stack Contract'
         }
       },
       {
-        name: 'Y Combinator & Hacker News Jobs',
-        platform: 'ycombinator',
-        options: { limit: 10 }
+        name: 'RemoteOK Contract & Freelance Tech',
+        platform: 'remoteok',
+        options: { limit: 10, tag: 'dev' }
       }
     ];
 
@@ -81,14 +255,12 @@ export async function runLeadFinderTask(companyId = null) {
       });
     }
 
-    // Phase 1: Collect candidates and filter hard negatives
+    // Phase 1: Collect candidates and filter out full-time jobs & hard negatives
     const candidateLeads = [];
     const negativeKeywords = [
       ...(companyProfile.negativeKeywords || []),
       'spanish speaking',
-      'spanish',
       'german speaking',
-      'german',
       'french speaking',
       'recruiter',
       'recruiting',
@@ -98,7 +270,11 @@ export async function runLeadFinderTask(companyId = null) {
       'unpaid',
       'internship',
       'volunteer',
-      'commission only'
+      'commission only',
+      'w-2 only',
+      'w2 only',
+      'no agencies',
+      'no c2c'
     ].map((k) => k.toLowerCase());
 
     for (const source of sourcesToQuery) {
@@ -106,10 +282,13 @@ export async function runLeadFinderTask(companyId = null) {
       if (!adapter) continue;
 
       try {
-        console.log(`[Scheduler] Fetching candidates from ${source.name}...`);
+        console.log(`[Scheduler] Fetching project candidates from ${source.name}...`);
         const rawItems = await adapter.fetchRawLeads(source.options);
         for (const item of rawItems) {
           const normalized = adapter.normalizeLead(item);
+
+          // Reject full-time employee positions immediately
+          if (isFullTimeEmployeeJob(normalized)) continue;
 
           // Deduplication against DB
           const existing = await Lead.findOne({
@@ -118,7 +297,7 @@ export async function runLeadFinderTask(companyId = null) {
               { externalId: normalized.externalId, platform: normalized.platform },
               { sourceUrl: normalized.sourceUrl, platform: normalized.platform }
             ]
-          });
+          }).select('_id').lean();
           if (existing) continue;
 
           // Deduplication against current batch
@@ -135,7 +314,7 @@ export async function runLeadFinderTask(companyId = null) {
           if (hasNegative) continue;
 
           candidateLeads.push(normalized);
-          if (candidateLeads.length >= 35) break; // Collect a pool of ~35 candidates to evaluate
+          if (candidateLeads.length >= 35) break;
         }
       } catch (srcErr) {
         console.warn(`[Scheduler] Source ${source.name} error:`, srcErr.message);
@@ -143,75 +322,91 @@ export async function runLeadFinderTask(companyId = null) {
       if (candidateLeads.length >= 35) break;
     }
 
-    console.log(`[Scheduler] Candidate pool gathered: ${candidateLeads.length} leads. Running evaluation...`);
+    console.log(`[Scheduler] Project candidate pool gathered: ${candidateLeads.length} leads. Running evaluation...`);
 
     let newLeadsCount = 0;
     const apiKey = config.geminiApiKey || process.env.GEMINI_API_KEY;
 
-    // Phase 2: Single-Call Batch LLM Evaluation (or fallback keyword filter)
+    // Phase 2: Single-Call Batch LLM Evaluation (with smart deterministic fallback if Gemini rate-limits)
+    let evaluated = [];
     if (apiKey && candidateLeads.length > 0) {
-      console.log(`[Scheduler] Running Single-Call Batch Gemini evaluation for ${candidateLeads.length} candidates...`);
-      const evaluated = await batchEvaluateLeads(
+      console.log(`[Scheduler] Running Single-Call Batch Gemini evaluation for ${candidateLeads.length} project candidates...`);
+      evaluated = await batchEvaluateLeads(
         candidateLeads,
         companyProfile,
         apiKey,
         config.geminiModel
       );
+      console.log(`[Scheduler] Gemini approved ${evaluated.length} high-fit project leads out of ${candidateLeads.length}.`);
+    }
 
-      console.log(`[Scheduler] Gemini approved ${evaluated.length} high-fit leads out of ${candidateLeads.length}.`);
-
+    if (evaluated.length > 0) {
       for (const item of evaluated) {
         if (newLeadsCount >= maxLeads) break;
         const candidate = candidateLeads[item.id];
-        if (!candidate) continue;
+        if (!candidate || isFullTimeEmployeeJob(candidate)) continue;
 
-        const lead = new Lead({ ...candidate, companyId: targetCompanyId });
+        const lead = new Lead({
+          ...candidate,
+          companyId: targetCompanyId,
+          postedAt: candidate.postedAt || new Date()
+        });
         lead.stage = 'discovered';
         lead.matchScore = item.matchScore || 85;
-        lead.matchReasoning = item.matchReasoning || 'Matches agency core AI and full-stack services.';
+        lead.matchReasoning = item.matchReasoning || 'High-fit client project matching agency AI and full-stack capabilities.';
         if (item.extractedTechStack?.length) {
-          lead.skillsRequired = Array.from(new Set([...lead.skillsRequired, ...item.extractedTechStack]));
+          lead.skillsRequired = Array.from(new Set([...(lead.skillsRequired || []), ...item.extractedTechStack]));
         }
         if (item.demoAngle) {
+          lead.demoAngle = item.demoAngle;
           lead.demoScript = {
+            hook: item.demoAngle,
             recommendedAngle: item.demoAngle,
             summary: item.demoAngle
           };
         }
         lead.activityLogs.push({
-          action: 'Discovered & AI Vetted',
-          details: `Ingested from ${candidate.platform}. AI Fit Score: ${lead.matchScore}%`
+          action: 'Project Lead Discovered & Vetted',
+          details: `Ingested project from ${candidate.platform}. AI Fit Score: ${lead.matchScore}%`
         });
 
         await lead.save();
         newLeadsCount++;
       }
-    } else {
-      // Regex keyword fallback if no Gemini key is configured
+    } else if (candidateLeads.length > 0) {
+      // Deterministic scoring fallback if Gemini is rate-limited or key is missing
       const targetKeywords = companyProfile.targetKeywords?.length
         ? companyProfile.targetKeywords
-        : ['AI', 'Agent', 'Automation', 'React', 'Node', 'Python', 'Full-Stack', 'DevOps'];
+        : ['AI', 'Agent', 'Automation', 'React', 'Node', 'Python', 'Full-Stack', 'Next.js', 'LLM', 'API', 'MVP'];
 
       for (const candidate of candidateLeads) {
         if (newLeadsCount >= maxLeads) break;
-        const text = `${candidate.title} ${candidate.description}`.toLowerCase();
-        const matches = targetKeywords.some((kw) => text.includes(kw.toLowerCase()));
-        if (!matches) continue;
+        if (isFullTimeEmployeeJob(candidate)) continue;
 
-        const lead = new Lead({ ...candidate, companyId: targetCompanyId });
+        const text = `${candidate.title} ${candidate.description} ${(candidate.skillsRequired || []).join(' ')}`.toLowerCase();
+        const matchedKws = targetKeywords.filter((kw) => text.includes(kw.toLowerCase()));
+        if (matchedKws.length === 0 && candidate.platform !== 'freelancer') continue;
+
+        const computedScore = Math.min(96, 76 + matchedKws.length * 4 + (candidate.budget?.amount > 1000 ? 5 : 0));
+        const lead = new Lead({
+          ...candidate,
+          companyId: targetCompanyId,
+          postedAt: candidate.postedAt || new Date()
+        });
         lead.stage = 'discovered';
-        lead.matchScore = 75;
-        lead.matchReasoning = 'Matches target technical keywords.';
+        lead.matchScore = computedScore;
+        lead.matchReasoning = `Project/contract opportunity matching ${matchedKws.slice(0, 3).join(', ') || 'full-stack engineering & AI delivery'}.`;
+        lead.demoAngle = `Show a live 60-second architecture & working module tailored to "${candidate.title.slice(0, 60)}".`;
         lead.activityLogs.push({
-          action: 'Discovered',
-          details: `Ingested from ${candidate.platform} via keyword match.`
+          action: 'Project Lead Discovered',
+          details: `Ingested active project from ${candidate.platform} (${computedScore}% match).`
         });
         await lead.save();
         newLeadsCount++;
       }
     }
 
-    console.log(`[Scheduler] Live Lead Finder complete. Added ${newLeadsCount} vetted leads (Capped at ${maxLeads}).`);
+    console.log(`[Scheduler] Live Project Lead Finder complete. Added ${newLeadsCount} vetted project leads.`);
     return { success: true, newLeadsCount };
   } catch (err) {
     console.error('[Scheduler] Lead Finder encountered error:', err.message);
@@ -221,11 +416,13 @@ export async function runLeadFinderTask(companyId = null) {
 
 /**
  * Runs the Follow-Up & Cooldown Tracker
- * Cadence: Day 7 -> Day 21 -> Monthly for 4 months (Day 51, 81, 111, 141) -> Auto-mark Lost
+ * Cadence: Day 7 -> Day 21 -> Monthly for 4 months (Day 51, 81, 111, 141) -> Auto-Delete Closed Lead
  */
 export async function runCooldownTrackerTask(companyId = null) {
-  console.log('[Scheduler] Starting Follow-Up Tracker Task...');
+  console.log('[Scheduler] Starting Follow-Up Tracker & Closed Lead Cleanup Task...');
   try {
+    await pruneClosedLeads(companyId);
+
     const leadQuery = {
       stage: { $in: ['sent', 'cooldown'] },
       lastContactedAt: { $exists: true, $ne: null }
@@ -236,13 +433,13 @@ export async function runCooldownTrackerTask(companyId = null) {
     const leadsInCooldown = await Lead.find(leadQuery);
 
     let updatedCount = 0;
+    let deletedClosedCount = 0;
     const now = new Date();
 
     for (const lead of leadsInCooldown) {
       const daysSinceContact = Math.floor((now - new Date(lead.lastContactedAt)) / (1000 * 60 * 60 * 24));
       let leadUpdated = false;
 
-      // Check pending follow-ups based on delayDays
       for (const followUp of lead.followUps || []) {
         if (followUp.status === 'pending') {
           const threshold = followUp.delayDays || 7;
@@ -259,20 +456,15 @@ export async function runCooldownTrackerTask(companyId = null) {
         }
       }
 
-      // Auto-Mark Lost Strategy:
-      // If 4 months (~141 days) have passed since initial contact and client never replied,
-      // or if all 6 follow-up touches are completed (sent/skipped) without reply:
-      const allFollowUpsHandled = (lead.followUps || []).length > 0 &&
+      // Auto-Delete Closed Leads after 4-month follow-up cadence completes without reply
+      const allFollowUpsHandled =
+        (lead.followUps || []).length > 0 &&
         lead.followUps.every((f) => f.status === 'sent' || f.status === 'skipped');
 
       if ((daysSinceContact >= 141 || (allFollowUpsHandled && daysSinceContact >= 141)) && lead.stage !== 'replied' && lead.stage !== 'closed_won') {
-        lead.stage = 'closed_lost';
-        lead.activityLogs.push({
-          action: 'Auto-Marked Lost',
-          details: `4-month follow-up sequence completed without client response (${daysSinceContact} days since contact). Lead automatically moved to Lost.`
-        });
-        leadUpdated = true;
-        updatedCount++;
+        await Lead.deleteOne({ _id: lead._id });
+        deletedClosedCount++;
+        continue;
       }
 
       if (leadUpdated) {
@@ -280,8 +472,8 @@ export async function runCooldownTrackerTask(companyId = null) {
       }
     }
 
-    console.log(`[Scheduler] Follow-Up Tracker finished. Updated ${updatedCount} leads/follow-ups.`);
-    return { success: true, updatedCount };
+    console.log(`[Scheduler] Follow-Up Tracker finished. Updated ${updatedCount} leads, auto-deleted ${deletedClosedCount} unresponsive closed leads.`);
+    return { success: true, updatedCount, deletedClosedCount };
   } catch (err) {
     console.error('[Scheduler] Follow-Up Tracker error:', err.message);
     return { success: false, error: err.message };
@@ -312,7 +504,6 @@ export async function initScheduler() {
     runCooldownTrackerTask();
   });
 
-  // Automated IMAP Reply Detection every 30 minutes
   imapJob = cron.schedule('*/30 * * * *', async () => {
     try {
       const { syncImapReplies } = await import('./imapSyncService.js');

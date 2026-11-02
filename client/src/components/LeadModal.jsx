@@ -328,7 +328,10 @@ export default function LeadModal({
                 <CustomSelect
                   value={lead.stage}
                   onChange={(val) => onUpdateStage(lead._id, val)}
-                  options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
+                  options={[
+                    ...STAGES.map((s) => ({ value: s.id, label: s.label })),
+                    { value: 'closed_lost', label: 'Close & Remove Lead' }
+                  ]}
                   size="sm"
                   className="w-36"
                   buttonClassName="py-1 px-2.5 text-xs font-semibold bg-card-subtle text-primary border-theme"

@@ -23,8 +23,29 @@ export class RemoteOkAdapter extends BaseLeadSource {
 
       // First element in RemoteOK API is usually metadata / legal disclaimer, slice(1)
       const jobs = response.data.slice(1);
-      const limit = options.limit || 30;
-      return jobs.slice(0, limit);
+      // Filter for contract, freelance, project, consultant, or agency-friendly roles only
+      const contractOrProjectJobs = jobs.filter((j) => {
+        const text = `${j.position || ''} ${j.description || ''} ${(j.tags || []).join(' ')}`.toLowerCase();
+        const isContractOrProject =
+          text.includes('contract') ||
+          text.includes('freelance') ||
+          text.includes('project') ||
+          text.includes('consultant') ||
+          text.includes('agency') ||
+          text.includes('hourly') ||
+          text.includes('part-time') ||
+          text.includes('b2b');
+        const isStrictFullTime =
+          text.includes('w-2 only') ||
+          text.includes('w2 only') ||
+          text.includes('no agencies') ||
+          text.includes('no c2c') ||
+          text.includes('401(k)') ||
+          text.includes('401k');
+        return isContractOrProject && !isStrictFullTime;
+      });
+      const limit = options.limit || 15;
+      return contractOrProjectJobs.slice(0, limit);
     } catch (error) {
       console.error('[RemoteOkAdapter] Error fetching live jobs:', error.message);
       return [];

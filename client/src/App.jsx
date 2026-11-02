@@ -6,6 +6,7 @@ import PriorityInbox from './components/PriorityInbox.jsx';
 import LeadModal from './components/LeadModal.jsx';
 import AddLeadModal from './components/AddLeadModal.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
+import FounderOutreachView from './components/FounderOutreachView.jsx';
 import CustomSelect from './components/CustomSelect.jsx';
 import AuthPage from './components/AuthPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
@@ -14,15 +15,26 @@ import { Search, Filter, RefreshCw, AlertCircle, X } from 'lucide-react';
 
 const PLATFORM_FILTER_OPTIONS = [
   { value: 'all', label: 'All Platforms' },
-  { value: 'upwork', label: 'Upwork' },
-  { value: 'freelancer', label: 'Freelancer' },
-  { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'indeed', label: 'Indeed' },
-  { value: 'ycombinator', label: 'Y Combinator' },
+  { value: 'freelancer', label: 'Freelancer Projects' },
+  { value: 'upwork', label: 'Upwork Projects' },
+  { value: 'ycombinator', label: 'YC / HN Freelance' },
+  { value: 'linkedin', label: 'LinkedIn Contract' },
+  { value: 'remoteok', label: 'RemoteOK Contract' },
   { value: 'apollo', label: 'Apollo' },
-  { value: 'remoteok', label: 'RemoteOK' },
-  { value: 'weworkremotely', label: 'WeWorkRemotely' },
-  { value: 'manual', label: 'Manual / Webhook' }
+  { value: 'manual', label: 'Manual / URL' }
+];
+
+const SORT_FILTER_OPTIONS = [
+  { value: 'smart', label: 'Rank: Match % + Recency' },
+  { value: 'match', label: 'Highest Match % Only' },
+  { value: 'newest', label: 'Newest Posted First' }
+];
+
+const MIN_MATCH_OPTIONS = [
+  { value: '0', label: 'All Match %' },
+  { value: '75', label: '75%+ Match' },
+  { value: '85', label: '85%+ Match' },
+  { value: '90', label: '90%+ Match' }
 ];
 
 export default function App() {
@@ -37,6 +49,8 @@ export default function App() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState('all');
+  const [sortMode, setSortMode] = useState('smart');
+  const [minMatchFilter, setMinMatchFilter] = useState('0');
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -84,12 +98,13 @@ export default function App() {
       window.__refreshLeads = fetchLeads;
       fetchLeads();
     }
-  }, [isAuthenticated, company?._id, platformFilter, searchQuery]);
+  }, [isAuthenticated, company?._id, platformFilter, searchQuery, sortMode, minMatchFilter]);
 
   const fetchLeads = async () => {
     try {
-      const params = {};
+      const params = { sort: sortMode };
       if (platformFilter !== 'all') params.platform = platformFilter;
+      if (minMatchFilter !== '0') params.minMatch = minMatchFilter;
       if (searchQuery.trim()) params.search = searchQuery.trim();
 
       const res = await axios.get('/api/leads', { params });
@@ -191,11 +206,17 @@ export default function App() {
     }
   };
 
-  // Update stage manually
+  // Update stage manually (auto-deletes if stage is closed_lost / closed)
   const handleUpdateStage = async (leadId, stage) => {
     try {
       const res = await axios.patch(`/api/leads/${leadId}/stage`, { stage });
-      setSelectedLead(res.data);
+      if (res.data?.deleted || stage === 'closed_lost' || stage === 'closed') {
+        setSelectedLead(null);
+        setLeads((prev) => prev.filter((l) => l._id !== leadId));
+        showBannerNotice('Closed lead automatically removed from pipeline.');
+      } else {
+        setSelectedLead(res.data);
+      }
       fetchLeads();
     } catch (err) {
       console.error('Failed to update stage:', err);
@@ -281,30 +302,46 @@ export default function App() {
       )}
 
       {/* Filter and Search Bar (Visible on Pipeline and Inbox) */}
-      {activeView !== 'settings' && (
+      {activeView !== 'settings' && activeView !== 'founders' && (
         <div className="px-6 py-3 border-b border-theme bg-surface flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Search */}
           <div className="relative w-full sm:w-80">
             <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 transform -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search leads, skills, company..."
+              placeholder="Search project leads, skills, client..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-card border border-theme rounded-lg pl-9 pr-3 py-1.5 text-xs text-primary placeholder:text-muted focus:outline-none focus:border-brand-500"
             />
           </div>
 
-          {/* Platform Filter */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="w-3.5 h-3.5 text-muted flex-shrink-0" />
+          {/* Sort (Match % + Recency), Min Match %, and Platform Filter */}
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            <Filter className="w-3.5 h-3.5 text-muted flex-shrink-0 hidden sm:inline" />
+            <CustomSelect
+              value={sortMode}
+              onChange={setSortMode}
+              options={SORT_FILTER_OPTIONS}
+              size="sm"
+              align="right"
+              buttonClassName="min-w-[180px]"
+            />
+            <CustomSelect
+              value={minMatchFilter}
+              onChange={setMinMatchFilter}
+              options={MIN_MATCH_OPTIONS}
+              size="sm"
+              align="right"
+              buttonClassName="min-w-[125px]"
+            />
             <CustomSelect
               value={platformFilter}
               onChange={setPlatformFilter}
               options={PLATFORM_FILTER_OPTIONS}
               size="sm"
               align="right"
-              buttonClassName="min-w-[145px]"
+              buttonClassName="min-w-[155px]"
             />
           </div>
         </div>
@@ -312,7 +349,11 @@ export default function App() {
 
       {/* Main View Area */}
       <main className="flex-1 flex overflow-hidden min-h-0">
-        {loading ? (
+        {activeView === 'founders' ? (
+          <div className="flex-1 overflow-y-auto p-6">
+            <FounderOutreachView />
+          </div>
+        ) : loading ? (
           activeView === 'settings' ? (
             <SettingsSkeleton />
           ) : activeView === 'inbox' ? (
@@ -328,6 +369,7 @@ export default function App() {
             selectedLead={selectedLead}
             onSelectLead={handleSelectLead}
             onAdvanceStage={handleUpdateStage}
+            sortMode={sortMode}
           />
         ) : (
           <PriorityInbox

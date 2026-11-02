@@ -13,25 +13,67 @@ import {
   generateFollowUpSequence,
   parseRawJobText
 } from '../services/geminiService.js';
+import { pruneClosedLeads, isFullTimeEmployeeJob } from '../services/schedulerService.js';
 
 const router = express.Router();
+const lastPruneTimestampByCompany = new Map();
 
 // Enforce authentication on all lead operations
 router.use(requireAuth);
 
 /**
- * GET /api/leads - Query leads with filtering and search scoped to the authenticated company
+ * Computes combined Match % + Recency priority score so newer high-match project leads
+ * rank at the top while older leads naturally decay lower.
+ */
+function computePriorityScore(lead, nowMs = Date.now()) {
+  const matchScore = Number(lead.matchScore) || 75;
+  const refDate = lead.postedAt || lead.createdAt || nowMs;
+  const refMs = new Date(refDate).getTime() || nowMs;
+  const ageInDays = Math.max(0, (nowMs - refMs) / (1000 * 60 * 60 * 24));
+  const freshnessBoost = ageInDays <= 0.5 ? 5 : ageInDays <= 1 ? 3 : ageInDays <= 2 ? 1 : 0;
+  const recencyDecay = Math.min(48, ageInDays * 4);
+  return Math.round((matchScore + freshnessBoost - recencyDecay) * 10) / 10;
+}
+
+/**
+ * GET /api/leads - Query leads with filtering, auto-cleanup of closed leads, and Match % + Recency ranking
  */
 router.get('/', async (req, res) => {
   try {
-    const { stage, platform, search, sort, page, limit } = req.query;
-    const query = { companyId: req.companyId, isArchived: { $ne: true } };
+    const { stage, platform, search, sort, page, limit, minMatch } = req.query;
+    const companyKey = String(req.companyId);
+    const nowMs = Date.now();
+
+    // Auto-delete any closed_lost / closed / archived leads immediately
+    await Lead.deleteMany({
+      companyId: req.companyId,
+      $or: [
+        { stage: { $in: ['closed_lost', 'closed', 'lost'] } },
+        { isArchived: true }
+      ]
+    });
+
+    // Periodically trigger full background prune (checks Freelancer API open status & removes full-time jobs)
+    const lastPruned = lastPruneTimestampByCompany.get(companyKey) || 0;
+    if (nowMs - lastPruned > 2 * 60 * 1000) {
+      lastPruneTimestampByCompany.set(companyKey, nowMs);
+      pruneClosedLeads(req.companyId).catch(() => {});
+    }
+
+    const query = {
+      companyId: req.companyId,
+      isArchived: { $ne: true },
+      stage: { $nin: ['closed_lost', 'closed', 'lost'] }
+    };
 
     if (stage && stage !== 'all') {
       query.stage = stage;
     }
     if (platform && platform !== 'all') {
       query.platform = platform;
+    }
+    if (minMatch && Number(minMatch) > 0) {
+      query.matchScore = { $gte: Number(minMatch) };
     }
     if (search && search.trim()) {
       const s = search.trim();
@@ -43,16 +85,12 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Default sort: highest matchScore first, then newest createdAt
-    let sortOption = { matchScore: -1, createdAt: -1 };
-    if (sort === 'oldest') sortOption = { createdAt: 1 };
-    if (sort === 'newest') sortOption = { createdAt: -1 };
+    let sortOption = { matchScore: -1, postedAt: -1, createdAt: -1 };
+    if (sort === 'oldest') sortOption = { postedAt: 1, createdAt: 1 };
+    if (sort === 'newest') sortOption = { postedAt: -1, createdAt: -1 };
 
-    // High-performance lean projection: Excludes only very heavy bodies (raw scraped full description,
-    // full demo scripts, and activityLogs) to keep payloads lean, while retaining AI match reasoning,
-    // demo angle, and tab status indicators so the UI renders seamlessly without layout shift or text jumping.
     const leadProjection =
-      '_id companyId title platform stage matchScore matchReasoning demoAngle demoVideoUrl demoScript.hook pitchDraft.body clientInfo budget skillsRequired createdAt updatedAt sourceUrl isArchived lastContactedAt lastRepliedAt followUps.status followUps.delayDays followUps.stage followUps.scheduledDate';
+      '_id companyId title platform stage matchScore matchReasoning demoAngle demoVideoUrl demoScript.hook pitchDraft.body clientInfo budget skillsRequired postedAt createdAt updatedAt sourceUrl isArchived lastContactedAt lastRepliedAt followUps.status followUps.delayDays followUps.stage followUps.scheduledDate';
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 0;
@@ -66,25 +104,65 @@ router.get('/', async (req, res) => {
       leadsQuery = leadsQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
     }
 
-    // Concurrently fetch leads and stage counts using MongoDB pipeline
-    const [leads, counts, totalCount] = await Promise.all([
+    const [rawLeads, counts, totalCount] = await Promise.all([
       leadsQuery.exec(),
       Lead.aggregate([
-        { $match: { companyId: req.companyId, isArchived: { $ne: true } } },
+        {
+          $match: {
+            companyId: req.companyId,
+            isArchived: { $ne: true },
+            stage: { $nin: ['closed_lost', 'closed', 'lost'] }
+          }
+        },
         { $group: { _id: '$stage', count: { $sum: 1 } } }
       ]),
       limitNum > 0 ? Lead.countDocuments(query) : Promise.resolve(null)
     ]);
 
+    // Filter out any legacy full-time discovered jobs on the fly & delete them asynchronously
+    const fullTimeIdsToRemove = [];
+    const leads = [];
+    for (const lead of rawLeads) {
+      if (lead.stage === 'discovered' && isFullTimeEmployeeJob(lead)) {
+        fullTimeIdsToRemove.push(lead._id);
+        continue;
+      }
+      const refMs = new Date(lead.postedAt || lead.createdAt || nowMs).getTime() || nowMs;
+      lead.priorityScore = computePriorityScore(lead, nowMs);
+      lead.ageInHours = Math.max(0, Math.round((nowMs - refMs) / (1000 * 60 * 60)));
+      leads.push(lead);
+    }
+
+    if (fullTimeIdsToRemove.length > 0) {
+      Lead.deleteMany({ _id: { $in: fullTimeIdsToRemove } }).catch(() => {});
+    }
+
+    // Apply Smart Ranking (Match % + Recency) unless user explicitly chose 'match', 'newest', or 'oldest'
+    if (!sort || sort === 'smart') {
+      leads.sort((a, b) => {
+        if (b.priorityScore !== a.priorityScore) return b.priorityScore - a.priorityScore;
+        if ((b.matchScore || 0) !== (a.matchScore || 0)) return (b.matchScore || 0) - (a.matchScore || 0);
+        return new Date(b.postedAt || b.createdAt || 0) - new Date(a.postedAt || a.createdAt || 0);
+      });
+    } else if (sort === 'match') {
+      leads.sort((a, b) => {
+        if ((b.matchScore || 0) !== (a.matchScore || 0)) return (b.matchScore || 0) - (a.matchScore || 0);
+        return b.priorityScore - a.priorityScore;
+      });
+    }
+
     const stageCounts = counts.reduce((acc, curr) => {
       acc[curr._id] = curr.count;
       return acc;
     }, {});
+    if (fullTimeIdsToRemove.length > 0 && stageCounts.discovered) {
+      stageCounts.discovered = Math.max(0, stageCounts.discovered - fullTimeIdsToRemove.length);
+    }
 
     res.json({
       leads,
       stageCounts,
-      total: totalCount !== null ? totalCount : leads.length,
+      total: totalCount !== null ? Math.max(0, totalCount - fullTimeIdsToRemove.length) : leads.length,
       page: pageNum,
       hasMore: limitNum > 0 ? pageNum * limitNum < totalCount : false
     });
@@ -310,11 +388,19 @@ router.post('/import-url', async (req, res) => {
 });
 
 /**
- * PATCH /api/leads/:id/stage - Update lead stage manually
+ * PATCH /api/leads/:id/stage - Update lead stage manually (automatically deletes closed leads)
  */
 router.patch('/:id/stage', async (req, res) => {
   try {
     const { stage } = req.body;
+
+    // Automatically delete closed/lost leads so they never pollute the pipeline
+    if (stage === 'closed_lost' || stage === 'closed' || stage === 'lost') {
+      const deleted = await Lead.findOneAndDelete({ _id: req.params.id, companyId: req.companyId });
+      if (!deleted) return res.status(404).json({ error: 'Lead not found in this workspace' });
+      return res.json({ deleted: true, _id: req.params.id, message: 'Closed lead automatically removed' });
+    }
+
     const lead = await Lead.findOne({ _id: req.params.id, companyId: req.companyId });
     if (!lead) return res.status(404).json({ error: 'Lead not found in this workspace' });
 

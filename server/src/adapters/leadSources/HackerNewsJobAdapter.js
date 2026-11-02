@@ -8,52 +8,84 @@ export class HackerNewsJobAdapter extends BaseLeadSource {
 
   async fetchRawLeads(options = {}) {
     try {
-      const response = await axios.get('https://hacker-news.firebaseio.com/v0/jobstories.json', {
-        timeout: 10000
-      });
-
-      const storyIds = (response.data || []).slice(0, options.limit || 20);
-      const jobs = await Promise.all(
-        storyIds.map(async (id) => {
-          try {
-            const itemRes = await axios.get(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
-              timeout: 6000
-            });
-            return itemRes.data;
-          } catch {
-            return null;
-          }
-        })
+      const limit = options.limit || 15;
+      // Query Hacker News Algolia API specifically for "SEEKING FREELANCER" client project posts
+      const response = await axios.get(
+        `https://hn.algolia.com/api/v1/search_by_date?tags=comment&query=${encodeURIComponent('"SEEKING FREELANCER"')}&hitsPerPage=35`,
+        { timeout: 10000 }
       );
 
-      return jobs.filter(Boolean);
+      const hits = response.data?.hits || [];
+      const freelanceProjects = [];
+
+      for (const hit of hits) {
+        const rawHtml = hit.comment_text || '';
+        const decoded = rawHtml
+          .replace(/&#x2F;/g, '/')
+          .replace(/&#x27;/g, "'")
+          .replace(/&quot;/g, '"')
+          .replace(/&amp;/g, '&');
+        const cleanText = decoded.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+
+        // Only keep genuine client project posts ("SEEKING FREELANCER"), never job-seeker posts ("SEEKING WORK")
+        const upper = cleanText.toUpperCase();
+        if (upper.startsWith('SEEKING WORK') || !upper.includes('SEEKING FREELANCER')) {
+          continue;
+        }
+        // Ensure it is near the beginning of the post (clients start with SEEKING FREELANCER)
+        if (upper.indexOf('SEEKING FREELANCER') > 80) {
+          continue;
+        }
+
+        freelanceProjects.push({
+          id: hit.objectID,
+          author: hit.author || 'HN Startup Founder',
+          createdAt: hit.created_at || new Date().toISOString(),
+          text: cleanText
+        });
+
+        if (freelanceProjects.length >= limit) break;
+      }
+
+      return freelanceProjects;
     } catch (error) {
-      console.error('[HackerNewsJobAdapter] Error fetching HN/YC jobs:', error.message);
+      console.error('[HackerNewsJobAdapter] Error fetching HN freelance projects:', error.message);
       return [];
     }
   }
 
-  normalizeLead(story) {
-    const rawTitle = story.title || 'YC Startup Engineering Opportunity';
-    let cleanText = (story.text || rawTitle).replace(/<[^>]*>?/gm, '').trim();
+  normalizeLead(item) {
+    const cleanText = item.text || '';
+    // Extract a clean title from the first line/segment after SEEKING FREELANCER
+    const stripped = cleanText.replace(/^SEEKING FREELANCER\s*[\|\-:•]*\s*/i, '').trim();
+    const firstChunk = stripped.split(/[\.\|\n]/)[0]?.trim() || 'Freelance Software & AI Project';
+    const title = firstChunk.length > 10 && firstChunk.length < 95
+      ? `${firstChunk} (Freelance Project)`
+      : `Startup Freelance Project by ${item.author}`;
+
+    // Extract email if present in the post
+    const emailMatch = cleanText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    const postedAt = item.createdAt ? new Date(item.createdAt) : new Date();
 
     return {
-      title: rawTitle,
+      title,
       description: cleanText.substring(0, 3000),
       platform: 'ycombinator',
-      sourceUrl: story.url || `https://news.ycombinator.com/item?id=${story.id}`,
-      externalId: `hn_yc_${story.id}`,
+      sourceUrl: `https://news.ycombinator.com/item?id=${item.id}`,
+      externalId: `hn_freelance_${item.id}`,
+      postedAt,
+      createdAt: postedAt,
       clientInfo: {
-        name: story.by || 'YC Founder',
-        company: rawTitle.split('Is Hiring')[0]?.trim() || '',
-        email: '',
-        location: 'Remote / US'
+        name: item.author || 'YC / HN Client',
+        company: 'HN Freelance Client',
+        email: emailMatch ? emailMatch[0] : '',
+        location: 'Remote / Global'
       },
-      skillsRequired: ['Full-Stack', 'Startup', 'Engineering'],
+      skillsRequired: ['Freelance Project', 'Contract', 'Full-Stack / AI'],
       stage: 'discovered',
       budget: {
         amount: 0,
-        type: 'unspecified',
+        type: 'hourly',
         currency: 'USD'
       }
     };

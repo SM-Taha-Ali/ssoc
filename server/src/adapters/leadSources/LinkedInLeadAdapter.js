@@ -8,13 +8,18 @@ export class LinkedInLeadAdapter extends BaseLeadSource {
   }
 
   /**
-   * Fetch public LinkedIn jobs by keywords using LinkedIn's public guest search API
+   * Fetch public LinkedIn Contract & Freelance project opportunities using LinkedIn's public guest search API
+   * Filters strictly for Contract (C) and Temporary/Project (T) engagements (f_JT=C%2CT) posted recently.
    */
   async fetchRawLeads(options = {}) {
     try {
-      const keywords = options.keywords || 'full stack ai developer';
+      const baseKeywords = options.keywords || 'AI Full Stack Developer';
+      const contractKeywords = /contract|freelance|consultant|project/i.test(baseKeywords)
+        ? baseKeywords
+        : `${baseKeywords} Contract`;
       const location = options.location || 'Worldwide';
-      const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${encodeURIComponent(keywords)}&location=${encodeURIComponent(location)}&start=0`;
+      // f_JT=C%2CT restricts LinkedIn to Contract & Temporary/Project roles only (no full-time W-2 employee roles)
+      const url = `https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=${encodeURIComponent(contractKeywords)}&location=${encodeURIComponent(location)}&f_JT=C%2CT&f_TPR=r604800&start=0`;
 
       const response = await axios.get(url, {
         headers: {
@@ -53,8 +58,8 @@ export class LinkedInLeadAdapter extends BaseLeadSource {
 
         if (title && jobUrl) {
           jobs.push({
-            title,
-            company: company || 'Hiring Company',
+            title: title.includes('Contract') || title.includes('Freelance') ? title : `${title} (Contract / Project)`,
+            company: company || 'Hiring Client',
             location: loc || 'Remote / Global',
             url: jobUrl,
             id: externalId,

@@ -9,6 +9,7 @@ import integrationsRoutes from './routes/integrations.js';
 import schedulerRoutes from './routes/scheduler.js';
 import authRoutes from './routes/auth.js';
 import webhooksRoutes from './routes/webhooks.js';
+import foundersRoutes from './routes/founders.js';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/company-profile', companyProfileRoutes);
 app.use('/api/integrations', integrationsRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/webhooks', webhooksRoutes);
+app.use('/api/founders', foundersRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {

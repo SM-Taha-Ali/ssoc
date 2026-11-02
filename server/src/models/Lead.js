@@ -149,6 +149,11 @@ const leadSchema = new mongoose.Schema(
     lastRepliedAt: {
       type: Date
     },
+    postedAt: {
+      type: Date,
+      default: Date.now,
+      index: true
+    },
     isArchived: {
       type: Boolean,
       default: false

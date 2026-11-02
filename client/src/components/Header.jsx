@@ -12,7 +12,8 @@ import {
   LogOut,
   ChevronDown,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -97,22 +98,33 @@ export default function Header({
               </div>
             </div>
 
-            {/* Primary Workflow Tabs (Pipeline Board & Priority Inbox) */}
+            {/* Primary Workflow Tabs (Pipeline Board, Founder Outreach & Priority Inbox) */}
             <div className="hidden md:flex items-center bg-card-subtle border border-theme p-0.5 rounded-lg">
               <button
                 onClick={() => setActiveView('pipeline')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                   activeView === 'pipeline'
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'text-secondary hover:text-primary hover:bg-card'
                 }`}
               >
                 <Kanban className="w-3.5 h-3.5" />
-                Pipeline Board
+                Project Pipeline
+              </button>
+              <button
+                onClick={() => setActiveView('founders')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  activeView === 'founders'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-secondary hover:text-primary hover:bg-card'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Founder Outreach
               </button>
               <button
                 onClick={() => setActiveView('inbox')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all relative ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all relative cursor-pointer ${
                   activeView === 'inbox'
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'text-secondary hover:text-primary hover:bg-card'
@@ -272,6 +284,17 @@ export default function Header({
             >
               <Kanban className="w-3.5 h-3.5" />
               Pipeline
+            </button>
+            <button
+              onClick={() => setActiveView('founders')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                activeView === 'founders'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-secondary hover:text-primary'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              Founders
             </button>
             <button
               onClick={() => setActiveView('inbox')}

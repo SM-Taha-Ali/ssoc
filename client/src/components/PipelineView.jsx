@@ -25,18 +25,38 @@ export const STAGES = [
   { id: 'cooldown', label: '5. Follow-up', icon: Clock, color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10' },
   { id: 'replied', label: '6. Client Replied', icon: MessageSquare, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' },
   { id: 'meeting', label: '7. Meeting Booked', icon: Calendar, color: 'text-teal-400', border: 'border-teal-500/30', bg: 'bg-teal-500/10' },
-  { id: 'closed_won', label: '8. Won', icon: CheckCircle2, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
-  { id: 'closed_lost', label: '9. Lost', icon: XCircle, color: 'text-rose-400', border: 'border-rose-500/30', bg: 'bg-rose-500/10' }
+  { id: 'closed_won', label: '8. Won', icon: CheckCircle2, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' }
 ];
 
 const COLUMN_PAGE_SIZE = 25;
+
+function formatLeadRecency(lead) {
+  const ref = lead.postedAt || lead.createdAt;
+  if (!ref) return 'Recent';
+  const diffMs = Math.max(0, Date.now() - new Date(ref).getTime());
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 1) return 'Just now';
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function getEffectivePriority(lead) {
+  if (typeof lead.priorityScore === 'number') return lead.priorityScore;
+  const match = typeof lead.matchScore === 'number' ? lead.matchScore : 75;
+  const refMs = new Date(lead.postedAt || lead.createdAt || Date.now()).getTime();
+  const ageDays = Math.max(0, (Date.now() - refMs) / 86400000);
+  const boost = ageDays <= 0.5 ? 5 : ageDays <= 1 ? 3 : 0;
+  return match + boost - Math.min(48, ageDays * 4);
+}
 
 export default function PipelineView({
   leads = [],
   loading = false,
   selectedLead,
   onSelectLead,
-  onAdvanceStage
+  onAdvanceStage,
+  sortMode = 'smart'
 }) {
   const [visibleCounts, setVisibleCounts] = useState({});
 
@@ -50,14 +70,25 @@ export default function PipelineView({
         {STAGES.map((stage) => {
           const StageIcon = stage.icon;
 
-          // Strictly sort leads so highest % match always appears at the top of every column
+          // Sort leads by Smart Rank (Match % + Recency) by default so fresh high-match leads stay at top
           const stageLeads = leads
             .filter((l) => l.stage === stage.id)
             .sort((a, b) => {
-              const scoreA = typeof a.matchScore === 'number' ? a.matchScore : 0;
-              const scoreB = typeof b.matchScore === 'number' ? b.matchScore : 0;
-              if (scoreB !== scoreA) return scoreB - scoreA;
-              return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+              if (sortMode === 'newest') {
+                return new Date(b.postedAt || b.createdAt || 0) - new Date(a.postedAt || a.createdAt || 0);
+              }
+              if (sortMode === 'oldest') {
+                return new Date(a.postedAt || a.createdAt || 0) - new Date(b.postedAt || b.createdAt || 0);
+              }
+              if (sortMode === 'match') {
+                const scoreA = typeof a.matchScore === 'number' ? a.matchScore : 0;
+                const scoreB = typeof b.matchScore === 'number' ? b.matchScore : 0;
+                if (scoreB !== scoreA) return scoreB - scoreA;
+              }
+              const prioA = getEffectivePriority(a);
+              const prioB = getEffectivePriority(b);
+              if (prioB !== prioA) return prioB - prioA;
+              return new Date(b.postedAt || b.createdAt || 0) - new Date(a.postedAt || a.createdAt || 0);
             });
 
           const currentLimit = visibleCounts[stage.id] || COLUMN_PAGE_SIZE;
@@ -118,11 +149,20 @@ export default function PipelineView({
                             : 'border-theme hover:border-slate-400/50'
                         }`}
                       >
-                        {/* Top Meta: Platform & Match Score */}
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme">
-                            {lead.platform}
-                          </span>
+                        {/* Top Meta: Platform, Recency & Match Score */}
+                        <div className="flex items-center justify-between gap-1.5 mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme">
+                              {lead.platform}
+                            </span>
+                            <span
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-card-subtle text-muted border border-theme flex items-center gap-1"
+                              title="Posting Recency (older leads rank lower)"
+                            >
+                              <Clock className="w-2.5 h-2.5 text-sky-400" />
+                              {formatLeadRecency(lead)}
+                            </span>
+                          </div>
 
                           {matchScore > 0 && (
                             <span
@@ -144,9 +184,9 @@ export default function PipelineView({
                           {lead.title}
                         </h4>
 
-                        {/* Description snippet */}
+                        {/* AI Fit Reasoning / Description snippet */}
                         <p className="text-[11px] text-secondary line-clamp-2 mb-3 leading-relaxed">
-                          {lead.description}
+                          {lead.matchReasoning || lead.description || 'Project/contract engagement matching workspace stack.'}
                         </p>
 
                         {/* Details Footer */}
