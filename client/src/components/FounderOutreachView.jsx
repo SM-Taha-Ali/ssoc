@@ -102,17 +102,18 @@ export default function FounderOutreachView() {
     fetchFounders(Boolean(cachedFoundersList));
   }, [sortBy]);
 
-  const handleDiscoverMore = async () => {
+  const handleDiscoverMore = async (resetExisting = false) => {
     setDiscovering(true);
     try {
       const res = await axios.post('/api/founders/discover', {
-        keywords: discoverKeywords || 'AI Automation SaaS'
+        keywords: discoverKeywords || 'AI Automation SaaS',
+        reset: Boolean(resetExisting)
       });
       await fetchFounders(true);
       showToast(
         res.data?.addedCount > 0
-          ? `Discovered ${res.data.addedCount} new Founders with AI outreach messages!`
-          : 'Founder list refreshed with latest live signals.'
+          ? `Discovered ${res.data.addedCount} verified Founders with AI outreach messages!`
+          : 'Verified founder list refreshed with latest live signals.'
       );
     } catch (err) {
       showToast('Error discovering founders: ' + (err.response?.data?.error || err.message));
@@ -317,12 +318,12 @@ export default function FounderOutreachView() {
     <div className="space-y-5">
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-slate-900 border border-indigo-500/40 text-slate-100 px-4 py-3 rounded-xl shadow-2xl max-w-md animate-in fade-in slide-in-from-bottom-4">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-card border border-indigo-500/40 text-primary px-4 py-3 rounded-xl shadow-2xl max-w-md animate-in fade-in slide-in-from-bottom-4">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
           <p className="text-xs font-medium leading-relaxed">{toastMessage}</p>
           <button
             onClick={() => setToastMessage(null)}
-            className="text-slate-400 hover:text-white ml-auto"
+            className="text-muted hover:text-primary ml-auto"
           >
             <X className="w-4 h-4" />
           </button>
@@ -330,38 +331,38 @@ export default function FounderOutreachView() {
       )}
 
       {/* Top Executive Banner & Controls */}
-      <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-5 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-800/80">
+      <div className="bg-card border border-theme rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-theme">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-500">
                 <Linkedin className="w-4 h-4" />
               </div>
-              <h2 className="text-base font-semibold text-white tracking-tight">
-                Founder & Decision-Maker Social Outreach
+              <h2 className="text-base font-semibold text-primary tracking-tight">
+                Founder &amp; Decision-Maker Social Outreach
               </h2>
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                {filteredFounders.length} Ready
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap">
+                {filteredFounders.length} Verified Founders
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Discover startup Founders, CEOs & CTOs across LinkedIn, Y Combinator & GitHub. AI writes the outreach message—edit inline if needed, then click <span className="text-slate-200 font-medium">Open LinkedIn & Send</span> to auto-copy and launch their profile immediately.
+            <p className="text-xs text-secondary mt-1">
+              Discover verified startup Founders, Co-Founders, CEOs &amp; CTOs with direct personal LinkedIn profiles. AI writes the outreach message—edit inline if needed, then click <span className="text-primary font-semibold">Open LinkedIn &amp; Send</span> to auto-copy and launch their profile immediately.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg overflow-hidden">
+            <div className="flex items-center bg-surface border border-theme rounded-lg overflow-hidden">
               <input
                 type="text"
                 value={discoverKeywords}
                 onChange={(e) => setDiscoverKeywords(e.target.value)}
                 placeholder="Target niche (e.g. AI Agents, FinTech)..."
-                className="bg-transparent text-xs text-slate-200 px-3 py-2 w-44 focus:outline-none"
+                className="bg-transparent text-xs text-primary px-3 py-2 w-44 focus:outline-none"
               />
               <button
-                onClick={handleDiscoverMore}
+                onClick={() => handleDiscoverMore(false)}
                 disabled={discovering}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${discovering ? 'animate-spin' : ''}`} />
                 <span>{discovering ? 'Scouting Founders...' : 'Scout Founders'}</span>
@@ -370,9 +371,9 @@ export default function FounderOutreachView() {
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-card-subtle hover:bg-slate-200/60 dark:hover:bg-slate-800 text-primary border border-theme rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
             >
-              <UserPlus className="w-3.5 h-3.5 text-indigo-400" />
+              <UserPlus className="w-3.5 h-3.5 text-indigo-500" />
               <span>+ Add Founder / LinkedIn URL</span>
             </button>
           </div>
@@ -382,31 +383,30 @@ export default function FounderOutreachView() {
         <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search founder, company, role, signal..."
-                className="pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-64"
+                className="pl-8 pr-3 py-1.5 bg-surface border border-theme rounded-lg text-xs text-primary placeholder-slate-400 focus:outline-none focus:border-indigo-500 w-64"
               />
             </div>
 
-            <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+            <div className="flex items-center bg-surface p-0.5 rounded-lg border border-theme">
               {[
-                { id: 'all', label: 'All Sources' },
-                { id: 'linkedin', label: 'LinkedIn' },
-                { id: 'ycombinator', label: 'Y Combinator' },
-                { id: 'github', label: 'GitHub + Social' },
+                { id: 'all', label: 'All Verified' },
+                { id: 'linkedin', label: 'LinkedIn Direct' },
+                { id: 'ycombinator', label: 'YC Founders' },
                 { id: 'apollo', label: 'Apollo' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setPlatformFilter(tab.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
                     platformFilter === tab.id
-                      ? 'bg-slate-800 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-secondary hover:text-primary'
                   }`}
                 >
                   {tab.label}
@@ -416,7 +416,7 @@ export default function FounderOutreachView() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+            <div className="flex items-center bg-surface p-0.5 rounded-lg border border-theme">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'discovered', label: 'To Contact' },
@@ -425,10 +425,10 @@ export default function FounderOutreachView() {
                 <button
                   key={st.id}
                   onClick={() => setStatusFilter(st.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
                     statusFilter === st.id
-                      ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-secondary hover:text-primary'
                   }`}
                 >
                   {st.label}
@@ -436,16 +436,16 @@ export default function FounderOutreachView() {
               ))}
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+            <div className="flex items-center gap-1.5 bg-surface border border-theme rounded-lg px-2.5 py-1">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-secondary" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-xs text-slate-300 focus:outline-none cursor-pointer"
+                className="bg-transparent text-xs text-primary focus:outline-none cursor-pointer"
               >
-                <option value="smart" className="bg-slate-900">Rank: Match % + Recency</option>
-                <option value="match" className="bg-slate-900">Highest Match %</option>
-                <option value="newest" className="bg-slate-900">Newest Signal First</option>
+                <option value="smart" className="bg-card text-primary">Rank: Match % + Recency</option>
+                <option value="match" className="bg-card text-primary">Highest Match %</option>
+                <option value="newest" className="bg-card text-primary">Newest Signal First</option>
               </select>
             </div>
           </div>
@@ -458,27 +458,27 @@ export default function FounderOutreachView() {
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="bg-slate-900/70 border border-slate-800/80 rounded-xl p-5 space-y-4 animate-pulse"
+              className="bg-card border border-theme rounded-xl p-5 space-y-4 animate-pulse"
             >
               <div className="flex justify-between">
                 <div className="space-y-2">
-                  <div className="h-4 w-44 bg-slate-800 rounded" />
-                  <div className="h-3 w-32 bg-slate-800/70 rounded" />
+                  <div className="h-4 w-44 bg-card-subtle rounded" />
+                  <div className="h-3 w-32 bg-card-subtle rounded" />
                 </div>
-                <div className="h-6 w-20 bg-slate-800 rounded-full" />
+                <div className="h-6 w-20 bg-card-subtle rounded-full" />
               </div>
-              <div className="h-12 bg-slate-800/50 rounded-lg" />
-              <div className="h-28 bg-slate-800/60 rounded-lg" />
-              <div className="h-9 bg-slate-800 rounded-lg" />
+              <div className="h-12 bg-card-subtle rounded-lg" />
+              <div className="h-28 bg-card-subtle rounded-lg" />
+              <div className="h-9 bg-card-subtle rounded-lg" />
             </div>
           ))}
         </div>
       ) : filteredFounders.length === 0 ? (
-        <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-12 text-center">
-          <Linkedin className="w-8 h-8 text-indigo-400 mx-auto mb-3 opacity-80" />
-          <h3 className="text-sm font-semibold text-white">No Founders Matching Filter</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-            Click &ldquo;Scout Founders&rdquo; above to discover fresh startup Founders & Decision Makers with pre-written AI outreach messages.
+        <div className="bg-card border border-theme rounded-xl p-12 text-center">
+          <Linkedin className="w-8 h-8 text-indigo-500 mx-auto mb-3 opacity-80" />
+          <h3 className="text-sm font-semibold text-primary">No Founders Matching Filter</h3>
+          <p className="text-xs text-secondary mt-1 max-w-md mx-auto">
+            Click &ldquo;Scout Founders&rdquo; above to discover verified startup Founders &amp; Decision Makers with pre-written AI outreach messages.
           </p>
         </div>
       ) : (
@@ -493,13 +493,13 @@ export default function FounderOutreachView() {
             return (
               <div
                 key={founder._id}
-                className="bg-slate-900/90 border border-slate-800/90 hover:border-slate-700/90 rounded-xl p-5 flex flex-col justify-between transition-all shadow-sm"
+                className="bg-card border border-theme hover:border-indigo-500/40 rounded-xl p-5 flex flex-col justify-between transition-all shadow-sm"
               >
                 <div>
                   {/* Card Header: Founder Identity & Match + Recency Badges */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-sky-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-semibold text-sm shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-500 font-semibold text-sm shrink-0">
                         {(founder.name || 'F')
                           .split(' ')
                           .map((p) => p[0])
@@ -509,20 +509,32 @@ export default function FounderOutreachView() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm font-semibold text-white truncate">
+                          <h3 className="text-sm font-semibold text-primary truncate">
                             {founder.name}
                           </h3>
+                          {founder.linkedinUrl && founder.linkedinUrl.includes('/in/') && (
+                            <a
+                              href={founder.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-500 border border-sky-500/25 hover:bg-sky-500/20 transition-colors whitespace-nowrap"
+                              title={founder.linkedinUrl}
+                            >
+                              <Linkedin className="w-2.5 h-2.5" />
+                              <span>Verified Profile</span>
+                            </a>
+                          )}
                           {founder.status === 'contacted' && (
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 whitespace-nowrap">
                               Contacted
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5 flex-wrap">
-                          <span className="text-indigo-300 font-medium">{founder.role}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-secondary mt-0.5 flex-wrap">
+                          <span className="text-indigo-500 font-medium">{founder.role}</span>
                           <span>•</span>
-                          <span className="flex items-center gap-1 text-slate-300 font-medium">
-                            <Building2 className="w-3 h-3 text-slate-500" />
+                          <span className="flex items-center gap-1 text-primary font-medium">
+                            <Building2 className="w-3 h-3 text-muted" />
                             {founder.company}
                           </span>
                           {founder.companyUrl && (
@@ -530,7 +542,7 @@ export default function FounderOutreachView() {
                               href={founder.companyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-slate-500 hover:text-indigo-400 transition-colors"
+                              className="text-muted hover:text-indigo-500 transition-colors"
                               title="Open Company Website / Page"
                             >
                               <Globe className="w-3 h-3" />
@@ -540,21 +552,21 @@ export default function FounderOutreachView() {
                       </div>
                     </div>
 
-                    {/* Right Badges: Match %, Recency, Platform, Dismiss */}
+                    {/* Right Badges: Match %, Recency, Dismiss */}
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 whitespace-nowrap">
                         {founder.matchScore || 90}% Match
                       </span>
                       <span
-                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/70"
+                        className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme whitespace-nowrap"
                         title="Signal Recency (used in Smart Rank)"
                       >
-                        <Clock className="w-2.5 h-2.5 text-sky-400" />
-                        {formatRelativeRecency(founder.postedAt || founder.createdAt)}
+                        <Clock className="w-2.5 h-2.5 text-sky-500 shrink-0" />
+                        <span>{formatRelativeRecency(founder.postedAt || founder.createdAt)}</span>
                       </span>
                       <button
                         onClick={() => handleDeleteFounder(founder._id)}
-                        className="p-1 text-slate-500 hover:text-rose-400 rounded-md transition-colors cursor-pointer"
+                        className="p-1 text-muted hover:text-rose-500 rounded-md transition-colors cursor-pointer"
                         title="Dismiss founder"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -562,16 +574,16 @@ export default function FounderOutreachView() {
                     </div>
                   </div>
 
-                  {/* Buying Signal & AI Fit Reasoning */}
-                  <div className="mt-3.5 p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 space-y-1">
+                  {/* Buying Signal & AI Fit Reasoning (Theme-Adaptive Surface — No Dark/Light Mode Clash) */}
+                  <div className="mt-3.5 p-3 rounded-lg bg-card-subtle border border-theme space-y-1">
                     {founder.signal && (
-                      <p className="text-xs text-slate-200 font-medium leading-snug">
-                        <span className="text-indigo-400 font-semibold mr-1.5">Signal:</span>
+                      <p className="text-xs text-primary font-medium leading-snug">
+                        <span className="text-indigo-500 font-semibold mr-1.5">Signal:</span>
                         {founder.signal}
                       </p>
                     )}
                     {founder.matchReasoning && (
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-secondary leading-relaxed">
                         {founder.matchReasoning}
                       </p>
                     )}
@@ -580,15 +592,15 @@ export default function FounderOutreachView() {
                   {/* AI Outreach Message Composer */}
                   <div className="mt-3.5">
                     <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-                      <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                      <div className="flex items-center gap-1 bg-surface p-0.5 rounded-lg border border-theme">
                         <button
                           onClick={() =>
                             setActiveMessageMode((prev) => ({ ...prev, [founder._id]: 'dm' }))
                           }
-                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
                             mode === 'dm'
                               ? 'bg-indigo-600 text-white'
-                              : 'text-slate-400 hover:text-slate-200'
+                              : 'text-secondary hover:text-primary'
                           }`}
                         >
                           LinkedIn Direct Message
@@ -597,10 +609,10 @@ export default function FounderOutreachView() {
                           onClick={() =>
                             setActiveMessageMode((prev) => ({ ...prev, [founder._id]: 'note' }))
                           }
-                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer whitespace-nowrap ${
                             mode === 'note'
                               ? 'bg-indigo-600 text-white'
-                              : 'text-slate-400 hover:text-slate-200'
+                              : 'text-secondary hover:text-primary'
                           }`}
                         >
                           Connection Note (&lt;280 chars)
@@ -608,7 +620,7 @@ export default function FounderOutreachView() {
                       </div>
 
                       {/* Quick AI Tone / Angle Regenerator */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-wrap">
                         {[
                           { label: 'Short', angle: 'Ultra-short 45-word punchy founder DM' },
                           { label: 'AI Agent Angle', angle: 'Focus on shipping custom AI agents & workflow automation' },
@@ -618,7 +630,7 @@ export default function FounderOutreachView() {
                             key={preset.label}
                             onClick={() => handleRegenerate(founder, preset.angle)}
                             disabled={isRegenerating}
-                            className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700/70 transition-colors cursor-pointer disabled:opacity-50"
+                            className="px-2 py-0.5 text-[10px] font-medium rounded bg-card-subtle hover:bg-indigo-500/10 text-secondary hover:text-primary border border-theme transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
                             title={`Regenerate with ${preset.label} angle`}
                           >
                             {preset.label}
@@ -627,7 +639,7 @@ export default function FounderOutreachView() {
                         <button
                           onClick={() => handleRegenerate(founder, '')}
                           disabled={isRegenerating}
-                          className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                          className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
                           title="Regenerate message with AI"
                         >
                           <Sparkles className={`w-3 h-3 ${isRegenerating ? 'animate-spin' : ''}`} />
@@ -641,12 +653,12 @@ export default function FounderOutreachView() {
                         rows={mode === 'note' ? 3 : 5}
                         value={currentText}
                         onChange={(e) => handleTextChange(founder, e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500/70 rounded-lg p-3 text-xs text-slate-200 leading-relaxed focus:outline-none resize-y font-sans"
+                        className="w-full bg-surface border border-theme focus:border-indigo-500 rounded-lg p-3 text-xs text-primary leading-relaxed focus:outline-none resize-y font-sans"
                         placeholder="AI personalized outreach message..."
                       />
                       <span
                         className={`absolute bottom-2 right-2.5 text-[10px] ${
-                          mode === 'note' && charCount > 280 ? 'text-rose-400 font-semibold' : 'text-slate-500'
+                          mode === 'note' && charCount > 280 ? 'text-rose-500 font-semibold' : 'text-muted'
                         }`}
                       >
                         {mode === 'note' ? `${charCount}/280 chars` : `${charCount} chars`}
@@ -656,11 +668,11 @@ export default function FounderOutreachView() {
                 </div>
 
                 {/* Action Footer: 1-Click Copy + Open LinkedIn */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+                <div className="mt-4 pt-3 border-t border-theme flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleOpenLinkedInAndSend(founder)}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm transition-all cursor-pointer whitespace-nowrap"
                     >
                       <Linkedin className="w-3.5 h-3.5" />
                       <span>Open LinkedIn &amp; Send</span>
@@ -669,16 +681,16 @@ export default function FounderOutreachView() {
 
                     <button
                       onClick={() => handleCopyOnly(founder)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-card-subtle hover:bg-indigo-500/10 text-primary border border-theme rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400">Copied!</span>
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="text-emerald-500">Copied!</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                          <Copy className="w-3.5 h-3.5 text-secondary" />
                           <span>Copy Message</span>
                         </>
                       )}
@@ -690,7 +702,7 @@ export default function FounderOutreachView() {
                       <button
                         onClick={() => handleDirectEmailSend(founder)}
                         disabled={sendingEmailId === founder._id}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
                         title={`1-Click Direct Email to ${founder.email}`}
                       >
                         <Mail className="w-3.5 h-3.5" />
@@ -704,7 +716,7 @@ export default function FounderOutreachView() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => handleCopyOnly(founder)}
-                        className="px-2.5 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-medium transition-colors"
+                        className="px-2.5 py-2 bg-card-subtle hover:bg-indigo-500/10 text-secondary hover:text-primary border border-theme rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
                         title="Auto-copy message & open X / Twitter profile"
                       >
                         X / DM
@@ -721,17 +733,17 @@ export default function FounderOutreachView() {
       {/* Modal: Add Custom Founder / LinkedIn URL */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="bg-card border border-theme rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-theme">
               <div className="flex items-center gap-2">
-                <Linkedin className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-semibold text-white">
+                <Linkedin className="w-4 h-4 text-indigo-500" />
+                <h3 className="text-sm font-semibold text-primary">
                   Add Founder / LinkedIn Profile
                 </h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-muted hover:text-primary"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -739,7 +751,7 @@ export default function FounderOutreachView() {
 
             <form onSubmit={handleAddFounder} className="space-y-3.5 mt-4">
               <div>
-                <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                <label className="block text-[11px] font-medium text-secondary mb-1">
                   LinkedIn Profile URL *
                 </label>
                 <input
@@ -747,13 +759,13 @@ export default function FounderOutreachView() {
                   value={newFounder.linkedinUrl}
                   onChange={(e) => setNewFounder({ ...newFounder, linkedinUrl: e.target.value })}
                   placeholder="https://www.linkedin.com/in/founder-name"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-secondary mb-1">
                     Founder Name
                   </label>
                   <input
@@ -761,11 +773,11 @@ export default function FounderOutreachView() {
                     value={newFounder.name}
                     onChange={(e) => setNewFounder({ ...newFounder, name: e.target.value })}
                     placeholder="e.g. Sam Altman"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-secondary mb-1">
                     Role / Title
                   </label>
                   <input
@@ -773,14 +785,14 @@ export default function FounderOutreachView() {
                     value={newFounder.role}
                     onChange={(e) => setNewFounder({ ...newFounder, role: e.target.value })}
                     placeholder="Founder & CEO"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-secondary mb-1">
                     Company Name
                   </label>
                   <input
@@ -788,11 +800,11 @@ export default function FounderOutreachView() {
                     value={newFounder.company}
                     onChange={(e) => setNewFounder({ ...newFounder, company: e.target.value })}
                     placeholder="e.g. Acme AI"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-secondary mb-1">
                     Email (Optional for 1-Click Send)
                   </label>
                   <input
@@ -800,13 +812,13 @@ export default function FounderOutreachView() {
                     value={newFounder.email}
                     onChange={(e) => setNewFounder({ ...newFounder, email: e.target.value })}
                     placeholder="founder@company.com"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                <label className="block text-[11px] font-medium text-secondary mb-1">
                   Context / Buying Signal (AI uses this to personalize message)
                 </label>
                 <textarea
@@ -814,7 +826,7 @@ export default function FounderOutreachView() {
                   value={newFounder.signal}
                   onChange={(e) => setNewFounder({ ...newFounder, signal: e.target.value })}
                   placeholder="e.g. Just raised Seed round, building AI workflow automation for healthcare..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 bg-surface border border-theme rounded-lg text-xs text-primary focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -822,7 +834,7 @@ export default function FounderOutreachView() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3.5 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-medium"
+                  className="px-3.5 py-2 bg-card-subtle text-secondary hover:text-primary border border-theme rounded-lg text-xs font-medium"
                 >
                   Cancel
                 </button>

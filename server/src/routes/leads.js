@@ -176,6 +176,18 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * DELETE /api/leads/reset - Clear all leads in this workspace to start fresh
+ */
+router.delete('/reset', async (req, res) => {
+  try {
+    const result = await Lead.deleteMany({ companyId: req.companyId });
+    res.json({ success: true, deletedCount: result.deletedCount || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/leads/:id
  */
 router.get('/:id', async (req, res) => {

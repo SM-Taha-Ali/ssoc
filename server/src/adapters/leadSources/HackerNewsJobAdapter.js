@@ -9,9 +9,10 @@ export class HackerNewsJobAdapter extends BaseLeadSource {
   async fetchRawLeads(options = {}) {
     try {
       const limit = options.limit || 15;
-      // Query Hacker News Algolia API specifically for "SEEKING FREELANCER" client project posts
+      const thirtyDaysAgoSec = Math.floor(Date.now() / 1000) - 30 * 86400;
+      // Query Hacker News Algolia API specifically for recent "SEEKING FREELANCER" client project posts
       const response = await axios.get(
-        `https://hn.algolia.com/api/v1/search_by_date?tags=comment&query=${encodeURIComponent('"SEEKING FREELANCER"')}&hitsPerPage=35`,
+        `https://hn.algolia.com/api/v1/search_by_date?tags=comment&query=${encodeURIComponent('"SEEKING FREELANCER"')}&numericFilters=created_at_i>${thirtyDaysAgoSec}&hitsPerPage=35`,
         { timeout: 10000 }
       );
 

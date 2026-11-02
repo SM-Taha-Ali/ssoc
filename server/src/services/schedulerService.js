@@ -21,11 +21,15 @@ export function isFullTimeEmployeeJob(lead) {
   const url = (lead.sourceUrl || '').toLowerCase();
   const combined = `${title} ${desc}`;
 
-  // Legacy full-time corporate listings scraped before Contract/Project filter
+  // Reject employee job boards (WeWorkRemotely, RemoteOK, LinkedIn Job Board) and competing talent/staffing networks
   if (
-    desc.includes('sourced from linkedin corporate listings') ||
+    lead.platform === 'weworkremotely' ||
+    lead.platform === 'remoteok' ||
+    lead.platform === 'rss' ||
+    desc.includes('sourced from linkedin') ||
     url.includes('/careers/') ||
-    url.includes('ashby_jid=')
+    url.includes('ashby_jid=') ||
+    /toptal|proxify|turing\.com|bairesdev|lemon\.io|andela|arc\.dev|gun\.io|discussion participant|reseller partner|content writer/i.test(combined)
   ) {
     return true;
   }
@@ -45,15 +49,13 @@ export function isFullTimeEmployeeJob(lead) {
     '1099',
     'fractional',
     'mvp',
-    'part-time',
-    'temporary',
     'fixed-price',
-    'hourly',
+    'quotation request',
     'seeking freelancer'
   ];
   const hasProjectSignal = projectIndicators.some((kw) => combined.includes(kw));
 
-  // Hard full-time employee only signals
+  // Hard full-time or part-time employee signals
   const hardFullTimeSignals = [
     'w-2 only',
     'w2 only',
@@ -64,13 +66,14 @@ export function isFullTimeEmployeeJob(lead) {
     'no contractors',
     'full-time employee',
     'permanent employee',
+    'part-time employee',
     '401(k)',
     '401k matching',
     'medical, dental, and vision',
     'health, dental, vision',
     'unlimited pto'
   ];
-  if (hardFullTimeSignals.some((kw) => combined.includes(kw)) && !title.includes('contract') && !title.includes('freelance')) {
+  if (hardFullTimeSignals.some((kw) => combined.includes(kw))) {
     return true;
   }
 
@@ -78,8 +81,7 @@ export function isFullTimeEmployeeJob(lead) {
   if (
     lead.platform === 'ycombinator' &&
     !combined.includes('seeking freelancer') &&
-    !combined.includes('contract') &&
-    !combined.includes('freelance')
+    !combined.includes('freelance project')
   ) {
     return true;
   }
@@ -91,23 +93,6 @@ export function isFullTimeEmployeeJob(lead) {
     lead.budget?.amount >= 55000 &&
     !hasProjectSignal
   ) {
-    return true;
-  }
-
-  // RemoteOK, WeWorkRemotely, RSS, or LinkedIn listings that have zero project/contract/freelance signal (only when description is loaded)
-  if (
-    lead.description &&
-    (lead.platform === 'remoteok' ||
-      lead.platform === 'linkedin' ||
-      lead.platform === 'weworkremotely' ||
-      lead.platform === 'rss') &&
-    !hasProjectSignal
-  ) {
-    return true;
-  }
-
-  // RemoteOK full-time employee roles where matchScore was flagged low (< 50) by AI evaluator
-  if (lead.platform === 'remoteok' && typeof lead.matchScore === 'number' && lead.matchScore <= 45) {
     return true;
   }
 
@@ -232,36 +217,18 @@ export async function runLeadFinderTask(companyId = null) {
 
     const maxLeads = companyProfile.maxLeadsPerBatch || 20;
 
-    // Compile active project/freelance sources (prioritizing live client project marketplaces first)
+    // Compile active client-project sources (strictly clients paying for software/AI/MVP project builds, never employee job boards)
     const sourcesToQuery = [
       {
         name: 'Freelancer.com Live Client Projects',
         platform: 'freelancer',
-        options: { limit: 16 }
-      },
-      {
-        name: 'LinkedIn Contract & Project Engagements',
-        platform: 'linkedin',
-        options: {
-          limit: 10,
-          keywords: config.linkedin?.searchKeywords || 'AI Automation Full Stack Contract'
-        }
+        options: { limit: 24 }
       },
       {
         name: 'Hacker News Seeking Freelancer Projects',
         platform: 'ycombinator',
-        options: { limit: 12 }
-      },
-      {
-        name: 'RemoteOK Contract & Freelance Tech',
-        platform: 'remoteok',
-        options: { limit: 10, tag: 'dev' }
-      },
-      ...((config.rssFeeds || []).filter((f) => f.enabled).map((f) => ({
-        name: f.name,
-        platform: f.platform || 'rss',
-        options: { url: f.url, platform: f.platform, limit: 10 }
-      })))
+        options: { limit: 8 }
+      }
     ];
 
     const apolloKey = config.apolloApiKey || process.env.APOLLO_API_KEY;

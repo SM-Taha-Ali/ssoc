@@ -41,6 +41,21 @@ function formatLeadRecency(lead) {
   return `${days}d ago`;
 }
 
+function formatPlatformLabel(platform) {
+  const map = {
+    freelancer: 'Freelancer',
+    ycombinator: 'HN Project',
+    upwork: 'Upwork',
+    linkedin: 'LinkedIn',
+    github: 'GitHub',
+    reddit: 'Reddit',
+    apollo: 'Apollo',
+    manual: 'Direct'
+  };
+  const key = (platform || '').toLowerCase();
+  return map[key] || (platform || 'Project').slice(0, 11);
+}
+
 function getEffectivePriority(lead) {
   if (typeof lead.priorityScore === 'number') return lead.priorityScore;
   const match = typeof lead.matchScore === 'number' ? lead.matchScore : 75;
@@ -150,23 +165,23 @@ export default function PipelineView({
                         }`}
                       >
                         {/* Top Meta: Platform, Recency & Match Score */}
-                        <div className="flex items-center justify-between gap-1.5 mb-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme">
-                              {lead.platform}
+                        <div className="flex items-center justify-between gap-1.5 mb-2 flex-nowrap">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-card-subtle text-secondary border border-theme whitespace-nowrap shrink-0">
+                              {formatPlatformLabel(lead.platform)}
                             </span>
                             <span
-                              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-card-subtle text-muted border border-theme flex items-center gap-1"
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-card-subtle text-muted border border-theme flex items-center gap-1 whitespace-nowrap shrink-0"
                               title="Posting Recency (older leads rank lower)"
                             >
-                              <Clock className="w-2.5 h-2.5 text-sky-400" />
-                              {formatLeadRecency(lead)}
+                              <Clock className="w-2.5 h-2.5 text-sky-400 shrink-0" />
+                              <span>{formatLeadRecency(lead)}</span>
                             </span>
                           </div>
 
                           {matchScore > 0 && (
                             <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap shrink-0 ${
                                 matchScore >= 80
                                   ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                                   : matchScore >= 60

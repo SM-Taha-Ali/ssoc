@@ -6,6 +6,7 @@ import { deliveryRegistry } from '../adapters/delivery/DeliveryRegistry.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   discoverFoundersForCompany,
+  purgeFakeFoundersForCompany,
   regenerateFounderOutreachForProspect,
   buildSmartFounderOutreachFallback
 } from '../services/founderScoutService.js';
@@ -30,7 +31,10 @@ router.get('/', async (req, res) => {
   try {
     const { platform, status, search, sort } = req.query;
 
-    // Auto-seed real founders on first visit if workspace has none yet
+    // Always purge any legacy placeholder/unverified founders first
+    await purgeFakeFoundersForCompany(req.companyId);
+
+    // Auto-seed real verified founders if workspace has none
     const existingCount = await FounderProspect.countDocuments({ companyId: req.companyId });
     if (existingCount === 0) {
       await discoverFoundersForCompany(req.companyId, { keywords: 'AI SaaS Startup' });
@@ -87,11 +91,32 @@ router.get('/', async (req, res) => {
  */
 router.post('/discover', async (req, res) => {
   try {
-    const { keywords } = req.body || {};
+    const { keywords, reset } = req.body || {};
     const result = await discoverFoundersForCompany(req.companyId, {
-      keywords: keywords || 'AI Automation SaaS'
+      keywords: keywords || 'AI Automation SaaS',
+      reset: Boolean(reset)
     });
     res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/founders/reset - Wipe all founders for the authenticated workspace and re-seed fresh verified founders
+ */
+router.delete('/reset', async (req, res) => {
+  try {
+    const deleted = await FounderProspect.deleteMany({ companyId: req.companyId });
+    const discovered = await discoverFoundersForCompany(req.companyId, {
+      keywords: 'AI SaaS Startup',
+      reset: false
+    });
+    res.json({
+      success: true,
+      deletedCount: deleted.deletedCount || 0,
+      addedCount: discovered.addedCount || 0
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
