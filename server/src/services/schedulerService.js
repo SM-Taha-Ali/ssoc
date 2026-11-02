@@ -18,7 +18,17 @@ let imapJob = null;
 export function isFullTimeEmployeeJob(lead) {
   const title = (lead.title || '').toLowerCase();
   const desc = (lead.description || '').toLowerCase();
+  const url = (lead.sourceUrl || '').toLowerCase();
   const combined = `${title} ${desc}`;
+
+  // Legacy full-time corporate listings scraped before Contract/Project filter
+  if (
+    desc.includes('sourced from linkedin corporate listings') ||
+    url.includes('/careers/') ||
+    url.includes('ashby_jid=')
+  ) {
+    return true;
+  }
 
   const projectIndicators = [
     'contract',
@@ -84,8 +94,17 @@ export function isFullTimeEmployeeJob(lead) {
     return true;
   }
 
-  // RemoteOK or LinkedIn listings that have zero project/contract/freelance signal
-  if ((lead.platform === 'remoteok' || lead.platform === 'linkedin') && !hasProjectSignal) {
+  // RemoteOK or LinkedIn listings that have zero project/contract/freelance signal (only when description is loaded)
+  if (
+    lead.description &&
+    (lead.platform === 'remoteok' || lead.platform === 'linkedin') &&
+    !hasProjectSignal
+  ) {
+    return true;
+  }
+
+  // RemoteOK full-time employee roles where matchScore was flagged low (< 50) by AI evaluator
+  if (lead.platform === 'remoteok' && typeof lead.matchScore === 'number' && lead.matchScore <= 45) {
     return true;
   }
 
@@ -123,18 +142,18 @@ export async function pruneClosedLeads(companyId = null) {
     });
     deletedCount += staleRes.deletedCount || 0;
 
-    // 3. Inspect remaining 'discovered' leads to remove full-time employee roles & closed Freelancer.com projects
-    const discoveredLeads = await Lead.find({
+    // 3. Inspect uncontacted ('discovered' and 'pre_reqs') leads to remove full-time employee roles & closed Freelancer.com projects
+    const uncontactedLeads = await Lead.find({
       ...scope,
-      stage: 'discovered'
+      stage: { $in: ['discovered', 'pre_reqs'] }
     })
-      .select('_id title description platform externalId budget postedAt createdAt')
+      .select('_id title description platform externalId sourceUrl matchScore budget postedAt createdAt')
       .lean();
 
     const idsToDelete = [];
     const freelancerMap = new Map(); // projectId -> lead._id
 
-    for (const lead of discoveredLeads) {
+    for (const lead of uncontactedLeads) {
       if (isFullTimeEmployeeJob(lead)) {
         idsToDelete.push(lead._id);
         continue;
@@ -191,7 +210,7 @@ export async function runLeadFinderTask(companyId = null) {
   try {
     let targetCompanyId = companyId;
     if (!targetCompanyId) {
-      const defaultCo = await Company.findOne();
+      const defaultCo = (await Company.findOne({ companyKey: 'quminai' })) || (await Company.findOne());
       targetCompanyId = defaultCo?._id;
     }
 

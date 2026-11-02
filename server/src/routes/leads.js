@@ -119,12 +119,14 @@ router.get('/', async (req, res) => {
       limitNum > 0 ? Lead.countDocuments(query) : Promise.resolve(null)
     ]);
 
-    // Filter out any legacy full-time discovered jobs on the fly & delete them asynchronously
+    // Filter out any legacy full-time discovered/pre_reqs jobs on the fly & delete them asynchronously
     const fullTimeIdsToRemove = [];
+    const removedByStage = {};
     const leads = [];
     for (const lead of rawLeads) {
-      if (lead.stage === 'discovered' && isFullTimeEmployeeJob(lead)) {
+      if ((lead.stage === 'discovered' || lead.stage === 'pre_reqs') && isFullTimeEmployeeJob(lead)) {
         fullTimeIdsToRemove.push(lead._id);
+        removedByStage[lead.stage] = (removedByStage[lead.stage] || 0) + 1;
         continue;
       }
       const refMs = new Date(lead.postedAt || lead.createdAt || nowMs).getTime() || nowMs;
@@ -155,8 +157,10 @@ router.get('/', async (req, res) => {
       acc[curr._id] = curr.count;
       return acc;
     }, {});
-    if (fullTimeIdsToRemove.length > 0 && stageCounts.discovered) {
-      stageCounts.discovered = Math.max(0, stageCounts.discovered - fullTimeIdsToRemove.length);
+    for (const [stg, removedCount] of Object.entries(removedByStage)) {
+      if (stageCounts[stg]) {
+        stageCounts[stg] = Math.max(0, stageCounts[stg] - removedCount);
+      }
     }
 
     res.json({
