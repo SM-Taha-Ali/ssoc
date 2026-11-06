@@ -352,9 +352,9 @@ Summary: ${(c.description || '').substring(0, 300)}...
   .join('\n---\n')}
 
 ### TASK:
-1. Review each candidate against our company's actual technical services (AI agents, automations, React/Node/MERN, Cloud/AWS).
-2. Strictly reject any job that violates the disqualification rules (especially full-time employee jobs) or is not a genuine software/AI/automation project/contract need.
-3. Select up to a maximum of 20 TOP approved project/freelance/contract leads.
+1. Review each candidate against our company's actual technical services (AI agents, automations, React/Node/MERN, Python, Full-Stack, Cloud/AWS, DevOps).
+2. Approve genuine software, AI, web/mobile app, automation, prototype, consulting, contract, and freelance engagements across ALL platforms (freelancer, ycombinator, linkedin, remoteok). Note that LinkedIn (f_JT=C,T), Y Combinator / Hacker News (Contract / SEEKING FREELANCER), and Remotive (Contract) leads are already pre-filtered for Contract/Project status—approve them if the technical work fits a software/AI engineering team!
+3. Select up to a maximum of 20 TOP approved project/freelance/contract leads across the multiple platforms.
 4. Return a valid JSON array of objects for the approved candidates ONLY.
 
 Schema:

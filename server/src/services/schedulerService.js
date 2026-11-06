@@ -21,15 +21,15 @@ export function isFullTimeEmployeeJob(lead) {
   const url = (lead.sourceUrl || '').toLowerCase();
   const combined = `${title} ${desc}`;
 
-  // Reject employee job boards (WeWorkRemotely, RemoteOK, LinkedIn Job Board) and competing talent/staffing networks
+  // Reject competing staffing/talent middlemen and non-software micro-gigs
   if (
     lead.platform === 'weworkremotely' ||
-    lead.platform === 'remoteok' ||
     lead.platform === 'rss' ||
-    desc.includes('sourced from linkedin') ||
     url.includes('/careers/') ||
     url.includes('ashby_jid=') ||
-    /toptal|proxify|turing\.com|bairesdev|lemon\.io|andela|arc\.dev|gun\.io|discussion participant|reseller partner|content writer/i.test(combined)
+    /toptal|proxify|turing\.com|bairesdev|lemon\.io|andela|arc\.dev|gun\.io|cybercoders|randstad|kforce|tek hire|jobgether|discussion participant|reseller partner|content writer/i.test(
+      combined
+    )
   ) {
     return true;
   }
@@ -40,6 +40,7 @@ export function isFullTimeEmployeeJob(lead) {
     'freelance',
     'freelancer',
     'project',
+    'prototype',
     'consultant',
     'consulting',
     'agency',
@@ -51,14 +52,17 @@ export function isFullTimeEmployeeJob(lead) {
     'mvp',
     'fixed-price',
     'quotation request',
-    'seeking freelancer'
+    'seeking freelancer',
+    '/hr',
+    'per task'
   ];
   const hasProjectSignal = projectIndicators.some((kw) => combined.includes(kw));
 
-  // Hard full-time or part-time employee signals
+  // Hard full-time or W-2 employee signals
   const hardFullTimeSignals = [
     'w-2 only',
     'w2 only',
+    'w2 contract',
     'no agencies',
     'no c2c',
     'no corp-to-corp',
@@ -77,12 +81,8 @@ export function isFullTimeEmployeeJob(lead) {
     return true;
   }
 
-  // Legacy YC job board postings ("at <Company> (YC ...)") that aren't from Ask HN: Seeking Freelancer
-  if (
-    lead.platform === 'ycombinator' &&
-    !combined.includes('seeking freelancer') &&
-    !combined.includes('freelance project')
-  ) {
+  // Require explicit contract/freelance/project signal on non-Freelancer platforms
+  if (lead.platform !== 'freelancer' && !hasProjectSignal) {
     return true;
   }
 
@@ -90,8 +90,7 @@ export function isFullTimeEmployeeJob(lead) {
   if (
     lead.platform !== 'freelancer' &&
     lead.platform !== 'upwork' &&
-    lead.budget?.amount >= 55000 &&
-    !hasProjectSignal
+    lead.budget?.amount >= 55000
   ) {
     return true;
   }
@@ -118,15 +117,12 @@ export async function pruneClosedLeads(companyId = null) {
     });
     deletedCount += closedRes.deletedCount || 0;
 
-    // 2. Delete stale uncontacted ('discovered') leads older than 14 days (closed/filled on source platforms)
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    // 2. Delete stale uncontacted ('discovered') leads discovered more than 21 days ago
+    const twentyOneDaysAgo = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000);
     const staleRes = await Lead.deleteMany({
       ...scope,
       stage: 'discovered',
-      $or: [
-        { postedAt: { $lt: fourteenDaysAgo } },
-        { createdAt: { $lt: fourteenDaysAgo } }
-      ]
+      createdAt: { $lt: twentyOneDaysAgo }
     });
     deletedCount += staleRes.deletedCount || 0;
 
@@ -217,17 +213,27 @@ export async function runLeadFinderTask(companyId = null) {
 
     const maxLeads = Math.max(Number(companyProfile.maxLeadsPerBatch) || 15, 12);
 
-    // Compile active client-project sources (strictly clients paying for software/AI/MVP project builds, never employee job boards)
+    // Compile multi-platform client-project & contract sources (Freelancer, Y Combinator / HN, LinkedIn Contracts, Remotive / RemoteOK Contracts)
     const sourcesToQuery = [
+      {
+        name: 'Y Combinator / Hacker News Contract & Freelance Projects',
+        platform: 'ycombinator',
+        options: { limit: 8 }
+      },
+      {
+        name: 'LinkedIn Contract & Project Engagements',
+        platform: 'linkedin',
+        options: { limit: 8, keywords: 'AI Automation Full Stack Contract' }
+      },
+      {
+        name: 'Remotive & RemoteOK Contract Projects',
+        platform: 'remoteok',
+        options: { limit: 6 }
+      },
       {
         name: 'Freelancer.com Live Client Projects',
         platform: 'freelancer',
-        options: { limit: 24 }
-      },
-      {
-        name: 'Hacker News Seeking Freelancer Projects',
-        platform: 'ycombinator',
-        options: { limit: 8 }
+        options: { limit: 10 }
       }
     ];
 
@@ -329,6 +335,9 @@ export async function runLeadFinderTask(companyId = null) {
       console.log(`[Scheduler] Gemini approved ${evaluated.length} high-fit project leads out of ${candidateLeads.length}.`);
     }
 
+    const savedIndices = new Set();
+    const savedByPlatform = {};
+
     if (evaluated.length > 0) {
       for (const item of evaluated) {
         if (newLeadsCount >= maxLeads) break;
@@ -342,9 +351,12 @@ export async function runLeadFinderTask(companyId = null) {
         });
         lead.stage = 'discovered';
         lead.matchScore = item.matchScore || 85;
-        lead.matchReasoning = item.matchReasoning || 'High-fit client project matching agency AI and full-stack capabilities.';
+        lead.matchReasoning =
+          item.matchReasoning || 'High-fit client project matching agency AI and full-stack capabilities.';
         if (item.extractedTechStack?.length) {
-          lead.skillsRequired = Array.from(new Set([...(lead.skillsRequired || []), ...item.extractedTechStack]));
+          lead.skillsRequired = Array.from(
+            new Set([...(lead.skillsRequired || []), ...item.extractedTechStack])
+          );
         }
         if (item.demoAngle) {
           lead.demoAngle = item.demoAngle;
@@ -360,23 +372,55 @@ export async function runLeadFinderTask(companyId = null) {
         });
 
         await lead.save();
+        savedIndices.add(item.id);
+        savedByPlatform[candidate.platform] = (savedByPlatform[candidate.platform] || 0) + 1;
         newLeadsCount++;
       }
-    } else if (candidateLeads.length > 0) {
-      // Deterministic scoring fallback if Gemini is rate-limited or key is missing
-      const targetKeywords = companyProfile.targetKeywords?.length
-        ? companyProfile.targetKeywords
-        : ['AI', 'Agent', 'Automation', 'React', 'Node', 'Python', 'Full-Stack', 'Next.js', 'LLM', 'API', 'MVP'];
+    }
 
-      for (const candidate of candidateLeads) {
+    // Ensure multi-platform coverage across Y Combinator, LinkedIn Contracts, Remotive/RemoteOK Contracts, and Freelancer
+    if (candidateLeads.length > 0 && newLeadsCount < maxLeads) {
+      const targetKeywords = [
+        ...(companyProfile.targetKeywords || []),
+        'AI',
+        'Agent',
+        'Automation',
+        'React',
+        'Node',
+        'Python',
+        'Full-Stack',
+        'Full Stack',
+        'Next.js',
+        'LLM',
+        'API',
+        'MVP',
+        'Prototype',
+        'Cloud',
+        'DevOps',
+        'Postgres',
+        'Software'
+      ];
+      const uniqueKws = Array.from(new Set(targetKeywords.map((k) => k.toLowerCase())));
+
+      for (let idx = 0; idx < candidateLeads.length; idx++) {
         if (newLeadsCount >= maxLeads) break;
-        if (isFullTimeEmployeeJob(candidate)) continue;
+        if (savedIndices.has(idx)) continue;
+
+        const candidate = candidateLeads[idx];
+        if (!candidate || isFullTimeEmployeeJob(candidate)) continue;
+
+        const platCount = savedByPlatform[candidate.platform] || 0;
+        // Cap supplementary per-platform additions at 3 so every source gets fair representation
+        if (evaluated.length > 0 && platCount >= 3) continue;
 
         const text = `${candidate.title} ${candidate.description} ${(candidate.skillsRequired || []).join(' ')}`.toLowerCase();
-        const matchedKws = targetKeywords.filter((kw) => text.includes(kw.toLowerCase()));
-        if (matchedKws.length === 0 && candidate.platform !== 'freelancer') continue;
+        const matchedKws = uniqueKws.filter((kw) => text.includes(kw));
+        if (matchedKws.length === 0) continue;
 
-        const computedScore = Math.min(96, 76 + matchedKws.length * 4 + (candidate.budget?.amount > 1000 ? 5 : 0));
+        const computedScore = Math.min(
+          95,
+          80 + Math.min(12, matchedKws.length * 3) + (candidate.budget?.amount > 500 ? 3 : 0)
+        );
         const lead = new Lead({
           ...candidate,
           companyId: targetCompanyId,
@@ -384,13 +428,17 @@ export async function runLeadFinderTask(companyId = null) {
         });
         lead.stage = 'discovered';
         lead.matchScore = computedScore;
-        lead.matchReasoning = `Project/contract opportunity matching ${matchedKws.slice(0, 3).join(', ') || 'full-stack engineering & AI delivery'}.`;
+        lead.matchReasoning = `Verified ${candidate.platform.toUpperCase()} contract/project engagement matching ${matchedKws
+          .slice(0, 4)
+          .join(', ')}.`;
         lead.demoAngle = `Show a live 60-second architecture & working module tailored to "${candidate.title.slice(0, 60)}".`;
         lead.activityLogs.push({
           action: 'Project Lead Discovered',
-          details: `Ingested active project from ${candidate.platform} (${computedScore}% match).`
+          details: `Ingested active contract/project from ${candidate.platform} (${computedScore}% match).`
         });
         await lead.save();
+        savedIndices.add(idx);
+        savedByPlatform[candidate.platform] = platCount + 1;
         newLeadsCount++;
       }
     }

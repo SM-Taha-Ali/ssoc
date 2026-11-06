@@ -44,9 +44,10 @@ function formatLeadRecency(lead) {
 function formatPlatformLabel(platform) {
   const map = {
     freelancer: 'Freelancer',
-    ycombinator: 'HN Project',
+    ycombinator: 'Y Combinator',
     upwork: 'Upwork',
     linkedin: 'LinkedIn',
+    remoteok: 'Remotive',
     github: 'GitHub',
     reddit: 'Reddit',
     apollo: 'Apollo',
