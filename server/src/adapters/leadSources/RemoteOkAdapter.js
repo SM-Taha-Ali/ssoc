@@ -84,7 +84,14 @@ export class RemoteOkAdapter extends BaseLeadSource {
             ) || /\b(1099 contract|independent contractor|contract-to-hire|freelance project)\b/i.test(bodyLower);
 
           if (!hasExplicitContractTitleOrTag) continue;
-          if (/toptal|proxify|turing|bairesdev|lemon\.io|andela|recruiter/i.test(`${j.company} ${j.position}`)) {
+          if (
+            /toptal|proxify|turing|bairesdev|lemon\.io|andela|recruiter|tax|accounting|accountant|legal|finance|sales|nurse/i.test(
+              `${j.company} ${j.position}`
+            )
+          ) {
+            continue;
+          }
+          if (!/engineer|developer|software|ai|full-stack|full stack|backend|frontend|devops|architect|cloud|data|python|react|node/i.test(titleAndTags)) {
             continue;
           }
           if (/\bw-?2 only\b|\bno agencies\b|\bno c2c\b|\b401\(k\)\b/.test(bodyLower)) {

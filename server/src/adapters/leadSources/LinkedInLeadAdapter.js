@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import { BaseLeadSource } from './BaseLeadSource.js';
 
 const STAFFING_RECRUITER_COMPANIES =
-  /\b(cybercoders|randstad|kforce|robert half|tek hire|teksystems|eliassen|yoh|jobgether|lensa|dice|toptal|proxify|turing|bairesdev|lemon\.io|andela|arc\.dev|gun\.io|insight global|apex systems|motion recruitment|harnham|nigel frank|jefferson frank|akkodis|modis|adecco|manpower|kelly services|beacon hill|judge group|collabera|infosys|tcs|wipro|cognizant|hcl|capgemini)\b/i;
+  /\b(cybercoders|randstad|kforce|robert half|tek hire|teksystems|eliassen|yoh|jobgether|lensa|dice|toptal|proxify|turing|bairesdev|lemon\.io|andela|arc\.dev|gun\.io|insight global|apex systems|motion recruitment|harnham|nigel frank|jefferson frank|akkodis|modis|adecco|manpower|kelly services|beacon hill|judge group|collabera|infosys|tcs|wipro|cognizant|hcl|capgemini|recruiting|recruitment|staffing|talent)\b/i;
 
 export class LinkedInLeadAdapter extends BaseLeadSource {
   constructor() {
